@@ -11,13 +11,13 @@ import { useApplicationFormStore } from "@/stores/application-form.store";
 import { updateApplicationStep } from "@/server/actions/application.actions";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Save, Loader2 } from "lucide-react";
+import React from "react";
 import { cn } from "@/lib/utils";
 
 interface StepProps {
   applicationId: string;
   readOnly?: boolean;
+  formRef?: React.RefObject<HTMLFormElement | null>;
   onSaved?: () => void;
 }
 
@@ -33,6 +33,7 @@ const ASSESSMENT_FIELDS = [
 export function ApplicantAssessmentStep({
   applicationId,
   readOnly,
+  formRef,
   onSaved,
 }: StepProps) {
   const store = useApplicationFormStore();
@@ -76,7 +77,7 @@ export function ApplicantAssessmentStep({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <form ref={formRef} onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       <div className="space-y-1">
         <h2 className="text-xl font-semibold">Applicant Assessment</h2>
         <p className="text-sm text-muted-foreground">
@@ -129,18 +130,6 @@ export function ApplicantAssessmentStep({
         })}
       </div>
 
-      {!readOnly && (
-        <div className="flex justify-end">
-          <Button type="submit" disabled={store.isSaving}>
-            {store.isSaving ? (
-              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-            ) : (
-              <Save className="mr-1.5 h-4 w-4" />
-            )}
-            Save &amp; Continue
-          </Button>
-        </div>
-      )}
     </form>
   );
 }
