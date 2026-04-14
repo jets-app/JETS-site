@@ -51,7 +51,7 @@ export const authConfig: NextAuthConfig = {
       const role = auth?.user?.role;
 
       // Admin routes — only ADMIN role
-      if (path.startsWith("/admin")) {
+      if (path.startsWith("/admin") || path.startsWith("/admin/")) {
         if (role !== "ADMIN") {
           return Response.redirect(new URL("/portal/dashboard", nextUrl));
         }
