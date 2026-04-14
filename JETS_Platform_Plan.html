@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JETS School Management Platform - Implementation Plan</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: #1a1a2e;
+    line-height: 1.6;
+    background: #fff;
+    font-size: 11pt;
+  }
+
+  @media print {
+    body { font-size: 10pt; }
+    .page-break { page-break-before: always; }
+    .no-print { display: none; }
+    @page { margin: 0.75in; }
+  }
+
+  .container { max-width: 850px; margin: 0 auto; padding: 40px 30px; }
+
+  /* Cover */
+  .cover {
+    text-align: center;
+    padding: 80px 40px;
+    background: linear-gradient(135deg, #A30018 0%, #7a0012 100%);
+    color: white;
+    border-radius: 12px;
+    margin-bottom: 40px;
+  }
+  .cover h1 { font-size: 32pt; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; }
+  .cover .subtitle { font-size: 14pt; font-weight: 300; opacity: 0.9; margin-bottom: 30px; }
+  .cover .meta { font-size: 10pt; opacity: 0.7; }
+  .cover .divider { width: 60px; height: 3px; background: rgba(255,255,255,0.5); margin: 20px auto; }
+
+  /* Section headers */
+  h2 {
+    font-size: 16pt;
+    font-weight: 700;
+    color: #A30018;
+    border-bottom: 2px solid #A30018;
+    padding-bottom: 6px;
+    margin: 35px 0 15px 0;
+  }
+  h3 {
+    font-size: 12pt;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin: 20px 0 8px 0;
+  }
+  h4 {
+    font-size: 10.5pt;
+    font-weight: 600;
+    color: #444;
+    margin: 12px 0 4px 0;
+  }
+
+  p { margin: 6px 0; }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 15px 0;
+    font-size: 10pt;
+  }
+  th {
+    background: #A30018;
+    color: white;
+    text-align: left;
+    padding: 8px 12px;
+    font-weight: 600;
+    font-size: 9.5pt;
+  }
+  td {
+    padding: 7px 12px;
+    border-bottom: 1px solid #e5e5e5;
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: #faf8f8; }
+
+  /* Lists */
+  ul, ol { margin: 6px 0 10px 20px; }
+  li { margin: 3px 0; }
+
+  /* Info box */
+  .info-box {
+    background: #fef7f7;
+    border-left: 4px solid #A30018;
+    padding: 12px 16px;
+    margin: 12px 0;
+    border-radius: 0 6px 6px 0;
+  }
+  .info-box strong { color: #A30018; }
+
+  /* Sprint box */
+  .sprint {
+    background: #f9f9fb;
+    border: 1px solid #e8e8ee;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 15px 0;
+  }
+  .sprint-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .sprint-number {
+    background: #A30018;
+    color: white;
+    font-weight: 700;
+    font-size: 9pt;
+    padding: 3px 10px;
+    border-radius: 12px;
+  }
+  .sprint-title { font-weight: 600; font-size: 11.5pt; }
+
+  /* Flow diagram */
+  .flow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 10px 0;
+    font-size: 9pt;
+  }
+  .flow-step {
+    background: #f0e8e9;
+    color: #A30018;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  .flow-arrow { color: #999; font-weight: 300; }
+
+  /* Two column */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin: 10px 0;
+  }
+  .col-box {
+    background: #f9f9fb;
+    border: 1px solid #e8e8ee;
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+  .col-box h4 { margin-top: 0; color: #A30018; }
+
+  .tag {
+    display: inline-block;
+    background: #A30018;
+    color: white;
+    font-size: 8pt;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: 500;
+    margin: 1px 2px;
+  }
+  .tag.green { background: #0a8754; }
+  .tag.blue { background: #1a56db; }
+  .tag.gray { background: #6b7280; }
+
+  .footer-note {
+    text-align: center;
+    color: #999;
+    font-size: 9pt;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<!-- COVER -->
+<div class="cover">
+  <h1>JETS School</h1>
+  <div class="subtitle">Management Platform</div>
+  <div class="divider"></div>
+  <div class="subtitle" style="font-size:12pt; margin-bottom:10px;">Implementation Plan</div>
+  <div class="meta">
+    Jewish Educational Trade School &bull; Granada Hills, Los Angeles, CA<br>
+    Prepared April 2026
+  </div>
+</div>
+
+<!-- WHAT WE'RE BUILDING -->
+<h2>What We're Building</h2>
+<p>A complete, custom-built school management platform to replace <strong>Rediker</strong> (registration) and <strong>Chabad Management Software</strong> ($79/mo) with one unified system that handles everything:</p>
+
+<div class="two-col">
+  <div class="col-box">
+    <h4>For Parents</h4>
+    <ul>
+      <li>Online application (10-step form)</li>
+      <li>Upload student photo</li>
+      <li>Pay $500 application fee online</li>
+      <li>Track application status</li>
+      <li>Sign documents electronically</li>
+      <li>Pay tuition online</li>
+      <li>Apply for scholarships</li>
+      <li>Receive messages from school</li>
+    </ul>
+  </div>
+  <div class="col-box">
+    <h4>For the Office & Principals</h4>
+    <ul>
+      <li>Dashboard showing all applications</li>
+      <li>Review & approve applications</li>
+      <li>Send documents for signing</li>
+      <li>Send invoices & collect tuition</li>
+      <li>Message parents (email + SMS)</li>
+      <li>Manage donors & donations</li>
+      <li>Track alumni by year</li>
+      <li>QuickBooks sync for accounting</li>
+    </ul>
+  </div>
+</div>
+
+<!-- KEY DETAILS -->
+<h2>Key Details About JETS</h2>
+<table>
+  <tr><th style="width:35%">Detail</th><th>Value</th></tr>
+  <tr><td><strong>Legal Entity</strong></td><td>JETS Synagogue (DBA: Jewish Educational Trade School), EIN: 68-0500418</td></tr>
+  <tr><td><strong>Students</strong></td><td>Ages 17-21, post-secondary Yeshiva + vocational trades</td></tr>
+  <tr><td><strong>Location</strong></td><td>Granada Hills, Los Angeles, CA (9-10 acre campus)</td></tr>
+  <tr><td><strong>Application Fee</strong></td><td>$500 (adjustable, with discount code support)</td></tr>
+  <tr><td><strong>Application Volume</strong></td><td>50-150 per year</td></tr>
+  <tr><td><strong>Recommendations</strong></td><td>2 required per application</td></tr>
+  <tr><td><strong>Review Process</strong></td><td>Office reviews first, then Principal + Committee</td></tr>
+  <tr><td><strong>Interviews</strong></td><td>Via Calendly (already in use)</td></tr>
+  <tr><td><strong>Tuition</strong></td><td>Custom amount per student, flexible payment plans</td></tr>
+  <tr><td><strong>Donor Database</strong></td><td>2,000+ donors, one-time + recurring gifts</td></tr>
+  <tr><td><strong>Admin Staff</strong></td><td>1-3 office users</td></tr>
+  <tr><td><strong>Parent Accounts</strong></td><td>Self-registration (parents create their own accounts)</td></tr>
+  <tr><td><strong>Messaging</strong></td><td>Email + SMS, individual + bulk</td></tr>
+  <tr><td><strong>Brand Color</strong></td><td>Burgundy/Maroon (#A30018)</td></tr>
+  <tr><td><strong>Accounting</strong></td><td>QuickBooks Online integration</td></tr>
+</table>
+
+<div class="page-break"></div>
+
+<!-- APPLICATION FORM -->
+<h2>The Application Form (10 Steps)</h2>
+<p>This matches your current Rediker application exactly, rebuilt as a modern online form that saves progress automatically.</p>
+
+<table>
+  <tr><th style="width:8%">Step</th><th style="width:25%">Section</th><th>What's Collected</th></tr>
+  <tr>
+    <td><strong>1</strong></td>
+    <td><strong>Student Info</strong></td>
+    <td>Preferred name, date of birth, cell phone, email, full address (international), family phone</td>
+  </tr>
+  <tr>
+    <td><strong>2</strong></td>
+    <td><strong>Hebrew Name</strong></td>
+    <td>Applicant's full Hebrew name, father's Hebrew name, mother's Hebrew name (for Torah reading)</td>
+  </tr>
+  <tr>
+    <td><strong>3</strong></td>
+    <td><strong>Parents / Guardian</strong></td>
+    <td>Father: salutation, name, phone, email, address, marital status, occupation<br>Mother: same fields<br>Guardian: conditional (if applicant doesn't live with parents)<br>Emergency contact: name, phone, relationship</td>
+  </tr>
+  <tr>
+    <td><strong>4</strong></td>
+    <td><strong>Family Info</strong></td>
+    <td>Siblings (name, age, phone, email &mdash; can add multiple)<br>Grandparents: father's side + mother's side (names, emails)</td>
+  </tr>
+  <tr>
+    <td><strong>5</strong></td>
+    <td><strong>School History</strong></td>
+    <td>Last school: principal name/phone/email, teacher name/phone/email<br>Previous schools attended (past 2 years)<br>Relatable contacts: rabbi, teacher, mashpia the applicant connects with</td>
+  </tr>
+  <tr>
+    <td><strong>6</strong></td>
+    <td><strong>Parent Questions</strong></td>
+    <td>Time gaps since school, how time was spent, last two summers<br>Learning strengths &amp; limitations, social strengths, midos tovos<br>Special learning needs, physical/emotional needs (with details)<br>Counseling history, maturity assessment for younger applicants</td>
+  </tr>
+  <tr>
+    <td><strong>7</strong></td>
+    <td><strong>Applicant Assessment</strong></td>
+    <td>Rated scales (Excellent / Above Average / Average / Needs Development / Poor) + optional comments for each:<br>Yiras Shamayim, Honesty &amp; Ethics, Work Habits, Social Interactions, Anger Issues, Maturity Level</td>
+  </tr>
+  <tr>
+    <td><strong>8</strong></td>
+    <td><strong>Studies & Trades</strong></td>
+    <td><em>Academic:</em> English Reading/Writing, Math, Hebrew Reading/Writing/Comprehension, Gemarah, Chassidus<br><em>Trade interests:</em> Accounting, Business, Computers, Construction, Photoshop, Electrical, Real Estate, Finance, Marketing, Web Dev, EMT<br><em>Extracurricular:</em> Culinary, Music Coaching, Martial Arts, Gym, Sports</td>
+  </tr>
+  <tr>
+    <td><strong>9</strong></td>
+    <td><strong>Essay & Additional</strong></td>
+    <td>Essay: "Why do you want to join our Yeshiva?"<br>GED/High School program interest<br>Gemarah, Chassidus, Halacha material studied last year<br>Other factors for evaluation</td>
+  </tr>
+  <tr>
+    <td><strong>10</strong></td>
+    <td><strong>Photo, Recs & Submit</strong></td>
+    <td>Upload student photo<br>Add 2 recommendation references: name, email, phone, relationship (past teacher, principal, rabbi, etc.)<br>Review all answers on one page<br>Submit application + pay $500 fee<br><em>Recommendation forms are automatically emailed to the references after submission</em></td>
+  </tr>
+</table>
+
+<div class="page-break"></div>
+
+<!-- HOW IT WORKS -->
+<h2>How the System Works (Step by Step)</h2>
+
+<h3>1. Parent Applies</h3>
+<div class="flow">
+  <span class="flow-step">Parent creates account</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Fills out 10-step form</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Uploads photo</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Adds 2 references</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Pays $500 fee</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Submits</span>
+</div>
+<ul>
+  <li>Progress saves automatically &mdash; parent can leave and come back</li>
+  <li>Discount codes can reduce or waive the $500 fee</li>
+  <li>Parent enters referee's name, email, and phone number for each of the 2 recommendations</li>
+  <li>References automatically receive an email + SMS with a private link to fill out the recommendation form</li>
+  <li>Parents can see recommendation <strong>status</strong> (Pending / Submitted checkmark) but <strong>cannot see the content</strong> &mdash; content goes directly to admin only</li>
+  <li>Admin can track recommendation status and resend requests if needed</li>
+</ul>
+
+<div class="info-box">
+  <strong>Application cannot be submitted until ALL of these are complete:</strong><br>
+  &check; All 10 form steps filled out (no empty required fields)<br>
+  &check; Student photo uploaded<br>
+  &check; Both recommendation letters received (submitted by referees)<br>
+  &check; $500 application fee paid<br><br>
+  The "Submit Application" button stays disabled until all 4 requirements are met. A progress tracker on the parent dashboard shows exactly what's done and what's still pending.
+</div>
+
+<h3>2. Office Reviews &rarr; Forwards to Principals</h3>
+<div class="flow">
+  <span class="flow-step">Application lands in dashboard</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Office checks completeness</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Adds notes</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Forwards to Principals</span>
+</div>
+<ul>
+  <li>Dashboard shows: total applications, how many pending, what each student still needs</li>
+  <li>Can print entire application as a PDF</li>
+  <li>Checklist per student: fee paid? Recommendations in? Photo uploaded?</li>
+</ul>
+
+<h3>3. Principals Review &rarr; Move to Interview</h3>
+<div class="flow">
+  <span class="flow-step">Principals review full application</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Call recommendation references</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Look into the student</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Good fit? Click "Move to Interview"</span>
+</div>
+<ul>
+  <li>Principals see all application details, recommendations, and notes</li>
+  <li>Can add their own notes and comments</li>
+  <li>If student looks like a good fit &rarr; one click to move to interview step</li>
+  <li>If not a fit &rarr; can reject with reason</li>
+</ul>
+
+<h3>4. Interview &rarr; Accept</h3>
+<div class="flow">
+  <span class="flow-step">System emails parents Calendly link</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Parents schedule interview</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Interview happens</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Principals click "Accept Student"</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Goes back to Office</span>
+</div>
+<ul>
+  <li>Automatic email + SMS sent to parents with Calendly link to book interview</li>
+  <li>System tracks: interview scheduled, completed, or no-show</li>
+  <li>After interview, principals decide: accept or reject</li>
+  <li>Accepted &rarr; application goes back to office for next steps</li>
+</ul>
+
+<h3>5. Office Sends Enrollment Documents</h3>
+<p>Once accepted, the office sends out the document package:</p>
+<table>
+  <tr><th>Document</th><th>Sent To</th><th>What It Does</th></tr>
+  <tr><td><strong>Medical Form</strong></td><td>Parents</td><td>Health info + insurance details &mdash; doubles as a card the student can take to the doctor</td></tr>
+  <tr><td><strong>Student Handbook</strong></td><td>Parents <strong>AND</strong> Student<br><em>(sent separately, each signs their own copy)</em></td><td>School rules &amp; policies &mdash; both parent and student must acknowledge and sign</td></tr>
+  <tr><td><strong>Tuition Contract</strong></td><td>Parents</td><td>Financial agreement for tuition payment terms</td></tr>
+  <tr><td><strong>Enrollment Agreement</strong></td><td>Parents</td><td>Formal acceptance and enrollment paperwork</td></tr>
+</table>
+<ul>
+  <li>Works like DocuSign &mdash; recipients click a link, see the document, fill fields, sign with finger or mouse</li>
+  <li>All templates are editable by admin before sending</li>
+  <li>System tracks which documents are sent, viewed, and signed</li>
+  <li><strong>Student handbook goes out twice</strong> &mdash; one copy to parents, one copy to student, signed independently</li>
+</ul>
+
+<h3>6. Scholarship (If Parents Want It)</h3>
+<div class="flow">
+  <span class="flow-step">Parents request scholarship</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Office sends scholarship app</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Parents fill out &amp; submit</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Admin reviews &amp; decides</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Two more docs sent</span>
+</div>
+<ul>
+  <li>If parents want to apply for a scholarship, office sends them the scholarship application</li>
+  <li>Parents fill out full financial details + upload tax returns</li>
+  <li>Admin reviews with affordability assessment tool</li>
+  <li>Once scholarship amount is decided:</li>
+  <ul>
+    <li><strong>Tuition contract is UPDATED</strong> with the new adjusted tuition amount</li>
+    <li><strong>Pay It Forward scholarship contract</strong> is sent to the <strong>STUDENT</strong> to sign</li>
+  </ul>
+</ul>
+
+<h3>7. Officially Enrolled</h3>
+<div class="info-box">
+  <strong>Student becomes officially enrolled when ALL signed documents are received back:</strong><br>
+  &check; Medical form (signed by parents)<br>
+  &check; Student handbook (signed by parents)<br>
+  &check; Student handbook (signed by student)<br>
+  &check; Tuition contract (signed by parents)<br>
+  &check; Enrollment agreement (signed by parents)<br>
+  &check; Scholarship contract (signed by student) &mdash; <em>if applicable</em><br><br>
+  Once all documents are in, the student's status automatically changes to <strong>ENROLLED</strong> &mdash; they are officially a student in the system.
+</div>
+
+<h3>8. Tuition & Payments</h3>
+<ul>
+  <li>Admin sets a custom tuition amount per student</li>
+  <li>Flexible payment plans: pay in full, semester, quarterly, or monthly</li>
+  <li>Admin creates and sends invoices</li>
+  <li>Parents pay by credit card through the portal</li>
+  <li>Automatic receipts sent via email</li>
+  <li>All payments sync to QuickBooks Online automatically</li>
+</ul>
+
+<h3>6. Scholarship Applications</h3>
+<p>Matches the current "Pay It Forward" application with all sections:</p>
+<ul>
+  <li>Family info, father's &amp; mother's income/assets/employment details</li>
+  <li>Expenses: taxes, housing (rent or own), utilities, auto, household</li>
+  <li>Requested scholarship amount + reason</li>
+  <li>Tax return uploads + signature/certification</li>
+  <li>Admin reviews and approves/denies with amount</li>
+</ul>
+
+<h3>7. Tuition Affordability Assessment</h3>
+<p>Built-in tool that determines how much tuition a family can actually afford &mdash; no third-party cost.</p>
+
+<div class="info-box">
+  <strong>How it works:</strong> Parents fill out a detailed financial form + upload tax returns. The system calculates a recommended family contribution automatically. Admin reviews and can adjust.
+</div>
+
+<p><strong>What parents fill out:</strong></p>
+<ul>
+  <li><strong>Income:</strong> salary, business income, investments, rental income, government assistance, all other sources</li>
+  <li><strong>Assets:</strong> bank balances (checking + savings), investments, real estate equity, retirement accounts</li>
+  <li><strong>Liabilities:</strong> mortgage balance, car loans, student loans, credit card debt, other debt</li>
+  <li><strong>Monthly expenses:</strong> housing, utilities, food, medical, auto, childcare, other tuition obligations</li>
+  <li><strong>Household:</strong> family size, number of children in tuition-charging schools</li>
+  <li><strong>Tax returns:</strong> upload 1-2 years of 1040s, W-2s, business returns if self-employed</li>
+</ul>
+
+<p><strong>What the system calculates:</strong></p>
+<ul>
+  <li>Total family income minus essential expenses = available income</li>
+  <li>Recommended family contribution (as a percentage of available income)</li>
+  <li>Adjustments for number of children, other tuition, community factors</li>
+</ul>
+
+<p><strong>What admin sees:</strong></p>
+<ul>
+  <li>Side-by-side comparison: what parents reported vs. what tax returns show</li>
+  <li>System's recommended contribution amount</li>
+  <li>Ability to override or adjust the recommendation</li>
+  <li>Optional: enter a third-party FACTS assessment recommendation for cross-reference</li>
+  <li>Historical tracking across all families and years</li>
+</ul>
+
+<div class="info-box">
+  <strong>Why not credit scores or bank account APIs?</strong> We researched Plaid, Experian, Truework, etc. Credit checks require special legal permission (FCRA) that schools don't have. Bank APIs cost $6K-18K/year. No private school uses these &mdash; they all use self-reported data + tax verification, which is what we're building. Same result, zero extra cost.
+</div>
+
+<div class="page-break"></div>
+
+<!-- ADDITIONAL FEATURES -->
+<h2>Additional Features</h2>
+
+<h3>Messaging Center</h3>
+<ul>
+  <li><strong>Individual:</strong> Send a message to one parent via email + SMS</li>
+  <li><strong>Bulk:</strong> Send to all parents, or filter by application status, year, etc.</li>
+  <li><strong>Templates:</strong> Save common messages as templates for quick reuse</li>
+  <li>All messages stored in system &mdash; parents see them in their portal too</li>
+</ul>
+
+<h3>Alumni Tracking (by Year)</h3>
+<ul>
+  <li>Browse alumni by graduation year</li>
+  <li>Each alumni profile: name, photo, graduation year, contact info, notes</li>
+  <li>Search and filter across all years</li>
+  <li>Bulk import from existing records (CSV upload)</li>
+  <li>When a student graduates, one-click to move them to alumni</li>
+</ul>
+
+<h3>Donor Management (Replaces CMS &mdash; Saves $79/month)</h3>
+<table>
+  <tr><th>What CMS Does</th><th>What Our System Does</th></tr>
+  <tr><td>Track donor names &amp; info</td><td>Full donor profiles: name, address, phone, email, tags, notes</td></tr>
+  <tr><td>Track donation history</td><td>Every donation logged: date, amount, method, purpose. Lifetime totals, yearly summaries per donor</td></tr>
+  <tr><td>Charge donations (credit card)</td><td>One-time + recurring donations via Stripe. Charge cards directly from the system</td></tr>
+  <tr><td>Send donor receipts</td><td>Auto-generate tax-deductible receipts (per-donation + year-end). PDF + email</td></tr>
+  <tr><td>Send thank you letters</td><td>Customizable thank you letter templates. Auto-send or batch-send via email</td></tr>
+  <tr><td>Charge tuition (credit card)</td><td>Full tuition billing with Stripe (built in Sprint 7)</td></tr>
+</table>
+<div class="info-box">
+  <strong>Cost savings:</strong> CMS costs $948/year ($79 &times; 12). This feature is built into the platform at no extra monthly cost.
+</div>
+
+<h3>QuickBooks Online Integration</h3>
+<ul>
+  <li>Admin connects QuickBooks with one click (OAuth login)</li>
+  <li>Invoices automatically sync to QuickBooks when created</li>
+  <li>Payments automatically recorded in QuickBooks when received</li>
+  <li>Parent records sync as QuickBooks customers</li>
+  <li>Dashboard shows sync status and flags any errors</li>
+</ul>
+
+<h3>Public Website (Replaces jetsschool.org)</h3>
+<p>Built into the same platform &mdash; no separate Webflow needed:</p>
+<table>
+  <tr><th>Page</th><th>Content</th></tr>
+  <tr><td><strong>Home</strong></td><td>Hero section, school mission, program highlights, "Apply Now" button</td></tr>
+  <tr><td><strong>About</strong></td><td>School history, Torah V'avodah mission, campus photos</td></tr>
+  <tr><td><strong>Programs</strong></td><td>Trade programs, Judaic studies, extracurricular activities</td></tr>
+  <tr><td><strong>Faculty</strong></td><td>Staff directory with photos and bios</td></tr>
+  <tr><td><strong>Apply</strong></td><td>Flows directly into the application portal</td></tr>
+  <tr><td><strong>Contact</strong></td><td>Address, phone, email, Calendly booking for consultations</td></tr>
+</table>
+
+<div class="page-break"></div>
+
+<!-- BUILD ORDER -->
+<h2>Build Order (10 Sprints)</h2>
+
+<div class="sprint">
+  <div class="sprint-header">
+    <span class="sprint-number">SPRINT 1</span>
+    <span class="sprint-title">Foundation</span>
+  </div>
+  <p>Set up the project, database, login system, and base design. Everything else is built on top of this.</p>
+  <ul>
+    <li>Project setup with premium design system (burgundy brand color)</li>
+    <li>Database with all tables for students, applications, users, etc.</li>
+    <li>Login &amp; registration pages for parents</li>
+    <li>Role-based access: parents see their portal, staff see the admin dashboard</li>
+  </ul>
+</div>
+
+<div class="sprint">
+  <div class="sprint-header">
+    <span class="sprint-number">SPRINT 2</span>
+    <span class="sprint-title">Parent Application Portal</span>
+  </div>
+  <p>The heart of the system &mdash; parents can create an account and fill out the full 10-step application.</p>
+  <ul>
+    <li>All 10 form steps (see Application Form section above)</li>
+    <li>Auto-save progress &mdash; come back anytime</li>
+    <li>Photo upload for student</li>
+    <li>$500 application fee with discount codes</li>
+    <li>Parent dashboard showing their application status</li>
+  </ul>
+</div>
+
+<div class="sprint">
+  <div class="sprint-header">
+    <span class="sprint-number">SPRINT 3</span>
+    <span class="sprint-title">Recommendation System</span>
+  </div>
+  <p>Automated, confidential recommendation requests &mdash; references get an email + SMS, fill out a form, it goes directly to the school.</p>
+  <ul>
+    <li>Parent adds 2 references: name, email, phone number, relationship (past teacher, principal, rabbi, etc.)</li>
+    <li>System automatically emails each reference a unique private link (+ SMS notification)</li>
+    <li>Reference fills out the structured recommendation form (no account needed)</li>
+    <li><strong>Recommendation content goes directly to admin only &mdash; parents see status (Pending/Submitted) but NOT the content</strong></li>
+    <li><strong>Both recommendations must be completed before the parent can submit the application</strong></li>
+    <li>Admin/office/principals can view all recommendations for any application</li>
+    <li>Status tracking per referee: Pending &rarr; Sent &rarr; Viewed &rarr; Completed</li>
+    <li>Admin can resend the request if a referee hasn't responded</li>
+  </ul>
+</div>
+
+<div class="sprint">
+  <div class="sprint-header">
+    <span class="sprint-number">SPRINT 4</span>
+    <span class="sprint-title">Admin Dashboard</span>
+  </div>
+  <p>The office staff's home base &mdash; see everything at a glance and manage applications.</p>
+  <ul>
+    <li>Stats: total applications, pending, accepted, missing items</li>
+    <li>Searchable, filterable list of all applications</li>
+    <li>Click into any application to see full details</li>
+    <li>Add internal notes and annotations</li>
+    <li>Checklist per student: what they still need</li>
+  </ul>
+</div>
+
+<div class="sprint">
+  <div class="sprint-header">
+    <span class="sprint-number">SPRINT 5</span>
+    <span class="sprint-title">Review & Acceptance Workflow</span>
+  </div>
+  <p>The full pipeline from application received to student accepted.</p>
+  <ul>
+    <li>Office reviews application, forwards to principals</li>
+    <li>Principals review, call references, research the student</li>
+    <li>If good fit &rarr; click "Move to Interview" &rarr; system auto-emails Calendly link to parents</li>
+    <li>Track interview status: Scheduled / Completed / No-show</li>
+    <li>After interview, principals click "Accept" or "Reject"</li>
+    <li>Accepted &rarr; goes back to office to send documents</li>
+    <li>Full timeline of every step and who did what</li>
+    <li>Email + SMS notifications at each stage</li>
+  </ul>
+</div>
+
+<div class="sprint">
+  <div class="sprint-header">
+    <span class="sprint-number">SPRINT 6</span>
+    <span class="sprint-title">Documents & E-Signing</span>
+  </div>
+  <p>Send documents to parents AND students for electronic signing &mdash; works like DocuSign.</p>
+  <ul>
+    <li>Medical form &rarr; sent to parents</li>
+    <li>Student handbook &rarr; sent <strong>separately</strong> to parents AND student (each signs their own copy)</li>
+    <li>Tuition contract &rarr; sent to parents</li>
+    <li>Enrollment agreement &rarr; sent to parents</li>
+    <li>Scholarship contract &rarr; sent to student (if scholarship awarded)</li>
+    <li>Admin can edit any template before sending</li>
+    <li>Tuition contract can be UPDATED after scholarship decision (adjusted amount)</li>
+    <li>All documents signed electronically, stored as PDFs</li>
+    <li><strong>Once ALL documents are signed &rarr; student status automatically changes to ENROLLED</strong></li>
+  </ul>
+</div>
+
+<div class="sprint">
+  <div class="sprint-header">
+    <span class="sprint-number">SPRINT 7</span>
+    <span class="sprint-title">Payments & Billing</span>
+  </div>
+  <p>Full payment system for application fees and tuition.</p>
+  <ul>
+    <li>$500 application fee (credit card via Stripe)</li>
+    <li>Discount/promo codes</li>
+    <li>Custom tuition amount per student</li>
+    <li>Flexible plans: full, semester, quarterly, monthly</li>
+    <li>Admin creates and sends invoices</li>
+    <li>Parents pay tuition online</li>
+    <li>Automatic email receipts</li>
+  </ul>
+</div>
+
+<div class="sprint">
+  <div class="sprint-header">
+    <span class="sprint-number">SPRINT 8</span>
+    <span class="sprint-title">Scholarships, Tuition Assessment, Messaging & Polish</span>
+  </div>
+  <p>Scholarship applications, tuition affordability assessment, messaging center, and final polish.</p>
+  <ul>
+    <li>Full scholarship application (matching "Pay It Forward" form)</li>
+    <li><strong>Tuition affordability assessment:</strong> detailed financial form, tax return upload, automatic recommended contribution calculation, admin review dashboard with override capability</li>
+    <li>Messaging center: individual + bulk, email + SMS</li>
+    <li>Message templates for common communications</li>
+    <li>Print full application as PDF</li>
+    <li>Final polish: loading states, error handling, mobile responsiveness</li>
+  </ul>
+</div>
+
+<div class="sprint">
+  <div class="sprint-header">
+    <span class="sprint-number">SPRINT 8.5</span>
+    <span class="sprint-title">Public Website</span>
+  </div>
+  <p>Replace jetsschool.org with a modern, premium public website built into the platform.</p>
+  <ul>
+    <li>Home, About, Programs, Faculty, Apply, Contact pages</li>
+    <li>Burgundy/maroon brand design, mobile responsive</li>
+    <li>"Apply Now" flows directly into the application portal</li>
+    <li>Calendly embed for booking consultations</li>
+  </ul>
+</div>
+
+<div class="sprint">
+  <div class="sprint-header">
+    <span class="sprint-number">SPRINT 9</span>
+    <span class="sprint-title">Alumni Management</span>
+  </div>
+  <p>Track all JETS alumni organized by graduation year.</p>
+  <ul>
+    <li>Alumni directory browsable by year</li>
+    <li>Profile pages with photo, contact info, notes</li>
+    <li>Search across all years</li>
+    <li>Bulk import from existing records (CSV)</li>
+    <li>One-click to move a graduating student to alumni</li>
+  </ul>
+</div>
+
+<div class="sprint">
+  <div class="sprint-header">
+    <span class="sprint-number">SPRINT 10</span>
+    <span class="sprint-title">QuickBooks + Donor Management</span>
+  </div>
+  <p>Replace CMS ($79/mo) and connect to QuickBooks for seamless accounting.</p>
+  <ul>
+    <li><strong>QuickBooks:</strong> Auto-sync invoices, payments, and customer records</li>
+    <li><strong>Donors:</strong> Full profiles, donation history, charge credit cards</li>
+    <li><strong>Receipts:</strong> Auto-generate tax-deductible donation receipts</li>
+    <li><strong>Thank You Letters:</strong> Customizable templates, auto-send via email</li>
+    <li><strong>Dashboard:</strong> Total raised, top donors, recent donations</li>
+  </ul>
+</div>
+
+<div class="page-break"></div>
+
+<!-- TECH STACK -->
+<h2>Technology Used</h2>
+<p>Modern, industry-standard tools chosen for reliability, security, and premium design:</p>
+<table>
+  <tr><th style="width:30%">Technology</th><th>What It Does</th></tr>
+  <tr><td><strong>Next.js 15</strong></td><td>The main framework &mdash; builds both the website and the application (used by Netflix, TikTok, Hulu)</td></tr>
+  <tr><td><strong>PostgreSQL</strong></td><td>The database &mdash; stores all student, application, payment, and donor data securely</td></tr>
+  <tr><td><strong>Stripe</strong></td><td>Handles all credit card payments &mdash; application fees, tuition, donations (used by Shopify, Amazon, Google)</td></tr>
+  <tr><td><strong>Twilio</strong></td><td>Sends SMS text messages to parents</td></tr>
+  <tr><td><strong>Resend</strong></td><td>Sends branded emails (application confirmations, document links, receipts)</td></tr>
+  <tr><td><strong>QuickBooks Online API</strong></td><td>Connects to your QuickBooks for automatic invoice &amp; payment syncing</td></tr>
+  <tr><td><strong>Calendly</strong></td><td>Embedded for interview scheduling (you already use this)</td></tr>
+  <tr><td><strong>Tailwind + shadcn/ui</strong></td><td>Premium design components &mdash; makes everything look world-class</td></tr>
+  <tr><td><strong>UploadThing</strong></td><td>Handles student photo and document uploads securely</td></tr>
+</table>
+
+<!-- WHO SEES WHAT -->
+<h2>Who Sees What</h2>
+<table>
+  <tr><th>User Type</th><th>What They Can Access</th></tr>
+  <tr>
+    <td><span class="tag">PARENT</span></td>
+    <td>Their own dashboard, applications, documents to sign, payments, messages, scholarship application</td>
+  </tr>
+  <tr>
+    <td><span class="tag blue">ADMIN (Office)</span></td>
+    <td>Everything &mdash; all applications, all students, dashboard, documents, billing, donors, alumni, messaging, settings</td>
+  </tr>
+  <tr>
+    <td><span class="tag green">PRINCIPAL</span></td>
+    <td>Review queue, application details, accept/reject decisions, review history</td>
+  </tr>
+  <tr>
+    <td><span class="tag gray">COMMITTEE</span></td>
+    <td>Same as principal &mdash; can review and comment on applications assigned to them</td>
+  </tr>
+  <tr>
+    <td><span class="tag gray">PUBLIC</span></td>
+    <td>Website pages (Home, About, Programs, Faculty, Contact), recommendation form (via email link), document signing (via email link)</td>
+  </tr>
+</table>
+
+<!-- WHAT THIS REPLACES -->
+<h2>What This Replaces</h2>
+<table>
+  <tr><th>Current System</th><th>Monthly Cost</th><th>Replaced By</th></tr>
+  <tr><td>Rediker (registration &amp; forms)</td><td>Varies</td><td>Sprints 1-5: Application portal + admin dashboard + review workflow</td></tr>
+  <tr><td>Chabad Management Software</td><td>$79/mo ($948/yr)</td><td>Sprint 10: Donor management, receipts, donation charging</td></tr>
+  <tr><td>Webflow (new website)</td><td>Varies</td><td>Sprint 8.5: Public website built into the platform</td></tr>
+  <tr><td>Manual document signing</td><td>&mdash;</td><td>Sprint 6: Electronic document signing</td></tr>
+  <tr><td>Manual invoicing</td><td>&mdash;</td><td>Sprint 7: Automated billing + QuickBooks sync</td></tr>
+</table>
+
+<div class="footer-note">
+  JETS School Management Platform &bull; Implementation Plan &bull; April 2026<br>
+  Build locally, test thoroughly, launch when ready.
+</div>
+
+</div>
+</body>
+</html>
