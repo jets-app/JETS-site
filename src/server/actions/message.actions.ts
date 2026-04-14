@@ -376,6 +376,86 @@ export async function searchParents(query: string) {
   });
 }
 
+// ---------- Parent → Admin Messaging ----------
+
+export async function sendMessageToAdmin(subject: string, body: string) {
+  const user = await requireAuth();
+
+  if (!subject.trim() || !body.trim()) {
+    throw new Error("Subject and body are required");
+  }
+
+  // Find an admin to route the message to. Prefer the oldest active admin.
+  const admin = await db.user.findFirst({
+    where: { role: "ADMIN", status: "ACTIVE" },
+    orderBy: { createdAt: "asc" },
+    select: { id: true },
+  });
+
+  const fallback = admin
+    ? admin
+    : await db.user.findFirst({
+        where: { role: "ADMIN" },
+        orderBy: { createdAt: "asc" },
+        select: { id: true },
+      });
+
+  if (!fallback) {
+    throw new Error(
+      "No admin is currently available to receive messages. Please try again later."
+    );
+  }
+
+  const message = await db.message.create({
+    data: {
+      senderId: user.id,
+      receiverId: fallback.id,
+      subject: subject.trim(),
+      body: body.trim(),
+      emailSent: false,
+    },
+  });
+
+  return message;
+}
+
+export async function getConversationWithAdmin(parentId?: string) {
+  const user = await requireAuth();
+  const targetParentId = parentId || user.id;
+
+  // Only the parent themselves or an admin may view the conversation
+  if (targetParentId !== user.id && user.role !== "ADMIN") {
+    throw new Error("Unauthorized");
+  }
+
+  // Identify admin user ids
+  const admins = await db.user.findMany({
+    where: { role: "ADMIN" },
+    select: { id: true },
+  });
+  const adminIds = admins.map((a) => a.id);
+
+  if (adminIds.length === 0) {
+    return [];
+  }
+
+  const messages = await db.message.findMany({
+    where: {
+      OR: [
+        { senderId: targetParentId, receiverId: { in: adminIds } },
+        { receiverId: targetParentId, senderId: { in: adminIds } },
+      ],
+    },
+    include: {
+      sender: { select: { id: true, name: true, email: true, role: true } },
+      receiver: { select: { id: true, name: true, email: true, role: true } },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  return messages;
+}
+
 // ---------- Get Academic Years (for bulk filters) ----------
 
 export async function getAcademicYears() {
