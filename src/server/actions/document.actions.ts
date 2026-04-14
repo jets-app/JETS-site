@@ -61,7 +61,7 @@ export async function createDocumentTemplate(data: {
       name: data.name,
       type: data.type,
       htmlContent: data.htmlContent,
-      content: { fields: data.fields ?? [] },
+      content: JSON.parse(JSON.stringify({ fields: data.fields ?? [] })),
     },
   });
 
@@ -92,7 +92,7 @@ export async function updateDocumentTemplate(
       ...(data.name !== undefined && { name: data.name }),
       ...(data.type !== undefined && { type: data.type }),
       ...(data.htmlContent !== undefined && { htmlContent: data.htmlContent }),
-      ...(data.fields !== undefined && { content: { fields: data.fields } }),
+      ...(data.fields !== undefined && { content: JSON.parse(JSON.stringify({ fields: data.fields })) }),
       ...(data.isActive !== undefined && { isActive: data.isActive }),
       version: { increment: 1 },
     },
@@ -622,16 +622,23 @@ export async function checkAllDocumentsSigned(applicationId: string) {
         data: { status: "ENROLLED" },
       });
 
-      // Add a system note
-      await db.applicationNote.create({
-        data: {
-          applicationId,
-          authorId: "system",
-          content:
-            "Status changed from DOCUMENTS_PENDING to ENROLLED. All enrollment documents have been signed.",
-          isInternal: true,
-        },
+      // Add a system note — use the first admin user as the author
+      const adminUser = await db.user.findFirst({
+        where: { role: "ADMIN" },
+        select: { id: true },
       });
+
+      if (adminUser) {
+        await db.applicationNote.create({
+          data: {
+            applicationId,
+            authorId: adminUser.id,
+            content:
+              "Status changed from DOCUMENTS_PENDING to ENROLLED. All enrollment documents have been signed. (Auto-updated)",
+            isInternal: true,
+          },
+        });
+      }
     }
   }
 
@@ -888,7 +895,7 @@ export async function seedDefaultTemplates() {
         name: template.name,
         type: template.type,
         htmlContent: template.htmlContent,
-        content: template.content,
+        content: JSON.parse(JSON.stringify(template.content)),
       },
     });
     seeded++;
