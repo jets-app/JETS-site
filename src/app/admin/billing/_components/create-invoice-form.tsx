@@ -39,7 +39,8 @@ export function CreateInvoiceForm({
 
   function updateLine(idx: number, field: keyof LineItemRow, value: string | number) {
     const updated = [...lineItems];
-    (updated[idx] as Record<string, unknown>)[field] = value;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (updated[idx] as any)[field] = value;
     setLineItems(updated);
   }
 

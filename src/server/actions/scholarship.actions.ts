@@ -140,7 +140,7 @@ export async function submitScholarshipApplication(
       await db.scholarshipApplication.update({
         where: { applicationId },
         data: {
-          financialInfo: data as unknown as Record<string, unknown>,
+          financialInfo: JSON.parse(JSON.stringify(data)),
           affordableAmount: data.scholarshipRequest?.affordableAmount
             ? Math.round(data.scholarshipRequest.affordableAmount * 100)
             : null,
@@ -155,7 +155,7 @@ export async function submitScholarshipApplication(
       await db.scholarshipApplication.create({
         data: {
           applicationId,
-          financialInfo: data as unknown as Record<string, unknown>,
+          financialInfo: JSON.parse(JSON.stringify(data)),
           affordableAmount: data.scholarshipRequest?.affordableAmount
             ? Math.round(data.scholarshipRequest.affordableAmount * 100)
             : null,
