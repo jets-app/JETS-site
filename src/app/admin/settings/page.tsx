@@ -10,13 +10,15 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  Building2,
   FileBarChart,
   CreditCard,
   Mail,
   MessageSquare,
   ArrowRight,
+  Users,
 } from "lucide-react";
+import { getSettings } from "@/server/actions/settings.actions";
+import { SchoolInfoCard } from "./_components/school-info-card";
 
 type SettingCard = {
   title: string;
@@ -26,15 +28,7 @@ type SettingCard = {
   status: "ready" | "coming-soon";
 };
 
-const SETTINGS: SettingCard[] = [
-  {
-    title: "School Info",
-    description:
-      "Academic year, school name, address, and basic organization details.",
-    href: null,
-    icon: Building2,
-    status: "coming-soon",
-  },
+const INTEGRATION_CARDS: SettingCard[] = [
   {
     title: "QuickBooks Integration",
     description:
@@ -66,6 +60,14 @@ const SETTINGS: SettingCard[] = [
     icon: MessageSquare,
     status: "coming-soon",
   },
+  {
+    title: "User Management",
+    description:
+      "Manage admins, principals, reviewers, and parent accounts.",
+    href: null,
+    icon: Users,
+    status: "coming-soon",
+  },
 ];
 
 export default async function AdminSettingsPage() {
@@ -74,6 +76,8 @@ export default async function AdminSettingsPage() {
     redirect("/dashboard");
   }
 
+  const settings = await getSettings();
+
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       <div className="space-y-1">
@@ -81,50 +85,70 @@ export default async function AdminSettingsPage() {
           Settings
         </h1>
         <p className="text-muted-foreground">
-          Configure integrations and school-wide defaults.
+          Configure school defaults, academic year, and integrations.
         </p>
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-4">
-        {SETTINGS.map((setting) => {
-          const Icon = setting.icon;
-          return (
-            <Card key={setting.title} className="flex flex-col">
-              <CardHeader>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-md bg-primary/10 text-primary">
-                      <Icon className="size-5" />
+      {/* Editable school info */}
+      <SchoolInfoCard
+        settings={{
+          currentAcademicYear: settings.currentAcademicYear,
+          applicationFeeAmount: settings.applicationFeeAmount,
+          applicationsOpen: settings.applicationsOpen,
+          schoolName: settings.schoolName,
+          schoolLegalName: settings.schoolLegalName,
+          schoolEin: settings.schoolEin,
+          schoolAddress: settings.schoolAddress,
+          schoolPhone: settings.schoolPhone,
+          schoolEmail: settings.schoolEmail,
+          calendlyUrl: settings.calendlyUrl,
+        }}
+      />
+
+      {/* Integration cards */}
+      <div className="space-y-3">
+        <h2 className="text-lg font-semibold">Integrations & Other</h2>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {INTEGRATION_CARDS.map((setting) => {
+            const Icon = setting.icon;
+            return (
+              <Card key={setting.title} className="flex flex-col">
+                <CardHeader>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-md bg-primary/10 text-primary">
+                        <Icon className="size-5" />
+                      </div>
+                      <div>
+                        <CardTitle>{setting.title}</CardTitle>
+                      </div>
                     </div>
-                    <div>
-                      <CardTitle>{setting.title}</CardTitle>
-                    </div>
+                    {setting.status === "coming-soon" ? (
+                      <Badge variant="outline">Coming soon</Badge>
+                    ) : (
+                      <Badge variant="secondary">Available</Badge>
+                    )}
                   </div>
-                  {setting.status === "coming-soon" ? (
-                    <Badge variant="outline">Coming soon</Badge>
+                  <CardDescription className="pt-2">
+                    {setting.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="mt-auto pt-2">
+                  {setting.href ? (
+                    <LinkButton href={setting.href} variant="outline" size="sm">
+                      Configure
+                      <ArrowRight className="size-3.5" />
+                    </LinkButton>
                   ) : (
-                    <Badge variant="secondary">Available</Badge>
+                    <span className="text-xs text-muted-foreground">
+                      Configuration UI pending
+                    </span>
                   )}
-                </div>
-                <CardDescription className="pt-2">
-                  {setting.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="mt-auto pt-2">
-                {setting.href ? (
-                  <LinkButton href={setting.href} variant="outline" size="sm">
-                    Configure
-                    <ArrowRight className="size-3.5" />
-                  </LinkButton>
-                ) : (
-                  <span className="text-xs text-muted-foreground">
-                    Configuration UI pending
-                  </span>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

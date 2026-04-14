@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   });
 
   if ("error" in result) {
-    baseRedirect.searchParams.set("qb_error", result.error);
+    baseRedirect.searchParams.set("qb_error", result.error ?? "unknown");
   } else {
     baseRedirect.searchParams.set("qb_connected", "1");
   }
