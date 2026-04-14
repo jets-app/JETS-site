@@ -1,0 +1,679 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== ENUMS ====================
+
+enum Role {
+  PARENT
+  ADMIN
+  PRINCIPAL
+  REVIEWER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING_VERIFICATION
+}
+
+enum ApplicationStatus {
+  DRAFT
+  SUBMITTED
+  OFFICE_REVIEW
+  PRINCIPAL_REVIEW
+  INTERVIEW_SCHEDULED
+  INTERVIEW_COMPLETED
+  ACCEPTED
+  DOCUMENTS_PENDING
+  SCHOLARSHIP_REVIEW
+  ENROLLED
+  REJECTED
+  WAITLISTED
+  WITHDRAWN
+}
+
+enum RecommendationStatus {
+  PENDING
+  SENT
+  VIEWED
+  COMPLETED
+  EXPIRED
+}
+
+enum DocumentTemplateType {
+  MEDICAL_FORM
+  STUDENT_HANDBOOK
+  TUITION_CONTRACT
+  ENROLLMENT_AGREEMENT
+  SCHOLARSHIP_CONTRACT
+  PHOTO_RELEASE
+  CUSTOM
+}
+
+enum DocumentStatus {
+  DRAFT
+  SENT
+  VIEWED
+  PARTIALLY_SIGNED
+  COMPLETED
+  EXPIRED
+  VOIDED
+}
+
+enum DocumentRecipientType {
+  PARENT
+  STUDENT
+}
+
+enum ReviewDecision {
+  PENDING
+  APPROVED
+  NEEDS_INFO
+  REJECTED
+}
+
+enum PaymentType {
+  APPLICATION_FEE
+  TUITION
+  REGISTRATION_FEE
+  DONATION
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum ScholarshipStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  DENIED
+}
+
+enum InterviewStatus {
+  PENDING
+  SCHEDULED
+  COMPLETED
+  NO_SHOW
+  CANCELLED
+}
+
+enum DonationFrequency {
+  ONE_TIME
+  MONTHLY
+  QUARTERLY
+  ANNUALLY
+}
+
+// ==================== AUTH (NextAuth) ====================
+
+model User {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  emailVerified DateTime?
+  passwordHash  String?
+  name          String
+  role          Role       @default(PARENT)
+  status        UserStatus @default(PENDING_VERIFICATION)
+  phone         String?
+  avatarUrl     String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+
+  applications     Application[]
+  sentMessages     Message[]           @relation("SentMessages")
+  receivedMessages Message[]           @relation("ReceivedMessages")
+  reviews          ApplicationReview[]
+  notes            ApplicationNote[]
+
+  @@index([role])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ==================== APPLICATION ====================
+
+model Application {
+  id              String            @id @default(cuid())
+  referenceNumber String            @unique
+  status          ApplicationStatus @default(DRAFT)
+  academicYear    String
+
+  parentId String
+  parent   User   @relation(fields: [parentId], references: [id])
+
+  student Student?
+
+  applicationFeePaid   Boolean @default(false)
+  applicationFeeAmount Int     @default(50000)
+  discountCode         String?
+  discountAmount       Int     @default(0)
+
+  currentStep   Int @default(1)
+  completionPct Int @default(0)
+
+  // Form data as JSON for flexibility
+  hebrewNames         Json?
+  fatherInfo          Json?
+  motherInfo          Json?
+  guardianInfo        Json?
+  emergencyContact    Json?
+  siblings            Json?
+  grandparents        Json?
+  schoolHistory       Json?
+  parentQuestions     Json?
+  applicantAssessment Json?
+  studiesInfo         Json?
+  tradePreferences    Json?
+  extracurricular     Json?
+  additionalQuestions Json?
+  essay               String? @db.Text
+
+  submittedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  interviewStatus InterviewStatus @default(PENDING)
+  interviewDate   DateTime?
+  interviewNotes  String?         @db.Text
+
+  documents       Document[]
+  recommendations Recommendation[]
+  reviews         ApplicationReview[]
+  payments        Payment[]
+  notes           ApplicationNote[]
+  scholarship     ScholarshipApplication?
+
+  @@index([parentId])
+  @@index([status])
+  @@index([academicYear])
+}
+
+// ==================== STUDENT ====================
+
+model Student {
+  id            String      @id @default(cuid())
+  applicationId String      @unique
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  firstName     String
+  lastName      String
+  middleName    String?
+  preferredName String?
+  dateOfBirth   DateTime
+  gender        String?
+  photoUrl      String?
+  email         String?
+  phone         String?
+
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  state        String?
+  zipCode      String?
+  country      String? @default("United States")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  alumni Alumni?
+}
+
+// ==================== RECOMMENDATIONS ====================
+
+model Recommendation {
+  id            String               @id @default(cuid())
+  applicationId String
+  application   Application          @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  refereeName     String
+  refereeEmail    String
+  refereePhone    String?
+  refereeRelation String
+
+  token  String               @unique @default(cuid())
+  status RecommendationStatus @default(PENDING)
+
+  // Confidential - not visible to parents
+  responses   Json?
+  submittedAt DateTime?
+
+  sentAt    DateTime  @default(now())
+  viewedAt  DateTime?
+  expiresAt DateTime
+
+  @@index([applicationId])
+  @@index([token])
+}
+
+// ==================== DOCUMENTS & E-SIGNING ====================
+
+model DocumentTemplate {
+  id          String               @id @default(cuid())
+  name        String
+  type        DocumentTemplateType
+  content     Json
+  htmlContent String?              @db.Text
+  isActive    Boolean              @default(true)
+  version     Int                  @default(1)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  documents Document[]
+}
+
+model Document {
+  id            String               @id @default(cuid())
+  applicationId String
+  application   Application          @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  templateId    String?
+  template      DocumentTemplate?    @relation(fields: [templateId], references: [id])
+
+  title         String
+  status        DocumentStatus       @default(DRAFT)
+  recipientType DocumentRecipientType @default(PARENT)
+
+  content        Json?
+  customizedHtml String? @db.Text
+
+  signatureUrl String?
+  signedAt     DateTime?
+  signerName   String?
+  signerIp     String?
+
+  token     String    @unique @default(cuid())
+  sentAt    DateTime?
+  viewedAt  DateTime?
+  expiresAt DateTime?
+
+  pdfUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([applicationId])
+  @@index([token])
+  @@index([status])
+}
+
+// ==================== APPLICATION REVIEW ====================
+
+model ApplicationReview {
+  id            String         @id @default(cuid())
+  applicationId String
+  application   Application    @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  reviewerId    String
+  reviewer      User           @relation(fields: [reviewerId], references: [id])
+
+  department String
+  decision   ReviewDecision @default(PENDING)
+  comments   String?        @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([applicationId])
+  @@index([reviewerId])
+}
+
+model ApplicationNote {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  authorId      String
+  author        User        @relation(fields: [authorId], references: [id])
+  content       String      @db.Text
+  isInternal    Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+
+  @@index([applicationId])
+}
+
+// ==================== PAYMENTS & BILLING ====================
+
+model Payment {
+  id            String        @id @default(cuid())
+  applicationId String?
+  application   Application?  @relation(fields: [applicationId], references: [id])
+
+  type        PaymentType
+  status      PaymentStatus @default(PENDING)
+  amount      Int
+  currency    String        @default("usd")
+  description String?
+
+  stripePaymentIntentId   String? @unique
+  stripeCheckoutSessionId String?
+  stripeReceiptUrl        String?
+
+  paidAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([applicationId])
+  @@index([stripePaymentIntentId])
+}
+
+model Invoice {
+  id            String  @id @default(cuid())
+  invoiceNumber String  @unique
+  applicationId String?
+  parentId      String
+
+  lineItems  Json
+  subtotal   Int
+  tax        Int    @default(0)
+  total      Int
+  amountPaid Int    @default(0)
+
+  status  String   @default("draft")
+  dueDate DateTime
+  paidAt  DateTime?
+
+  stripeInvoiceId String? @unique
+  pdfUrl          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId])
+  @@index([status])
+}
+
+model DiscountCode {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  description String?
+  amountOff   Int?
+  percentOff  Int?
+  maxUses     Int?
+  usedCount   Int       @default(0)
+  isActive    Boolean   @default(true)
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+// ==================== TUITION AFFORDABILITY ====================
+
+model TuitionAssessment {
+  id            String @id @default(cuid())
+  applicationId String @unique
+
+  fatherIncome      Json?
+  motherIncome      Json?
+  totalAnnualIncome Int?
+
+  assets      Json?
+  totalAssets Int?
+
+  liabilities      Json?
+  totalLiabilities Int?
+
+  monthlyExpenses      Json?
+  totalMonthlyExpenses Int?
+
+  householdSize            Int?
+  childrenInTuitionSchools Int?
+
+  taxReturnUrls Json?
+
+  recommendedContribution Int?
+  calculationDetails      Json?
+
+  adminAdjustedAmount Int?
+  adminNotes          String? @db.Text
+  factsRecommendation Int?
+  reviewedAt          DateTime?
+  reviewedBy          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==================== SCHOLARSHIPS ====================
+
+model ScholarshipApplication {
+  id            String            @id @default(cuid())
+  applicationId String            @unique
+  application   Application       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  financialInfo    Json?
+  essayResponse    String?         @db.Text
+  requestedAmount  Int?
+  affordableAmount Int?
+  approvedAmount   Int?
+  status           ScholarshipStatus @default(SUBMITTED)
+  reviewNotes      String?         @db.Text
+
+  taxReturnUrls Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==================== MESSAGING ====================
+
+model Message {
+  id         String  @id @default(cuid())
+  senderId   String
+  sender     User    @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId String?
+  receiver   User?   @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  subject String
+  body    String  @db.Text
+  isRead  Boolean @default(false)
+
+  isBulk    Boolean @default(false)
+  bulkGroup String?
+
+  emailSent Boolean @default(false)
+  smsSent   Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([receiverId, isRead])
+  @@index([senderId])
+}
+
+model MessageTemplate {
+  id      String @id @default(cuid())
+  name    String
+  subject String
+  body    String @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==================== ALUMNI ====================
+
+model Alumni {
+  id        String   @id @default(cuid())
+  studentId String?  @unique
+  student   Student? @relation(fields: [studentId], references: [id])
+
+  firstName        String
+  lastName         String
+  photoUrl         String?
+  email            String?
+  phone            String?
+  address          String?
+  graduationYear   Int
+  programCompleted String?
+  notes            String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([graduationYear])
+}
+
+// ==================== DONORS ====================
+
+model Donor {
+  id        String   @id @default(cuid())
+  firstName String
+  lastName  String
+  email     String?
+  phone     String?
+  address   String?
+  city      String?
+  state     String?
+  zipCode   String?
+  country   String?  @default("United States")
+  notes     String?  @db.Text
+  tags      String[]
+
+  stripeCustomerId String? @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  donations Donation[]
+  receipts  DonorReceipt[]
+
+  @@index([lastName, firstName])
+}
+
+model Donation {
+  id      String @id @default(cuid())
+  donorId String
+  donor   Donor  @relation(fields: [donorId], references: [id], onDelete: Cascade)
+
+  amount    Int
+  currency  String          @default("usd")
+  frequency DonationFrequency @default(ONE_TIME)
+  method    String?
+  campaign  String?
+  purpose   String?
+  notes     String?
+
+  stripePaymentIntentId String? @unique
+  stripeSubscriptionId  String?
+
+  receiptSent Boolean @default(false)
+  receiptId   String?
+
+  donatedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@index([donorId])
+  @@index([campaign])
+  @@index([donatedAt])
+}
+
+model DonorReceipt {
+  id      String @id @default(cuid())
+  donorId String
+  donor   Donor  @relation(fields: [donorId], references: [id], onDelete: Cascade)
+
+  type      String
+  year      Int?
+  amount    Int
+  pdfUrl    String?
+  emailSent Boolean  @default(false)
+  sentAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([donorId])
+}
+
+model DonorLetterTemplate {
+  id      String @id @default(cuid())
+  name    String
+  type    String
+  subject String
+  body    String @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==================== SYSTEM SETTINGS ====================
+
+model SystemSettings {
+  id String @id @default("settings")
+
+  currentAcademicYear    String  @default("2026-2027")
+  applicationFeeAmount   Int     @default(50000)
+  applicationsOpen       Boolean @default(true)
+
+  schoolName      String @default("JETS School")
+  schoolLegalName String @default("JETS Synagogue")
+  schoolEin       String @default("68-0500418")
+  schoolAddress   String @default("Granada Hills, Los Angeles, CA")
+  schoolPhone     String @default("(818) 831-3000")
+  schoolEmail     String @default("info@jetsschool.org")
+
+  stripeConnected     Boolean @default(false)
+  quickbooksConnected Boolean @default(false)
+  calendlyUrl         String?
+
+  updatedAt DateTime @updatedAt
+}
+
+// ==================== QUICKBOOKS SYNC ====================
+
+model QuickBooksSync {
+  id         String    @id @default(cuid())
+  entityType String
+  entityId   String
+  qbId       String?
+  status     String    @default("pending")
+  errorMsg   String?
+  syncedAt   DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([entityType, entityId])
+  @@index([status])
+}
