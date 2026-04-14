@@ -29,6 +29,8 @@ import {
 } from "lucide-react";
 import { PayApplicationFeeButton } from "./_components/pay-fee-button";
 import { ApplyDiscountForm } from "./_components/apply-discount-form";
+import { TuitionPortal } from "./_components/tuition-portal";
+import { getTuitionSummary } from "@/server/actions/tuition-payment.actions";
 
 function formatCents(cents: number): string {
   return `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
@@ -38,28 +40,38 @@ function getInvoiceStatusBadge(status: string) {
   const config: Record<string, { label: string; className: string }> = {
     draft: {
       label: "Draft",
-      className: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+      className:
+        "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
     },
     sent: {
       label: "Sent",
-      className: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+      className:
+        "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
     },
     paid: {
       label: "Paid",
-      className: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+      className:
+        "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
     },
     partially_paid: {
       label: "Partially Paid",
-      className: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+      className:
+        "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
     },
     overdue: {
       label: "Overdue",
       className: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
     },
   };
-  const c = config[status] ?? { label: status, className: "bg-gray-100 text-gray-700" };
+  const c = config[status] ?? {
+    label: status,
+    className: "bg-gray-100 text-gray-700",
+  };
   return (
-    <Badge variant="outline" className={`border-transparent font-medium ${c.className}`}>
+    <Badge
+      variant="outline"
+      className={`border-transparent font-medium ${c.className}`}
+    >
       {c.label}
     </Badge>
   );
@@ -71,7 +83,85 @@ export default async function ParentPaymentsPage() {
     redirect("/login");
   }
 
-  // Get applications for this parent
+  // Load the primary application (one per parent currently)
+  const primaryApp = await db.application.findFirst({
+    where: { parentId: session.user.id },
+    include: {
+      student: { select: { firstName: true, lastName: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const isEnrolled = primaryApp?.status === "ENROLLED";
+
+  // ==================== ENROLLED: Full tuition portal ====================
+  if (isEnrolled && primaryApp) {
+    const [summaryRes, invoices, paymentsRaw] = await Promise.all([
+      getTuitionSummary(primaryApp.id),
+      db.invoice.findMany({
+        where: { applicationId: primaryApp.id },
+        orderBy: { dueDate: "asc" },
+      }),
+      db.payment.findMany({
+        where: { applicationId: primaryApp.id },
+        orderBy: { createdAt: "desc" },
+        take: 50,
+      }),
+    ]);
+
+    if ("error" in summaryRes || !summaryRes.summary) {
+      return (
+        <div className="max-w-5xl mx-auto">
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-sm text-muted-foreground">
+                Unable to load tuition details. Please try again later.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    const now = new Date();
+    const invoiceRows = invoices.map((inv) => ({
+      id: inv.id,
+      invoiceNumber: inv.invoiceNumber,
+      dueDate: inv.dueDate.toISOString(),
+      total: inv.total,
+      amountPaid: inv.amountPaid,
+      status: inv.status,
+      displayStatus:
+        inv.status !== "paid" && inv.dueDate < now ? "overdue" : inv.status,
+      paidAt: inv.paidAt ? inv.paidAt.toISOString() : null,
+    }));
+
+    const paymentRows = paymentsRaw.map((p) => ({
+      id: p.id,
+      createdAt: p.createdAt.toISOString(),
+      description: p.description,
+      amount: p.amount,
+      status: p.status,
+      type: p.type,
+    }));
+
+    const studentName = primaryApp.student
+      ? `${primaryApp.student.firstName} ${primaryApp.student.lastName}`
+      : "Student";
+
+    return (
+      <div className="max-w-6xl mx-auto">
+        <TuitionPortal
+          studentName={studentName}
+          summary={summaryRes.summary}
+          invoices={invoiceRows}
+          payments={paymentRows}
+        />
+      </div>
+    );
+  }
+
+  // ==================== PRE-ENROLLMENT: Original application fee UI ====================
   const applications = await db.application.findMany({
     where: { parentId: session.user.id },
     select: {
@@ -86,13 +176,11 @@ export default async function ParentPaymentsPage() {
     orderBy: { createdAt: "desc" },
   });
 
-  // Get invoices
   const invoices = await db.invoice.findMany({
     where: { parentId: session.user.id },
     orderBy: { dueDate: "asc" },
   });
 
-  // Mark overdue
   const now = new Date();
   const invoicesWithOverdue = invoices.map((inv) => ({
     ...inv,
@@ -100,7 +188,6 @@ export default async function ParentPaymentsPage() {
       inv.status !== "paid" && inv.dueDate < now ? "overdue" : inv.status,
   }));
 
-  // Get payments
   const applicationIds = applications.map((a) => a.id);
   const payments = await db.payment.findMany({
     where: { applicationId: { in: applicationIds } },
@@ -113,7 +200,6 @@ export default async function ParentPaymentsPage() {
     take: 20,
   });
 
-  // Calculate totals
   const totalOutstanding = invoicesWithOverdue
     .filter((i) => i.status !== "paid")
     .reduce((s, i) => s + (i.total - i.amountPaid), 0);
@@ -143,8 +229,12 @@ export default async function ParentPaymentsPage() {
                 <DollarSign className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Outstanding Balance</p>
-                <p className="text-2xl font-bold">{formatCents(totalOutstanding)}</p>
+                <p className="text-sm text-muted-foreground">
+                  Outstanding Balance
+                </p>
+                <p className="text-2xl font-bold">
+                  {formatCents(totalOutstanding)}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -189,7 +279,9 @@ export default async function ParentPaymentsPage() {
               <CreditCard className="h-5 w-5" />
               Application Fees
             </CardTitle>
-            <CardDescription>Pay the application fee for each of your applications.</CardDescription>
+            <CardDescription>
+              Pay the application fee for each of your applications.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -197,7 +289,8 @@ export default async function ParentPaymentsPage() {
                 const studentName = app.student
                   ? `${app.student.firstName} ${app.student.lastName}`
                   : "Student";
-                const finalAmount = app.applicationFeeAmount - app.discountAmount;
+                const finalAmount =
+                  app.applicationFeeAmount - app.discountAmount;
 
                 return (
                   <div
@@ -215,7 +308,8 @@ export default async function ParentPaymentsPage() {
                         Fee: {formatCents(finalAmount)}
                         {app.discountCode && (
                           <span className="ml-2 text-green-600">
-                            (Discount: {app.discountCode} &mdash; {formatCents(app.discountAmount)} off)
+                            (Discount: {app.discountCode} &mdash;{" "}
+                            {formatCents(app.discountAmount)} off)
                           </span>
                         )}
                       </div>
@@ -283,7 +377,9 @@ export default async function ParentPaymentsPage() {
               <TableBody>
                 {invoicesWithOverdue.map((inv) => (
                   <TableRow key={inv.id}>
-                    <TableCell className="font-medium">{inv.invoiceNumber}</TableCell>
+                    <TableCell className="font-medium">
+                      {inv.invoiceNumber}
+                    </TableCell>
                     <TableCell>
                       {new Date(inv.dueDate).toLocaleDateString("en-US", {
                         month: "short",
@@ -296,7 +392,9 @@ export default async function ParentPaymentsPage() {
                     <TableCell className="font-medium">
                       {formatCents(inv.total - inv.amountPaid)}
                     </TableCell>
-                    <TableCell>{getInvoiceStatusBadge(inv.displayStatus)}</TableCell>
+                    <TableCell>
+                      {getInvoiceStatusBadge(inv.displayStatus)}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -363,11 +461,15 @@ export default async function ParentPaymentsPage() {
                         year: "numeric",
                       })}
                     </TableCell>
-                    <TableCell>{payment.description || payment.type.replace(/_/g, " ")}</TableCell>
+                    <TableCell>
+                      {payment.description || payment.type.replace(/_/g, " ")}
+                    </TableCell>
                     <TableCell className="text-muted-foreground">
                       {payment.application?.referenceNumber ?? "N/A"}
                     </TableCell>
-                    <TableCell className="font-medium">{formatCents(payment.amount)}</TableCell>
+                    <TableCell className="font-medium">
+                      {formatCents(payment.amount)}
+                    </TableCell>
                     <TableCell>
                       <Badge
                         variant="outline"
@@ -379,7 +481,9 @@ export default async function ParentPaymentsPage() {
                               : "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
                         }`}
                       >
-                        {payment.status === "SUCCEEDED" ? "Paid" : payment.status}
+                        {payment.status === "SUCCEEDED"
+                          ? "Paid"
+                          : payment.status}
                       </Badge>
                     </TableCell>
                   </TableRow>

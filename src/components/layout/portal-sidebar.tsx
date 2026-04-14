@@ -57,11 +57,23 @@ export function PortalSidebar({
     ? ACCEPTED_STATUSES.includes(applicationStatus)
     : false;
 
+  const isEnrolled = applicationStatus === "ENROLLED";
+
   const navItems = [
     { label: "Dashboard", href: "/portal/dashboard", icon: LayoutDashboard, show: true },
-    { label: "My Application", href: "/portal/applications", icon: FileText, show: true },
+    {
+      label: isEnrolled ? "Student Details" : "My Application",
+      href: "/portal/applications",
+      icon: isEnrolled ? GraduationCap : FileText,
+      show: true,
+    },
     { label: "Documents", href: "/portal/documents", icon: FileSignature, show: showDocuments },
-    { label: "Payments", href: "/portal/payments", icon: CreditCard, show: showPayments },
+    {
+      label: isEnrolled ? "Tuition" : "Payments",
+      href: "/portal/payments",
+      icon: CreditCard,
+      show: showPayments,
+    },
     { label: "Scholarship", href: "/portal/scholarship", icon: BookOpen, show: showScholarship },
     { label: "Messages", href: "/portal/messages", icon: MessageSquare, show: true },
     { label: "Profile", href: "/portal/profile", icon: User, show: true },
@@ -117,7 +129,7 @@ export function PortalSidebar({
                 JETS School
               </span>
               <span className="text-[10px] text-sidebar-foreground/50 leading-none mt-1">
-                Parent Portal
+                {isEnrolled ? "Student Portal" : "Parent Portal"}
               </span>
             </div>
           </div>

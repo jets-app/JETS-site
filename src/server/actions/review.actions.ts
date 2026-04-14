@@ -2,7 +2,17 @@
 
 import { db } from "@/server/db";
 import { auth } from "@/server/auth";
+import { revalidatePath } from "next/cache";
 import type { ApplicationStatus } from "@prisma/client";
+
+function revalidateApplicationViews(applicationId: string) {
+  revalidatePath(`/admin/applications/${applicationId}`);
+  revalidatePath(`/review/${applicationId}`);
+  revalidatePath("/admin/applications");
+  revalidatePath("/admin/dashboard");
+  revalidatePath("/review");
+  revalidatePath("/portal/dashboard");
+}
 
 // ---------- Helpers ----------
 
@@ -89,6 +99,7 @@ export async function beginOfficeReview(applicationId: string) {
     }),
   ]);
 
+  revalidateApplicationViews(applicationId);
   return updated;
 }
 
@@ -125,6 +136,7 @@ export async function forwardToPrincipals(
     }),
   ]);
 
+  revalidateApplicationViews(applicationId);
   return updated;
 }
 
@@ -148,6 +160,7 @@ export async function sendToDocuments(applicationId: string) {
     }),
   ]);
 
+  revalidateApplicationViews(applicationId);
   return updated;
 }
 
@@ -193,6 +206,7 @@ export async function moveToInterview(
   // TODO: Send email to parent with Calendly link
   // The Calendly URL is shown in the UI for now
 
+  revalidateApplicationViews(applicationId);
   return updated;
 }
 
@@ -224,6 +238,7 @@ export async function markInterviewCompleted(
     }),
   ]);
 
+  revalidateApplicationViews(applicationId);
   return updated;
 }
 
@@ -260,6 +275,7 @@ export async function acceptStudent(
     }),
   ]);
 
+  revalidateApplicationViews(applicationId);
   return updated;
 }
 
@@ -301,6 +317,7 @@ export async function rejectStudent(
     }),
   ]);
 
+  revalidateApplicationViews(applicationId);
   return updated;
 }
 
@@ -342,6 +359,7 @@ export async function requestMoreInfo(
     }),
   ]);
 
+  revalidateApplicationViews(applicationId);
   return updated;
 }
 

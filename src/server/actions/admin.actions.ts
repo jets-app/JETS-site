@@ -2,6 +2,7 @@
 
 import { db } from "@/server/db";
 import { auth } from "@/server/auth";
+import { revalidatePath } from "next/cache";
 import type { ApplicationStatus } from "@prisma/client";
 
 // ---------- Helpers ----------
@@ -245,6 +246,7 @@ export async function addApplicationNote(
     },
   });
 
+  revalidatePath(`/admin/applications/${applicationId}`);
   return note;
 }
 
@@ -285,6 +287,9 @@ export async function updateApplicationStatus(
     }),
   ]);
 
+  revalidatePath(`/admin/applications/${applicationId}`);
+  revalidatePath("/admin/applications");
+  revalidatePath("/admin/dashboard");
   return updatedApplication;
 }
 
