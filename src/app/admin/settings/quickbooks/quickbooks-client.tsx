@@ -127,7 +127,7 @@ export function QuickBooksSettingsClient({
         toast.error(r.error);
         return;
       }
-      if (r.url) {
+      if ("url" in r && r.url) {
         window.location.href = r.url;
       }
     });
@@ -151,7 +151,7 @@ export function QuickBooksSettingsClient({
       const r = await bulkSyncAll();
       if ("error" in r) {
         toast.error(r.error);
-      } else if (r.results) {
+      } else if ("results" in r && r.results) {
         const { customers, invoices, payments } = r.results;
         toast.success(
           `Synced — Customers: ${customers.synced}, Invoices: ${invoices.synced}, Payments: ${payments.synced}`
