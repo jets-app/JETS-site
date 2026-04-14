@@ -19,6 +19,13 @@ export default function NewApplicationPage() {
       if (cancelled) return;
 
       if (result.error) {
+        // If they already have an application, redirect to it
+        if (result.existingApplicationId) {
+          router.replace(
+            `/portal/applications/${result.existingApplicationId}/edit`
+          );
+          return;
+        }
         setError(result.error);
         return;
       }
