@@ -2,7 +2,15 @@
 
 import { useEffect, useCallback, useState } from "react";
 import { useApplicationFormStore } from "@/stores/application-form.store";
-import { STEP_LABELS } from "@/lib/validators/application";
+import {
+  STEP_LABELS,
+  type ParentsInfoData,
+  type FamilyInfoData,
+  type SchoolHistoryData,
+  type ParentQuestionsData,
+  type ApplicantAssessmentData,
+  type StudiesTradesData,
+} from "@/lib/validators/application";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
@@ -132,72 +140,51 @@ export function ApplicationFormWizard({
           : undefined,
         parentsInfo:
           application.fatherInfo || application.motherInfo
-            ? {
-                father: (application.fatherInfo as Record<string, string>) ?? {
+            ? ({
+                father: application.fatherInfo ?? {
                   firstName: "",
                   lastName: "",
                 },
-                mother: (application.motherInfo as Record<string, string>) ?? {
+                mother: application.motherInfo ?? {
                   firstName: "",
                   lastName: "",
                 },
                 hasGuardian: !!application.guardianInfo,
-                guardian: application.guardianInfo
-                  ? (application.guardianInfo as Record<string, string>)
-                  : undefined,
+                guardian: application.guardianInfo ?? undefined,
                 emergencyContact:
-                  (application.emergencyContact as {
-                    name: string;
-                    phone: string;
-                    relationship?: string;
-                  }) ?? { name: "", phone: "" },
-              }
+                  application.emergencyContact ?? { name: "", phone: "" },
+              } as ParentsInfoData)
             : undefined,
         familyInfo: application.grandparents
-          ? {
+          ? ({
               closeToSiblings:
-                (
-                  application.grandparents as {
-                    closeToSiblings?: boolean;
-                  }
-                ).closeToSiblings ?? false,
-              siblings: (application.siblings as Array<{
-                name: string;
-                age?: string;
-                phone?: string;
-                email?: string;
-              }>) ?? undefined,
+                (application.grandparents as Record<string, unknown>)
+                  .closeToSiblings ?? false,
+              siblings: application.siblings ?? undefined,
               grandparentsFather: (
-                application.grandparents as {
-                  grandparentsFather?: { names?: string; email?: string };
-                }
+                application.grandparents as Record<string, unknown>
               ).grandparentsFather,
               grandparentsMother: (
-                application.grandparents as {
-                  grandparentsMother?: { names?: string; email?: string };
-                }
+                application.grandparents as Record<string, unknown>
               ).grandparentsMother,
-            }
+            } as FamilyInfoData)
           : undefined,
         schoolHistory: application.schoolHistory
-          ? (application.schoolHistory as Record<string, unknown>)
+          ? (application.schoolHistory as SchoolHistoryData)
           : undefined,
         parentQuestions: application.parentQuestions
-          ? (application.parentQuestions as Record<string, unknown>)
+          ? (application.parentQuestions as ParentQuestionsData)
           : undefined,
         applicantAssessment: application.applicantAssessment
-          ? (application.applicantAssessment as Record<string, unknown>)
+          ? (application.applicantAssessment as ApplicantAssessmentData)
           : undefined,
         studiesTrades:
           application.studiesInfo || application.tradePreferences
-            ? {
-                academics: (application.studiesInfo as Record<string, string>) ?? {},
-                trades:
-                  (application.tradePreferences as Record<string, string>) ??
-                  {},
-                extracurricular:
-                  (application.extracurricular as Record<string, string>) ?? {},
-              }
+            ? ({
+                academics: application.studiesInfo ?? {},
+                trades: application.tradePreferences ?? {},
+                extracurricular: application.extracurricular ?? {},
+              } as StudiesTradesData)
             : undefined,
         essayAdditional: application.essay
           ? {

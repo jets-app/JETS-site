@@ -36,6 +36,11 @@ import {
   updateApplicationStatus,
   addApplicationNote,
 } from "@/server/actions/admin.actions";
+import {
+  beginOfficeReview,
+  forwardToPrincipals,
+  sendToDocuments,
+} from "@/server/actions/review.actions";
 import type { ApplicationStatus } from "@prisma/client";
 
 interface ApplicationDetailViewProps {
@@ -89,7 +94,25 @@ export function ApplicationDetailView({
     }
     startTransition(async () => {
       try {
-        await updateApplicationStatus(application.id, newStatus);
+        // Use specialized actions for certain transitions to create review records
+        if (
+          newStatus === "OFFICE_REVIEW" &&
+          application.status === "SUBMITTED"
+        ) {
+          await beginOfficeReview(application.id);
+        } else if (
+          newStatus === "PRINCIPAL_REVIEW" &&
+          application.status === "OFFICE_REVIEW"
+        ) {
+          await forwardToPrincipals(application.id);
+        } else if (
+          newStatus === "DOCUMENTS_PENDING" &&
+          application.status === "ACCEPTED"
+        ) {
+          await sendToDocuments(application.id);
+        } else {
+          await updateApplicationStatus(application.id, newStatus);
+        }
         router.refresh();
       } catch (err: any) {
         alert(err.message ?? "Failed to update status");
