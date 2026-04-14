@@ -65,7 +65,7 @@ const emergencyContactSchema = z.object({
 export const parentsInfoSchema = z.object({
   father: parentInfoSchema,
   mother: parentInfoSchema,
-  hasGuardian: z.boolean().default(false),
+  hasGuardian: z.boolean().optional(),
   guardian: guardianSchema.optional(),
   emergencyContact: emergencyContactSchema,
 });
@@ -86,7 +86,7 @@ const grandparentsSchema = z.object({
 });
 
 export const familyInfoSchema = z.object({
-  closeToSiblings: z.boolean().default(false),
+  closeToSiblings: z.boolean().optional(),
   siblings: z.array(siblingSchema).optional(),
   grandparentsFather: grandparentsSchema.optional(),
   grandparentsMother: grandparentsSchema.optional(),
@@ -120,17 +120,17 @@ export type SchoolHistoryData = z.infer<typeof schoolHistorySchema>;
 
 // ==================== Step 6: Parent Questions ====================
 export const parentQuestionsSchema = z.object({
-  timeElapsed: z.boolean().default(false),
+  timeElapsed: z.boolean().optional(),
   timeElapsedDetails: z.string().optional(),
   lastTwoSummers: z.string().optional(),
   learningStrengths: z.string().optional(),
   socialStrengths: z.string().optional(),
   midosTovos: z.string().optional(),
-  specialLearningNeeds: z.boolean().default(false),
+  specialLearningNeeds: z.boolean().optional(),
   specialLearningNeedsDetails: z.string().optional(),
-  physicalEmotionalNeeds: z.boolean().default(false),
+  physicalEmotionalNeeds: z.boolean().optional(),
   physicalEmotionalNeedsDetails: z.string().optional(),
-  counselingHistory: z.boolean().default(false),
+  counselingHistory: z.boolean().optional(),
   counselingHistoryDetails: z.string().optional(),
   maturityAssessment: z.string().optional(),
 });
@@ -200,7 +200,7 @@ export { tradeInterestValues };
 // ==================== Step 9: Essay & Additional ====================
 export const essayAdditionalSchema = z.object({
   essay: z.string().min(50, "Please write at least a few sentences for your essay"),
-  gedInterest: z.boolean().default(false),
+  gedInterest: z.boolean().optional(),
   gemarahMaterial: z.string().optional(),
   chassidusMaterial: z.string().optional(),
   halachaMaterial: z.string().optional(),

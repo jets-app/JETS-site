@@ -58,7 +58,7 @@ export function SchoolHistoryStep({
     store.setIsSaving(false);
 
     if (result.success) {
-      store.setStepData("schoolHistory", data as Record<string, unknown>);
+      store.setStepData("schoolHistory", data);
       store.markStepComplete(5);
       store.setIsDirty(false);
       reset(data);
