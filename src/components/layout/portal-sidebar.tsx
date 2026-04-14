@@ -25,7 +25,7 @@ const navItems = [
   { label: "Profile", href: "/portal/profile", icon: User },
 ];
 
-export function PortalSidebar() {
+export function PortalSidebar({ unreadCount = 0 }: { unreadCount?: number }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -100,6 +100,11 @@ export function PortalSidebar() {
               >
                 <item.icon className="h-4 w-4 shrink-0" />
                 {item.label}
+                {item.label === "Messages" && unreadCount > 0 && (
+                  <span className="ml-auto inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
               </Link>
             );
           })}
