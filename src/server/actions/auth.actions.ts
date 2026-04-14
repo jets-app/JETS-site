@@ -21,31 +21,36 @@ export async function registerUser(formData: {
 
   const { name, email, phone, password } = validated.data;
 
-  // Check if user already exists
-  const existingUser = await db.user.findUnique({
-    where: { email: email.toLowerCase() },
-  });
+  try {
+    // Check if user already exists
+    const existingUser = await db.user.findUnique({
+      where: { email: email.toLowerCase() },
+    });
 
-  if (existingUser) {
-    return { error: "An account with this email already exists" };
+    if (existingUser) {
+      return { error: "An account with this email already exists" };
+    }
+
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    // Create user (default role: PARENT)
+    await db.user.create({
+      data: {
+        name,
+        email: email.toLowerCase(),
+        phone: phone || null,
+        passwordHash,
+        role: "PARENT",
+        status: "ACTIVE",
+      },
+    });
+
+    return { success: "Account created successfully. Please log in." };
+  } catch (error) {
+    console.error("Registration error:", error);
+    return { error: "Something went wrong. Please try again later." };
   }
-
-  // Hash password
-  const passwordHash = await bcrypt.hash(password, 12);
-
-  // Create user (default role: PARENT)
-  await db.user.create({
-    data: {
-      name,
-      email: email.toLowerCase(),
-      phone: phone || null,
-      passwordHash,
-      role: "PARENT",
-      status: "ACTIVE",
-    },
-  });
-
-  return { success: "Account created successfully. Please log in." };
 }
 
 export async function loginUser(formData: {
