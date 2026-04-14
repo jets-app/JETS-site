@@ -50,18 +50,22 @@ export const authConfig: NextAuthConfig = {
 
       const role = auth?.user?.role;
 
-      if (path.startsWith("/admin") && role !== "ADMIN") {
-        return Response.redirect(new URL("/dashboard", nextUrl));
+      // Admin routes — only ADMIN role
+      if (path.startsWith("/admin")) {
+        if (role !== "ADMIN") {
+          return Response.redirect(new URL("/portal/dashboard", nextUrl));
+        }
       }
 
-      if (
-        path.startsWith("/review") &&
-        role !== "PRINCIPAL" &&
-        role !== "REVIEWER" &&
-        role !== "ADMIN"
-      ) {
-        return Response.redirect(new URL("/dashboard", nextUrl));
+      // Review routes — PRINCIPAL, REVIEWER, or ADMIN
+      if (path.startsWith("/review")) {
+        if (role !== "PRINCIPAL" && role !== "REVIEWER" && role !== "ADMIN") {
+          return Response.redirect(new URL("/portal/dashboard", nextUrl));
+        }
       }
+
+      // Portal routes — PARENT role (or any logged-in user)
+      // No restriction needed — all logged-in users can access portal
 
       return true;
     },
