@@ -13,21 +13,59 @@ import {
   Menu,
   X,
   GraduationCap,
+  FileSignature,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
-const navItems = [
-  { label: "Dashboard", href: "/portal/dashboard", icon: LayoutDashboard },
-  { label: "My Applications", href: "/portal/applications", icon: FileText },
-  { label: "Payments", href: "/portal/payments", icon: CreditCard },
-  { label: "Messages", href: "/portal/messages", icon: MessageSquare },
-  { label: "Profile", href: "/portal/profile", icon: User },
+// Statuses where tuition/payments become available
+const ACCEPTED_STATUSES = [
+  "ACCEPTED",
+  "DOCUMENTS_PENDING",
+  "SCHOLARSHIP_REVIEW",
+  "ENROLLED",
 ];
 
-export function PortalSidebar({ unreadCount = 0 }: { unreadCount?: number }) {
+// Statuses where documents section shows
+const DOCUMENTS_STATUSES = [
+  "ACCEPTED",
+  "DOCUMENTS_PENDING",
+  "SCHOLARSHIP_REVIEW",
+  "ENROLLED",
+];
+
+interface PortalSidebarProps {
+  unreadCount?: number;
+  applicationStatus?: string | null;
+}
+
+export function PortalSidebar({
+  unreadCount = 0,
+  applicationStatus = null,
+}: PortalSidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const showPayments = applicationStatus
+    ? ACCEPTED_STATUSES.includes(applicationStatus)
+    : false;
+  const showDocuments = applicationStatus
+    ? DOCUMENTS_STATUSES.includes(applicationStatus)
+    : false;
+  const showScholarship = applicationStatus
+    ? ACCEPTED_STATUSES.includes(applicationStatus)
+    : false;
+
+  const navItems = [
+    { label: "Dashboard", href: "/portal/dashboard", icon: LayoutDashboard, show: true },
+    { label: "My Application", href: "/portal/applications", icon: FileText, show: true },
+    { label: "Documents", href: "/portal/documents", icon: FileSignature, show: showDocuments },
+    { label: "Payments", href: "/portal/payments", icon: CreditCard, show: showPayments },
+    { label: "Scholarship", href: "/portal/scholarship", icon: BookOpen, show: showScholarship },
+    { label: "Messages", href: "/portal/messages", icon: MessageSquare, show: true },
+    { label: "Profile", href: "/portal/profile", icon: User, show: true },
+  ].filter((item) => item.show);
 
   return (
     <>
@@ -38,7 +76,11 @@ export function PortalSidebar({ unreadCount = 0 }: { unreadCount?: number }) {
           size="icon"
           onClick={() => setMobileOpen(!mobileOpen)}
         >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          {mobileOpen ? (
+            <X className="h-5 w-5" />
+          ) : (
+            <Menu className="h-5 w-5" />
+          )}
         </Button>
         <div className="flex items-center gap-2 ml-3">
           <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">

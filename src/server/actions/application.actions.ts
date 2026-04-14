@@ -33,8 +33,22 @@ export async function createApplication() {
   }
 
   try {
+    // One application per account — check if they already have one
+    const existingApplication = await db.application.findFirst({
+      where: { parentId: session.user.id },
+      select: { id: true, status: true },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (existingApplication) {
+      return {
+        error: "You already have an application.",
+        existingApplicationId: existingApplication.id,
+      };
+    }
+
     // Get system settings for academic year
-    let settings = await db.systemSettings.findFirst({
+    const settings = await db.systemSettings.findFirst({
       where: { id: "settings" },
     });
 

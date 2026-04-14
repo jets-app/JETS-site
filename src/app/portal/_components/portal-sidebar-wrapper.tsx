@@ -9,16 +9,31 @@ export async function PortalSidebarWrapper({
   userId,
 }: PortalSidebarWrapperProps) {
   let unreadCount = 0;
+  let applicationStatus: string | null = null;
 
   if (userId) {
     try {
-      unreadCount = await db.message.count({
-        where: { receiverId: userId, isRead: false },
-      });
+      const [msgCount, application] = await Promise.all([
+        db.message.count({
+          where: { receiverId: userId, isRead: false },
+        }),
+        db.application.findFirst({
+          where: { parentId: userId },
+          select: { status: true },
+          orderBy: { createdAt: "desc" },
+        }),
+      ]);
+      unreadCount = msgCount;
+      applicationStatus = application?.status ?? null;
     } catch {
-      // Silently fail — sidebar still renders without badge
+      // Silently fail
     }
   }
 
-  return <PortalSidebar unreadCount={unreadCount} />;
+  return (
+    <PortalSidebar
+      unreadCount={unreadCount}
+      applicationStatus={applicationStatus}
+    />
+  );
 }
