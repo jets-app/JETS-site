@@ -1,14 +1,17 @@
 import { auth } from "@/server/auth";
 import { redirect } from "next/navigation";
+import { getDashboardStats } from "@/server/actions/admin.actions";
+import { LinkButton } from "@/components/shared/link-button";
+import { StatusBadge } from "@/components/shared/status-badge";
 import {
   FileText,
   Users,
   Clock,
   CheckCircle2,
-  AlertCircle,
   TrendingUp,
   DollarSign,
   GraduationCap,
+  ArrowRight,
 } from "lucide-react";
 
 export default async function AdminDashboard() {
@@ -18,6 +21,8 @@ export default async function AdminDashboard() {
     redirect("/dashboard");
   }
 
+  const stats = await getDashboardStats();
+
   return (
     <div className="max-w-7xl mx-auto space-y-8">
       {/* Header */}
@@ -26,7 +31,8 @@ export default async function AdminDashboard() {
           Admin Dashboard
         </h1>
         <p className="text-muted-foreground">
-          Overview of applications, students, and school operations.
+          Overview of applications, students, and school operations for{" "}
+          {stats.academicYear}.
         </p>
       </div>
 
@@ -35,28 +41,28 @@ export default async function AdminDashboard() {
         {[
           {
             label: "Total Applications",
-            value: "0",
-            change: "2026-2027",
+            value: stats.total.toString(),
+            change: stats.academicYear,
             icon: FileText,
             color: "text-primary bg-primary/10",
           },
           {
             label: "Pending Review",
-            value: "0",
-            change: "Needs attention",
+            value: stats.pending.toString(),
+            change: stats.pending > 0 ? "Needs attention" : "All clear",
             icon: Clock,
             color: "text-amber-600 bg-amber-500/10",
           },
           {
             label: "Accepted",
-            value: "0",
+            value: stats.accepted.toString(),
             change: "This year",
             icon: CheckCircle2,
             color: "text-emerald-600 bg-emerald-500/10",
           },
           {
             label: "Enrolled",
-            value: "0",
+            value: stats.enrolled.toString(),
             change: "Active students",
             icon: GraduationCap,
             color: "text-blue-600 bg-blue-500/10",
@@ -86,14 +92,52 @@ export default async function AdminDashboard() {
         <div className="rounded-xl border bg-card">
           <div className="px-6 py-4 border-b flex items-center justify-between">
             <h2 className="font-semibold">Recent Applications</h2>
-            <span className="text-xs text-muted-foreground">View all</span>
+            <LinkButton
+              href="/admin/applications"
+              variant="ghost"
+              size="xs"
+            >
+              View all
+              <ArrowRight className="h-3 w-3 ml-1" />
+            </LinkButton>
           </div>
-          <div className="p-12 text-center">
-            <FileText className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">
-              No applications yet
-            </p>
-          </div>
+          {stats.recentApplications.length > 0 ? (
+            <div className="divide-y">
+              {stats.recentApplications.map((app: any) => (
+                <a
+                  key={app.id}
+                  href={`/admin/applications/${app.id}`}
+                  className="flex items-center justify-between px-6 py-3 hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
+                      {app.student
+                        ? `${app.student.firstName[0]}${app.student.lastName[0]}`
+                        : "--"}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">
+                        {app.student
+                          ? `${app.student.firstName} ${app.student.lastName}`
+                          : app.referenceNumber}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(app.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <StatusBadge status={app.status} />
+                </a>
+              ))}
+            </div>
+          ) : (
+            <div className="p-12 text-center">
+              <FileText className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">
+                No applications yet
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Quick Actions */}
@@ -105,15 +149,15 @@ export default async function AdminDashboard() {
             {[
               {
                 label: "Review Applications",
-                desc: "Check pending applications",
+                desc: `${stats.pending} pending review`,
                 icon: FileText,
-                href: "/admin/applications",
+                href: "/admin/applications?status=SUBMITTED",
               },
               {
-                label: "Send Message",
-                desc: "Message parents or students",
+                label: "All Applications",
+                desc: "Browse and manage all applications",
                 icon: Users,
-                href: "/admin/messages",
+                href: "/admin/applications",
               },
               {
                 label: "Manage Billing",
