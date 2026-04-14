@@ -2,6 +2,7 @@
 
 import { db } from "@/server/db";
 import { auth } from "@/server/auth";
+import { revalidatePath } from "next/cache";
 import type { ApplicationStatus } from "@prisma/client";
 
 // ---------- Helpers ----------
@@ -56,6 +57,8 @@ export async function sendMessage(
     },
   });
 
+  revalidatePath("/admin/messages");
+  revalidatePath("/portal/messages");
   return message;
 }
 
@@ -118,6 +121,8 @@ export async function sendBulkMessage(
     })),
   });
 
+  revalidatePath("/admin/messages");
+  revalidatePath("/portal/messages");
   return { count: messages.count };
 }
 
@@ -227,6 +232,8 @@ export async function getMessage(messageId: string) {
       data: { isRead: true },
     });
     message.isRead = true;
+    revalidatePath("/portal/messages");
+    revalidatePath("/admin/messages");
   }
 
   return message;
@@ -255,6 +262,8 @@ export async function markAsRead(messageId: string) {
     data: { isRead: true },
   });
 
+  revalidatePath("/portal/messages");
+  revalidatePath("/admin/messages");
   return { success: true };
 }
 
@@ -273,6 +282,8 @@ export async function markAllAsRead(userId?: string) {
     data: { isRead: true },
   });
 
+  revalidatePath("/portal/messages");
+  revalidatePath("/admin/messages");
   return { success: true };
 }
 
@@ -314,13 +325,15 @@ export async function createMessageTemplate(
     throw new Error("Name, subject, and body are required");
   }
 
-  return db.messageTemplate.create({
+  const template = await db.messageTemplate.create({
     data: {
       name: name.trim(),
       subject: subject.trim(),
       body: body.trim(),
     },
   });
+  revalidatePath("/admin/messages");
+  return template;
 }
 
 export async function updateMessageTemplate(
@@ -334,7 +347,7 @@ export async function updateMessageTemplate(
     throw new Error("Template not found");
   }
 
-  return db.messageTemplate.update({
+  const template = await db.messageTemplate.update({
     where: { id },
     data: {
       ...(data.name !== undefined && { name: data.name.trim() }),
@@ -342,6 +355,8 @@ export async function updateMessageTemplate(
       ...(data.body !== undefined && { body: data.body.trim() }),
     },
   });
+  revalidatePath("/admin/messages");
+  return template;
 }
 
 export async function deleteMessageTemplate(id: string) {
@@ -353,6 +368,7 @@ export async function deleteMessageTemplate(id: string) {
   }
 
   await db.messageTemplate.delete({ where: { id } });
+  revalidatePath("/admin/messages");
   return { success: true };
 }
 
@@ -416,6 +432,8 @@ export async function sendMessageToAdmin(subject: string, body: string) {
     },
   });
 
+  revalidatePath("/portal/messages");
+  revalidatePath("/admin/messages");
   return message;
 }
 

@@ -122,6 +122,46 @@ export default async function PortalDashboard() {
     orderBy: { createdAt: "desc" },
   });
 
+  // Upcoming tuition invoice (for enrolled students)
+  let upcomingInvoice: {
+    id: string;
+    invoiceNumber: string;
+    dueDate: Date;
+    balance: number;
+  } | null = null;
+  if (application?.status === "ENROLLED") {
+    const next = await db.invoice.findFirst({
+      where: {
+        applicationId: application.id,
+        status: { not: "paid" },
+      },
+      orderBy: { dueDate: "asc" },
+    });
+    if (next) {
+      upcomingInvoice = {
+        id: next.id,
+        invoiceNumber: next.invoiceNumber,
+        dueDate: next.dueDate,
+        balance: next.total - next.amountPaid,
+      };
+    }
+  }
+
+  // Signed documents for enrolled students
+  let signedDocuments: { id: string; title: string; token: string; signedAt: Date | null }[] = [];
+  if (application?.status === "ENROLLED") {
+    const docs = await db.document.findMany({
+      where: {
+        applicationId: application.id,
+        status: "COMPLETED",
+      },
+      orderBy: { signedAt: "desc" },
+      select: { id: true, title: true, token: true, signedAt: true },
+      take: 6,
+    });
+    signedDocuments = docs;
+  }
+
   const status = application?.status ?? null;
   const statusConfig = status ? STATUS_CONFIG[status] : null;
   const StatusIcon = statusConfig?.icon ?? FileText;
@@ -273,15 +313,38 @@ export default async function PortalDashboard() {
       priority: 1,
     });
   } else if (isEnrolled) {
-    tasks.push({
-      title: "Tuition Payment Portal",
-      description: "View your tuition, scholarship, and monthly payment schedule.",
-      icon: CreditCard,
-      href: "/portal/payments",
-      action: "View Tuition",
-      color: "text-emerald-600 bg-emerald-500/10",
-      priority: 1,
-    });
+    if (upcomingInvoice) {
+      const dueStr = upcomingInvoice.dueDate.toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      });
+      const isOverdue = upcomingInvoice.dueDate < new Date();
+      tasks.push({
+        title: isOverdue
+          ? `Overdue Tuition Payment — ${dueStr}`
+          : `Upcoming Tuition Payment Due ${dueStr}`,
+        description: `Invoice ${upcomingInvoice.invoiceNumber} · $${(upcomingInvoice.balance / 100).toFixed(2)} due.`,
+        icon: CreditCard,
+        href: "/portal/payments",
+        action: "Pay Tuition",
+        color: isOverdue
+          ? "text-red-600 bg-red-500/10"
+          : "text-emerald-600 bg-emerald-500/10",
+        priority: 1,
+      });
+    } else {
+      tasks.push({
+        title: "Tuition Payment Portal",
+        description:
+          "View your tuition, scholarship, and monthly payment schedule.",
+        icon: CreditCard,
+        href: "/portal/payments",
+        action: "View Tuition",
+        color: "text-emerald-600 bg-emerald-500/10",
+        priority: 1,
+      });
+    }
   }
 
   // Messages always at the end
@@ -308,7 +371,7 @@ export default async function PortalDashboard() {
         </h1>
         <p className="text-muted-foreground">
           {isEnrolled && studentName
-            ? `${studentName} · Enrolled Student`
+            ? `${studentName} · Enrolled Student at JETS`
             : studentName
               ? `Application for ${studentName}`
               : "Manage your application and track your progress."}
@@ -382,19 +445,50 @@ export default async function PortalDashboard() {
         </div>
       )}
 
-      {/* ============ ENROLLED STUDENT TUITION OVERVIEW ============ */}
+      {/* ============ ENROLLED STUDENT DOCUMENTS ============ */}
       {isEnrolled && (
         <div className="rounded-xl border bg-card p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold">Student Forms</h2>
+            <h2 className="font-semibold">Student Documents</h2>
             <LinkButton href="/portal/documents" size="sm" variant="outline">
               View All
               <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
             </LinkButton>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Your signed enrollment documents (handbook, medical form, tuition contract, enrollment agreement) are available for reference.
-          </p>
+          {signedDocuments.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Your signed enrollment documents will appear here (handbook,
+              medical form, tuition contract, enrollment agreement).
+            </p>
+          ) : (
+            <div className="grid sm:grid-cols-2 gap-2">
+              {signedDocuments.map((doc) => (
+                <a
+                  key={doc.id}
+                  href={`/d/${doc.token}`}
+                  className="flex items-center gap-3 rounded-lg border p-3 hover:border-primary/30 hover:bg-muted/30 transition-colors"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{doc.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Signed{" "}
+                      {doc.signedAt
+                        ? new Date(doc.signedAt).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })
+                        : "—"}
+                    </p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

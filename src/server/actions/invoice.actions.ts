@@ -3,6 +3,10 @@
 import { db } from "@/server/db";
 import { auth } from "@/server/auth";
 import { revalidatePath } from "next/cache";
+import {
+  triggerInvoiceAutoSync,
+  triggerPaymentAutoSync,
+} from "@/server/actions/quickbooks.actions";
 
 // ==================== Generate Invoice Number ====================
 async function generateInvoiceNumber(): Promise<string> {
@@ -65,6 +69,10 @@ export async function createInvoice(
     });
 
     revalidatePath("/admin/billing");
+
+    // Fire-and-forget QuickBooks auto-sync
+    void triggerInvoiceAutoSync(invoice.id);
+
     return { success: true, invoice };
   } catch (error) {
     console.error("Error creating invoice:", error);
@@ -123,6 +131,10 @@ export async function updateInvoice(
     });
 
     revalidatePath("/admin/billing");
+
+    // Fire-and-forget QuickBooks auto-sync for updated invoice
+    void triggerInvoiceAutoSync(invoice.id);
+
     return { success: true, invoice };
   } catch (error) {
     console.error("Error updating invoice:", error);
@@ -185,7 +197,7 @@ export async function recordInvoicePayment(invoiceId: string, amount: number) {
     const newAmountPaid = invoice.amountPaid + amount;
     const isPaidInFull = newAmountPaid >= invoice.total;
 
-    await db.$transaction([
+    const [, payment] = await db.$transaction([
       db.invoice.update({
         where: { id: invoiceId },
         data: {
@@ -208,6 +220,11 @@ export async function recordInvoicePayment(invoiceId: string, amount: number) {
 
     revalidatePath("/admin/billing");
     revalidatePath("/portal/payments");
+
+    // Fire-and-forget QuickBooks auto-sync
+    void triggerInvoiceAutoSync(invoiceId);
+    void triggerPaymentAutoSync(payment.id);
+
     return { success: true, isPaidInFull, remaining: invoice.total - newAmountPaid };
   } catch (error) {
     console.error("Error recording payment:", error);

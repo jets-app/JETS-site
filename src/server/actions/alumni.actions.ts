@@ -2,6 +2,7 @@
 
 import { db } from "@/server/db";
 import { auth } from "@/server/auth";
+import { revalidatePath } from "next/cache";
 
 // ---------- Helpers ----------
 
@@ -117,6 +118,7 @@ export async function createAlumni(data: AlumniFormData) {
     },
   });
 
+  revalidatePath("/admin/alumni");
   return alumni;
 }
 
@@ -138,6 +140,8 @@ export async function updateAlumni(id: string, data: AlumniFormData) {
     },
   });
 
+  revalidatePath("/admin/alumni");
+  revalidatePath(`/admin/alumni/${id}`);
   return alumni;
 }
 
@@ -145,6 +149,7 @@ export async function deleteAlumni(id: string) {
   await requireAdmin();
 
   await db.alumni.delete({ where: { id } });
+  revalidatePath("/admin/alumni");
   return { success: true };
 }
 
@@ -186,6 +191,7 @@ export async function moveToAlumni(studentId: string, graduationYear: number) {
     },
   });
 
+  revalidatePath("/admin/alumni");
   return alumni;
 }
 

@@ -2,6 +2,7 @@
 
 import { db } from "@/server/db";
 import { auth } from "@/server/auth";
+import { revalidatePath } from "next/cache";
 import type { DonationFrequency } from "@prisma/client";
 
 // ---------- Helpers ----------
@@ -162,6 +163,7 @@ export async function createDonor(data: DonorFormData) {
     },
   });
 
+  revalidatePath("/admin/donors");
   return donor;
 }
 
@@ -185,6 +187,8 @@ export async function updateDonor(id: string, data: DonorFormData) {
     },
   });
 
+  revalidatePath("/admin/donors");
+  revalidatePath(`/admin/donors/${id}`);
   return donor;
 }
 
@@ -192,6 +196,7 @@ export async function deleteDonor(id: string) {
   await requireAdmin();
 
   await db.donor.delete({ where: { id } });
+  revalidatePath("/admin/donors");
   return { success: true };
 }
 
@@ -213,6 +218,8 @@ export async function addDonation(donorId: string, data: DonationFormData) {
     },
   });
 
+  revalidatePath("/admin/donors");
+  revalidatePath(`/admin/donors/${donorId}`);
   return donation;
 }
 

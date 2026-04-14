@@ -3,6 +3,7 @@
 import { db } from "@/server/db";
 import { auth } from "@/server/auth";
 import { revalidatePath } from "next/cache";
+import { triggerPaymentAutoSync } from "@/server/actions/quickbooks.actions";
 
 // ==================== Helper: Format cents to dollars ====================
 export async function formatCents(cents: number): Promise<string> {
@@ -44,7 +45,7 @@ export async function createApplicationFeeCheckout(applicationId: string) {
     const finalAmount = application.applicationFeeAmount - application.discountAmount;
 
     // Mock: Mark fee as paid and create payment record
-    await db.$transaction([
+    const [payment] = await db.$transaction([
       db.payment.create({
         data: {
           applicationId,
@@ -63,6 +64,9 @@ export async function createApplicationFeeCheckout(applicationId: string) {
 
     revalidatePath("/portal/payments");
     revalidatePath(`/portal/applications/${applicationId}`);
+
+    // Fire-and-forget QuickBooks auto-sync
+    void triggerPaymentAutoSync(payment.id);
 
     // In production, this would return a Stripe checkout URL
     return { success: true, message: "Application fee marked as paid (mock)." };
@@ -230,6 +234,10 @@ export async function recordManualPayment(
 
     revalidatePath("/admin/billing");
     revalidatePath("/portal/payments");
+
+    // Fire-and-forget QuickBooks auto-sync
+    void triggerPaymentAutoSync(payment.id);
+
     return { success: true, payment };
   } catch (error) {
     console.error("Error recording payment:", error);
@@ -260,7 +268,7 @@ export async function markApplicationFeePaid(applicationId: string) {
 
     const finalAmount = application.applicationFeeAmount - application.discountAmount;
 
-    await db.$transaction([
+    const [payment] = await db.$transaction([
       db.payment.create({
         data: {
           applicationId,
@@ -279,6 +287,10 @@ export async function markApplicationFeePaid(applicationId: string) {
 
     revalidatePath("/admin/billing");
     revalidatePath("/portal/payments");
+
+    // Fire-and-forget QuickBooks auto-sync
+    void triggerPaymentAutoSync(payment.id);
+
     return { success: true };
   } catch (error) {
     console.error("Error marking fee paid:", error);
