@@ -54,7 +54,7 @@ export async function createInvoice(
         invoiceNumber,
         parentId,
         applicationId: applicationId || null,
-        lineItems: lineItems as unknown as Record<string, unknown>[],
+        lineItems: JSON.parse(JSON.stringify(lineItems)),
         subtotal,
         tax: 0,
         total: subtotal,
@@ -103,7 +103,7 @@ export async function updateInvoice(
 
     if (data.lineItems) {
       const subtotal = data.lineItems.reduce((sum, item) => sum + item.total, 0);
-      updateData.lineItems = data.lineItems as unknown as Record<string, unknown>[];
+      updateData.lineItems = JSON.parse(JSON.stringify(data.lineItems));
       updateData.subtotal = subtotal;
       updateData.total = subtotal + (data.tax ?? existing.tax);
     }

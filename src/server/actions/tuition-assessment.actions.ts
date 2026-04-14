@@ -99,14 +99,14 @@ export async function submitTuitionAssessment(
     });
 
     const assessmentData = {
-      fatherIncome: data.fatherIncome as unknown as Record<string, unknown>,
-      motherIncome: data.motherIncome as unknown as Record<string, unknown>,
+      fatherIncome: data.fatherIncome ? JSON.parse(JSON.stringify(data.fatherIncome)) : undefined,
+      motherIncome: data.motherIncome ? JSON.parse(JSON.stringify(data.motherIncome)) : undefined,
       totalAnnualIncome: Math.round(totalAnnualIncome * 100), // store in cents
-      assets: data.assets as unknown as Record<string, unknown>,
+      assets: data.assets ? JSON.parse(JSON.stringify(data.assets)) : undefined,
       totalAssets: Math.round(totalAssets * 100),
-      liabilities: data.liabilities as unknown as Record<string, unknown>,
+      liabilities: data.liabilities ? JSON.parse(JSON.stringify(data.liabilities)) : undefined,
       totalLiabilities: Math.round(totalLiabilities * 100),
-      monthlyExpenses: data.monthlyExpenses as unknown as Record<string, unknown>,
+      monthlyExpenses: data.monthlyExpenses ? JSON.parse(JSON.stringify(data.monthlyExpenses)) : undefined,
       totalMonthlyExpenses: Math.round(totalMonthlyExpenses * 100),
       householdSize: data.householdSize ?? null,
       childrenInTuitionSchools: data.childrenInTuitionSchools ?? null,
@@ -216,7 +216,7 @@ export async function calculateRecommendedContribution(assessmentId: string) {
       where: { id: assessmentId },
       data: {
         recommendedContribution: recommended,
-        calculationDetails: calculationDetails as unknown as Record<string, unknown>,
+        calculationDetails: JSON.parse(JSON.stringify(calculationDetails)),
       },
     });
 
