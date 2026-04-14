@@ -49,8 +49,9 @@ export default function RegisterPage() {
     if (result.success) {
       setSuccess(result.success);
       setTimeout(() => {
-        router.push("/login");
-      }, 2000);
+        router.push("/dashboard");
+        router.refresh();
+      }, 1500);
     }
   }
 

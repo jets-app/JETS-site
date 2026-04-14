@@ -33,6 +33,8 @@ export const authConfig: NextAuthConfig = {
         "/login",
         "/register",
         "/verify-email",
+        "/forgot-password",
+        "/reset-password",
       ];
       const isPublicRoute =
         publicRoutes.includes(path) ||
