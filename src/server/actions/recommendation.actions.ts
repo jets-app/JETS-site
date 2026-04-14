@@ -269,6 +269,71 @@ export async function resendRecommendationRequest(
   }
 }
 
+// ==================== Resend Recommendation Request (Parent/Owner) ====================
+
+export async function resendRecommendationByOwner(
+  recommendationId: string
+) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "You must be logged in." };
+  }
+
+  try {
+    const recommendation = await db.recommendation.findUnique({
+      where: { id: recommendationId },
+      include: {
+        application: {
+          select: { id: true, parentId: true },
+        },
+      },
+    });
+
+    if (!recommendation) {
+      return { error: "Recommendation not found." };
+    }
+
+    const isOwner = recommendation.application.parentId === session.user.id;
+    const isAdmin = session.user.role === "ADMIN";
+
+    if (!isOwner && !isAdmin) {
+      return {
+        error: "You do not have permission to resend this request.",
+      };
+    }
+
+    if (recommendation.status === "COMPLETED") {
+      return { error: "This recommendation has already been submitted." };
+    }
+
+    // Reset expiry to 30 days from now
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
+    await db.recommendation.update({
+      where: { id: recommendationId },
+      data: {
+        status: "SENT",
+        expiresAt,
+        sentAt: new Date(),
+      },
+    });
+
+    // TODO: Send email to referee with the recommendation link
+    // The link will be: ${process.env.NEXT_PUBLIC_APP_URL}/r/${recommendation.token}
+
+    const { revalidatePath } = await import("next/cache");
+    revalidatePath(
+      `/portal/applications/${recommendation.application.id}/recommendations`
+    );
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error resending recommendation (owner):", error);
+    return { error: "Something went wrong. Please try again." };
+  }
+}
+
 // ==================== Get Recommendation by Token (Public - No Auth) ====================
 
 export async function getRecommendationByToken(token: string) {

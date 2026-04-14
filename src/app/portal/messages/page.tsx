@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import {
   getInbox,
   getUnreadCount,
+  getConversationWithAdmin,
 } from "@/server/actions/message.actions";
 import { PortalMessagesClient } from "./_components/portal-messages-client";
 
@@ -12,9 +13,10 @@ export default async function PortalMessagesPage() {
     redirect("/login");
   }
 
-  const [inbox, unreadCount] = await Promise.all([
+  const [inbox, unreadCount, conversation] = await Promise.all([
     getInbox(session.user.id),
     getUnreadCount(session.user.id),
+    getConversationWithAdmin(session.user.id),
   ]);
 
   return (
@@ -22,7 +24,8 @@ export default async function PortalMessagesPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Messages</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Messages from JETS School administration.
+          View messages from JETS School administration and send questions to
+          the admin office.
         </p>
       </div>
 
@@ -30,6 +33,7 @@ export default async function PortalMessagesPage() {
         initialInbox={JSON.parse(JSON.stringify(inbox))}
         unreadCount={unreadCount}
         userId={session.user.id}
+        initialConversation={JSON.parse(JSON.stringify(conversation))}
       />
     </div>
   );
