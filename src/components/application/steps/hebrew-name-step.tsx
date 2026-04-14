@@ -10,16 +10,16 @@ import { useApplicationFormStore } from "@/stores/application-form.store";
 import { updateApplicationStep } from "@/server/actions/application.actions";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Save, Loader2 } from "lucide-react";
+import React from "react";
 
 interface StepProps {
   applicationId: string;
   readOnly?: boolean;
+  formRef?: React.RefObject<HTMLFormElement | null>;
   onSaved?: () => void;
 }
 
-export function HebrewNameStep({ applicationId, readOnly, onSaved }: StepProps) {
+export function HebrewNameStep({ applicationId, readOnly, formRef, onSaved }: StepProps) {
   const store = useApplicationFormStore();
   const existing = store.formData.hebrewNames;
 
@@ -52,7 +52,7 @@ export function HebrewNameStep({ applicationId, readOnly, onSaved }: StepProps) 
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <form ref={formRef} onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       <div className="space-y-1">
         <h2 className="text-xl font-semibold">Hebrew Name</h2>
         <p className="text-sm text-muted-foreground">
@@ -108,18 +108,6 @@ export function HebrewNameStep({ applicationId, readOnly, onSaved }: StepProps) 
         </div>
       </div>
 
-      {!readOnly && (
-        <div className="flex justify-end">
-          <Button type="submit" disabled={store.isSaving}>
-            {store.isSaving ? (
-              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-            ) : (
-              <Save className="mr-1.5 h-4 w-4" />
-            )}
-            Save &amp; Continue
-          </Button>
-        </div>
-      )}
     </form>
   );
 }

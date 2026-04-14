@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState, useRef } from "react";
 import { useApplicationFormStore } from "@/stores/application-form.store";
 import {
   STEP_LABELS,
@@ -15,9 +15,7 @@ import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
   ArrowRight,
-  Save,
   Check,
-  AlertCircle,
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -84,6 +82,7 @@ export function ApplicationFormWizard({
 }) {
   const store = useApplicationFormStore();
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
 
   // Hydrate store from server data on mount
   useEffect(() => {
@@ -232,6 +231,13 @@ export function ApplicationFormWizard({
     setTimeout(() => setSaveMessage(null), 3000);
   }, []);
 
+  // "Next" triggers the current step's form submit, which saves and then advances
+  const handleNext = useCallback(() => {
+    if (formRef.current) {
+      formRef.current.requestSubmit();
+    }
+  }, []);
+
   const isSubmitted = application.status !== "DRAFT";
   const currentStep = store.currentStep;
 
@@ -239,7 +245,14 @@ export function ApplicationFormWizard({
     const stepProps = {
       applicationId: application.id,
       readOnly: isSubmitted,
-      onSaved: () => showSaveNotification("Progress saved"),
+      formRef,
+      onSaved: () => {
+        showSaveNotification("Progress saved");
+        // Advance to next step after save
+        if (currentStep < 10) {
+          store.goToNextStep();
+        }
+      },
     };
 
     switch (currentStep) {
@@ -330,6 +343,7 @@ export function ApplicationFormWizard({
             return (
               <button
                 key={label}
+                type="button"
                 onClick={() => store.setCurrentStep(stepNum)}
                 className={cn(
                   "flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all text-center",
@@ -384,7 +398,7 @@ export function ApplicationFormWizard({
         {renderStep()}
       </div>
 
-      {/* Navigation */}
+      {/* Navigation — single Next button that saves + advances */}
       {!isSubmitted && (
         <div className="flex items-center justify-between pt-2">
           <Button
@@ -404,9 +418,22 @@ export function ApplicationFormWizard({
               </span>
             )}
             {currentStep < 10 && (
-              <Button onClick={() => store.goToNextStep()} disabled={store.isSaving}>
-                Next
-                <ArrowRight className="ml-1.5 h-4 w-4" />
+              <Button
+                onClick={handleNext}
+                disabled={store.isSaving}
+                className="shadow-md shadow-primary/20"
+              >
+                {store.isSaving ? (
+                  <>
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    Next
+                    <ArrowRight className="ml-1.5 h-4 w-4" />
+                  </>
+                )}
               </Button>
             )}
           </div>

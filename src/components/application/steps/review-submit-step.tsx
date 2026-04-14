@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import React, { useState, useTransition } from "react";
 import { useApplicationFormStore } from "@/stores/application-form.store";
 import {
   addRecommendation,
@@ -28,6 +28,7 @@ import { STEP_LABELS } from "@/lib/validators/application";
 interface StepProps {
   applicationId: string;
   readOnly?: boolean;
+  formRef?: React.RefObject<HTMLFormElement | null>;
   onSaved?: () => void;
   application: {
     id: string;
@@ -51,6 +52,7 @@ interface StepProps {
 export function ReviewSubmitStep({
   applicationId,
   readOnly,
+  formRef,
   onSaved,
   application,
 }: StepProps) {
