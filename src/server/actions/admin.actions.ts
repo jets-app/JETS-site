@@ -371,8 +371,8 @@ export async function getAcademicYears() {
   return years.map((y) => y.academicYear);
 }
 
-export function getValidTransitions(
+export async function getValidTransitions(
   currentStatus: ApplicationStatus
-): ApplicationStatus[] {
+): Promise<ApplicationStatus[]> {
   return STATUS_TRANSITIONS[currentStatus] ?? [];
 }
