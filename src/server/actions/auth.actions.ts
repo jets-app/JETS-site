@@ -46,7 +46,18 @@ export async function registerUser(formData: {
       },
     });
 
-    return { success: "Account created successfully. Please log in." };
+    // Auto-login after registration
+    try {
+      await signIn("credentials", {
+        email: email.toLowerCase(),
+        password,
+        redirect: false,
+      });
+    } catch {
+      // If auto-login fails, still return success — they can log in manually
+    }
+
+    return { success: "Account created successfully!" };
   } catch (error) {
     console.error("Registration error:", error);
     return { error: "Something went wrong. Please try again later." };
