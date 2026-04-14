@@ -5,7 +5,7 @@ import { auth } from "@/server/auth";
 import { revalidatePath } from "next/cache";
 
 // ==================== Helper: Format cents to dollars ====================
-export function formatCents(cents: number): string {
+export async function formatCents(cents: number): Promise<string> {
   return `$${(cents / 100).toFixed(2)}`;
 }
 

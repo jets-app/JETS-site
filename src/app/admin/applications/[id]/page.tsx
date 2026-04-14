@@ -22,7 +22,7 @@ export default async function ApplicationDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const validTransitions = getValidTransitions(application.status);
+  const validTransitions = await getValidTransitions(application.status);
 
   return (
     <ApplicationDetailView
