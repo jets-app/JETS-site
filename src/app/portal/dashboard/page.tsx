@@ -427,7 +427,7 @@ export default async function PortalDashboard() {
               },
               {
                 step: "Enrolled",
-                done: status === "ENROLLED",
+                done: (status as string) === "ENROLLED",
               },
             ].map((item, idx) => (
               <div key={item.step} className="flex items-center gap-3">
