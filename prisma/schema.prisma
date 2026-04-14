@@ -668,6 +668,17 @@ model SystemSettings {
   quickbooksConnected Boolean @default(false)
   calendlyUrl         String?
 
+  // QuickBooks Online OAuth tokens & settings
+  qbAccessToken      String?   @db.Text
+  qbRefreshToken     String?   @db.Text
+  qbRealmId          String?
+  qbTokenExpiresAt   DateTime?
+  qbCompanyName      String?
+  qbLastSyncAt       DateTime?
+  qbAutoSyncInvoices Boolean   @default(true)
+  qbAutoSyncPayments Boolean   @default(true)
+  qbAutoSyncCustomers Boolean  @default(true)
+
   updatedAt DateTime @updatedAt
 }
 
