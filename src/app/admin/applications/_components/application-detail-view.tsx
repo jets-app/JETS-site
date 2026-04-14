@@ -31,6 +31,7 @@ import {
   Calendar,
   Shield,
   AlertCircle,
+  FileSignature,
 } from "lucide-react";
 import {
   updateApplicationStatus,
@@ -41,6 +42,8 @@ import {
   forwardToPrincipals,
   sendToDocuments,
 } from "@/server/actions/review.actions";
+import { DocumentStatusTracker } from "@/components/documents/document-status-tracker";
+import { SendEnrollmentDocuments } from "@/components/documents/send-enrollment-documents";
 import type { ApplicationStatus } from "@prisma/client";
 
 interface ApplicationDetailViewProps {
@@ -684,6 +687,32 @@ export function ApplicationDetailView({
               </CardContent>
             </Card>
           )}
+
+          {/* Enrollment Documents */}
+          <Card>
+            <CardHeader className="border-b">
+              <CardTitle className="flex items-center gap-2">
+                <FileSignature className="h-4 w-4 text-primary" />
+                Enrollment Documents
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-4">
+              {(application.status === "ACCEPTED" ||
+                application.status === "DOCUMENTS_PENDING" ||
+                application.status === "ENROLLED") && (
+                <SendEnrollmentDocuments
+                  applicationId={application.id}
+                  hasExistingDocuments={
+                    (application.documents?.length ?? 0) > 0
+                  }
+                />
+              )}
+              <DocumentStatusTracker
+                documents={application.documents ?? []}
+                applicationId={application.id}
+              />
+            </CardContent>
+          </Card>
 
           {/* Internal Notes */}
           <Card>
