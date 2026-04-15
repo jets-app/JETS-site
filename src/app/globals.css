@@ -440,6 +440,145 @@
     box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.3), 0 0 24px rgba(251, 191, 36, 0.15);
   }
 
+  /* ===== V2: Warm Editorial Heritage ===== */
+  .v2-root {
+    --v2-parchment: #f5ede0;
+    --v2-parchment-deep: #ebe0cd;
+    --v2-parchment-light: #faf5ea;
+    --v2-ink: #1a1510;
+    --v2-ink-muted: #5a4f42;
+    --v2-ink-faint: #8a7d6c;
+    --v2-burgundy: #6b0012;
+    --v2-burgundy-dark: #4a000d;
+    --v2-navy: #1a2942;
+    --v2-gold: #a88a3d;
+    --v2-rule: #c9b896;
+    --v2-rule-soft: #dccba6;
+    background-color: var(--v2-parchment);
+    color: var(--v2-ink);
+    font-family: var(--font-editorial), "EB Garamond", ui-serif, Georgia, serif;
+    font-size: 17px;
+    line-height: 1.55;
+  }
+  .v2-root ::selection {
+    background: #6b001230;
+    color: var(--v2-ink);
+  }
+  .v2-paper {
+    background-color: var(--v2-parchment);
+    background-image:
+      radial-gradient(at 20% 10%, #f5ede020 0, transparent 50%),
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+  }
+  .v2-display {
+    font-family: var(--font-editorial-display), "Playfair Display", "EB Garamond", ui-serif, Georgia, serif;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    line-height: 1.05;
+  }
+  .v2-editorial {
+    font-family: var(--font-editorial), "EB Garamond", ui-serif, Georgia, serif;
+  }
+  .v2-sans {
+    font-family: var(--font-sans), "Inter", ui-sans-serif, system-ui, sans-serif;
+  }
+  .v2-kicker {
+    font-family: var(--font-sans), "Inter", ui-sans-serif, system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--v2-burgundy);
+  }
+  .v2-smallcaps {
+    font-family: var(--font-sans), "Inter", ui-sans-serif, system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .v2-rule {
+    border-color: var(--v2-rule);
+  }
+  .v2-hr {
+    height: 1px;
+    background: var(--v2-rule);
+    border: 0;
+  }
+  .v2-hr-soft {
+    height: 1px;
+    background: var(--v2-rule-soft);
+    border: 0;
+  }
+  .v2-double-rule {
+    border-top: 1px solid var(--v2-rule);
+    border-bottom: 1px solid var(--v2-rule);
+    padding: 3px 0;
+  }
+  .v2-double-rule-inner {
+    border-top: 1px solid var(--v2-rule);
+    border-bottom: 1px solid var(--v2-rule);
+  }
+  .v2-drop-cap::first-letter {
+    font-family: var(--font-editorial-display), "Playfair Display", Georgia, serif;
+    font-weight: 600;
+    float: left;
+    font-size: 5.2em;
+    line-height: 0.88;
+    padding-right: 0.08em;
+    padding-top: 0.04em;
+    margin-bottom: -0.1em;
+    color: var(--v2-burgundy);
+  }
+  .v2-ornament {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    color: var(--v2-gold);
+    letter-spacing: 0.4em;
+    font-size: 12px;
+  }
+  .v2-ornament::before,
+  .v2-ornament::after {
+    content: "";
+    height: 1px;
+    background: var(--v2-rule);
+    flex: 1;
+    max-width: 120px;
+  }
+  .v2-link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-position: 0% 100%;
+    background-repeat: no-repeat;
+    background-size: 0% 1px;
+    transition: background-size 0.4s ease;
+  }
+  .v2-link-underline:hover {
+    background-size: 100% 1px;
+  }
+  .v2-pullquote {
+    font-family: var(--font-editorial-display), "Playfair Display", Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--v2-burgundy);
+    line-height: 1.18;
+    letter-spacing: -0.01em;
+  }
+  .v2-byline {
+    font-family: var(--font-sans), "Inter", sans-serif;
+    font-size: 10.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--v2-ink-muted);
+  }
+  .v2-column-divider > * + * {
+    border-left: 1px solid var(--v2-rule);
+  }
+  @media (max-width: 768px) {
+    .v2-column-divider > * + * { border-left: 0; border-top: 1px solid var(--v2-rule); }
+  }
+
   /* Reduced motion */
   @media (prefers-reduced-motion: reduce) {
     .animate-marquee,
