@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { Menu, X, ArrowUpRight } from "lucide-react";
@@ -26,9 +26,11 @@ export function PublicNav() {
     return () => window.removeEventListener("scroll", on);
   }, []);
 
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
+  const prevPath = useRef(pathname);
+  if (prevPath.current !== pathname) {
+    prevPath.current = pathname;
+    if (open) setOpen(false);
+  }
 
   return (
     <>
