@@ -39,7 +39,6 @@ const admissionsPaths = [
 
 const schoolYearPaths = [
   "/admin/students",
-  "/admin/families",
   "/admin/billing",
   "/admin/records",
 ];
@@ -80,7 +79,6 @@ const schoolYearNav = {
   items: [
     { label: "Dashboard", href: "/admin/students", icon: LayoutDashboard },
     { label: "Students", href: "/admin/students/list", icon: GraduationCap },
-    { label: "Families", href: "/admin/families", icon: HomeIcon },
     { label: "Tuition & Billing", href: "/admin/billing", icon: CreditCard },
     { label: "Student Records", href: "/admin/records", icon: ClipboardList },
   ],

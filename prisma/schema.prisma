@@ -116,6 +116,11 @@ enum DonationFrequency {
   ANNUALLY
 }
 
+enum PaymentMethodType {
+  CREDIT_CARD
+  BANK_ACCOUNT
+}
+
 // ==================== AUTH (NextAuth) ====================
 
 model User {
@@ -139,6 +144,8 @@ model User {
   receivedMessages Message[]           @relation("ReceivedMessages")
   reviews          ApplicationReview[]
   notes            ApplicationNote[]
+  paymentMethods   PaymentMethod[]
+  autoPaySettings  AutoPaySettings?
 
   @@index([role])
 }
@@ -427,6 +434,9 @@ model Invoice {
   dueDate DateTime
   paidAt  DateTime?
 
+  processingFee     Int     @default(0)
+  paymentMethodType String?
+
   stripeInvoiceId String? @unique
   pdfUrl          String?
 
@@ -435,6 +445,36 @@ model Invoice {
 
   @@index([parentId])
   @@index([status])
+}
+
+model PaymentMethod {
+  id                    String            @id @default(cuid())
+  userId                String
+  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type                  PaymentMethodType
+  last4                 String
+  brand                 String?
+  expiryMonth           Int?
+  expiryYear            Int?
+  bankName              String?
+  accountNickname       String?
+  isDefault             Boolean           @default(false)
+  stripePaymentMethodId String?           @unique
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  @@index([userId])
+}
+
+model AutoPaySettings {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enabled         Boolean   @default(true)
+  paymentMethodId String?
+  lastChargedAt   DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
 model DiscountCode {
