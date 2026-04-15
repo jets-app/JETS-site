@@ -24,10 +24,11 @@ export function StatCounter({
   const [display, setDisplay] = useState(reduce ? value : 0);
 
   useEffect(() => {
-    if (!inView || reduce) {
-      if (reduce) setDisplay(value);
+    if (reduce) {
+      setDisplay(value);
       return;
     }
+    if (!inView) return;
     let start: number | null = null;
     let raf: number;
 
