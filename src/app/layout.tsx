@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Instrument_Serif } from "next/font/google";
+import { Inter, Instrument_Serif, EB_Garamond, Playfair_Display } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
@@ -13,6 +13,20 @@ const instrumentSerif = Instrument_Serif({
   variable: "--font-serif",
   subsets: ["latin"],
   weight: ["400"],
+  style: ["normal", "italic"],
+});
+
+const ebGaramond = EB_Garamond({
+  variable: "--font-editorial",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+});
+
+const playfair = Playfair_Display({
+  variable: "--font-editorial-display",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
   style: ["normal", "italic"],
 });
 
@@ -34,7 +48,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${instrumentSerif.variable} h-full`}
+      className={`${inter.variable} ${instrumentSerif.variable} ${ebGaramond.variable} ${playfair.variable} h-full`}
     >
       <body className="min-h-full flex flex-col bg-background">
         <TooltipProvider>{children}</TooltipProvider>
