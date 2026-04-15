@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Instrument_Serif } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
@@ -7,6 +7,13 @@ import "./globals.css";
 const inter = Inter({
   variable: "--font-sans",
   subsets: ["latin"],
+});
+
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-serif",
+  subsets: ["latin"],
+  weight: ["400"],
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -25,11 +32,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full`}>
-      <body className="min-h-full flex flex-col">
-        <TooltipProvider>
-          {children}
-        </TooltipProvider>
+    <html
+      lang="en"
+      className={`${inter.variable} ${instrumentSerif.variable} h-full`}
+    >
+      <body className="min-h-full flex flex-col bg-background">
+        <TooltipProvider>{children}</TooltipProvider>
         <Toaster richColors position="top-right" />
       </body>
     </html>
