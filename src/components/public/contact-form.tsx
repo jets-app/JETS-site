@@ -113,7 +113,10 @@ export function ContactForm() {
           <label htmlFor="subject" className="text-sm font-medium">
             Subject <span className="text-primary">*</span>
           </label>
-          <Select value={subject} onValueChange={setSubject}>
+          <Select
+            value={subject}
+            onValueChange={(v) => setSubject(v ?? "")}
+          >
             <SelectTrigger className="h-10 w-full" size="default">
               <SelectValue placeholder="Choose a topic..." />
             </SelectTrigger>
