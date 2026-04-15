@@ -29,8 +29,7 @@ import {
 } from "lucide-react";
 import { PayApplicationFeeButton } from "./_components/pay-fee-button";
 import { ApplyDiscountForm } from "./_components/apply-discount-form";
-import { TuitionPortal } from "./_components/tuition-portal";
-import { getTuitionSummary } from "@/server/actions/tuition-payment.actions";
+import { EnrolledPortal } from "./_components/enrolled-portal";
 
 function formatCents(cents: number): string {
   return `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
@@ -94,68 +93,74 @@ export default async function ParentPaymentsPage() {
 
   const isEnrolled = primaryApp?.status === "ENROLLED";
 
-  // ==================== ENROLLED: Full tuition portal ====================
+  // ==================== ENROLLED: AppFolio-style portal ====================
   if (isEnrolled && primaryApp) {
-    const [summaryRes, invoices, paymentsRaw] = await Promise.all([
-      getTuitionSummary(primaryApp.id),
+    const [invoices, paymentsRaw, methodsRaw, autoPay] = await Promise.all([
       db.invoice.findMany({
         where: { applicationId: primaryApp.id },
         orderBy: { dueDate: "asc" },
       }),
       db.payment.findMany({
-        where: { applicationId: primaryApp.id },
+        where: { applicationId: primaryApp.id, status: "SUCCEEDED" },
         orderBy: { createdAt: "desc" },
         take: 50,
       }),
+      db.paymentMethod.findMany({
+        where: { userId: session.user.id },
+        orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
+      }),
+      db.autoPaySettings.findUnique({ where: { userId: session.user.id } }),
     ]);
 
-    if ("error" in summaryRes || !summaryRes.summary) {
-      return (
-        <div className="max-w-5xl mx-auto">
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-sm text-muted-foreground">
-                Unable to load tuition details. Please try again later.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      );
-    }
+    const balance = invoices
+      .filter((i) => i.status !== "paid")
+      .reduce((s, i) => s + (i.total - i.amountPaid), 0);
 
-    const now = new Date();
-    const invoiceRows = invoices.map((inv) => ({
-      id: inv.id,
-      invoiceNumber: inv.invoiceNumber,
-      dueDate: inv.dueDate.toISOString(),
-      total: inv.total,
-      amountPaid: inv.amountPaid,
-      status: inv.status,
-      displayStatus:
-        inv.status !== "paid" && inv.dueDate < now ? "overdue" : inv.status,
-      paidAt: inv.paidAt ? inv.paidAt.toISOString() : null,
+    const methodsLite = methodsRaw.map((m) => ({
+      id: m.id,
+      type: m.type,
+      last4: m.last4,
+      brand: m.brand,
+      bankName: m.bankName,
+      isDefault: m.isDefault,
     }));
 
-    const paymentRows = paymentsRaw.map((p) => ({
-      id: p.id,
-      createdAt: p.createdAt.toISOString(),
-      description: p.description,
-      amount: p.amount,
-      status: p.status,
-      type: p.type,
-    }));
-
-    const studentName = primaryApp.student
-      ? `${primaryApp.student.firstName} ${primaryApp.student.lastName}`
-      : "Student";
+    const apMethod =
+      methodsLite.find((m) => m.id === autoPay?.paymentMethodId) ??
+      methodsLite.find((m) => m.isDefault) ??
+      methodsLite[0] ??
+      null;
 
     return (
-      <div className="max-w-6xl mx-auto">
-        <TuitionPortal
-          studentName={studentName}
-          summary={summaryRes.summary}
-          invoices={invoiceRows}
-          payments={paymentRows}
+      <div className="max-w-5xl mx-auto">
+        <EnrolledPortal
+          studentName={
+            primaryApp.student
+              ? `${primaryApp.student.firstName} ${primaryApp.student.lastName}`
+              : "Student"
+          }
+          autoPayEnabled={autoPay?.enabled ?? true}
+          autoPayMethod={apMethod}
+          methods={methodsLite}
+          invoices={invoices.map((inv) => ({
+            id: inv.id,
+            invoiceNumber: inv.invoiceNumber,
+            dueDate: inv.dueDate.toISOString(),
+            total: inv.total,
+            amountPaid: inv.amountPaid,
+            status: inv.status,
+            paidAt: inv.paidAt?.toISOString() ?? null,
+            paymentMethodType: inv.paymentMethodType,
+          }))}
+          payments={paymentsRaw.map((p) => ({
+            id: p.id,
+            createdAt: p.createdAt.toISOString(),
+            paidAt: p.paidAt?.toISOString() ?? null,
+            description: p.description,
+            amount: p.amount,
+            type: p.type,
+          }))}
+          balance={balance}
         />
       </div>
     );

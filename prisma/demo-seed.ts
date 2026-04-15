@@ -1027,7 +1027,78 @@ async function main() {
     });
     invoicesCreated++;
   }
+
+  // Create extra past-due invoices for the enrolled parent (demo)
+  for (let extra = 1; extra <= 2; extra++) {
+    const invoiceNumber = `INV-2026-9${String(extra).padStart(3, "0")}`;
+    const existingExtra = await db.invoice.findUnique({ where: { invoiceNumber } });
+    if (existingExtra) continue;
+    await db.invoice.create({
+      data: {
+        invoiceNumber,
+        applicationId: enrolledApp.id,
+        parentId: enrolledApp.parentId,
+        lineItems: [
+          {
+            description: `Past-due tuition (demo) — month ${extra}`,
+            quantity: 1,
+            unitAmount: 150000,
+            amount: 150000,
+          },
+        ],
+        subtotal: 150000,
+        tax: 0,
+        total: 150000,
+        amountPaid: 0,
+        status: "overdue",
+        dueDate: daysAgo(30 + extra * 15),
+      },
+    });
+    invoicesCreated++;
+  }
   console.log(`  Invoices: ${invoicesCreated} created`);
+
+  // ---------- 5b. Payment Methods + Auto-Pay (enrolled parent) ----------
+  const enrolledParentId = enrolledApp.parentId;
+  const existingMethods = await db.paymentMethod.count({
+    where: { userId: enrolledParentId },
+  });
+  if (existingMethods === 0) {
+    const card = await db.paymentMethod.create({
+      data: {
+        userId: enrolledParentId,
+        type: "CREDIT_CARD",
+        last4: "4242",
+        brand: "Visa",
+        expiryMonth: 12,
+        expiryYear: 2028,
+        isDefault: false,
+      },
+    });
+    const bank = await db.paymentMethod.create({
+      data: {
+        userId: enrolledParentId,
+        type: "BANK_ACCOUNT",
+        last4: "6789",
+        bankName: "Chase",
+        accountNickname: "Chase Checking",
+        isDefault: true,
+      },
+    });
+    await db.autoPaySettings.upsert({
+      where: { userId: enrolledParentId },
+      create: {
+        userId: enrolledParentId,
+        enabled: true,
+        paymentMethodId: bank.id,
+      },
+      update: {
+        enabled: true,
+        paymentMethodId: bank.id,
+      },
+    });
+    console.log(`  Payment methods: 2 added (card ${card.last4}, bank ${bank.last4}); auto-pay ON`);
+  }
 
   // ---------- 6. Alumni ----------
   let alumniCreated = 0;
