@@ -1,193 +1,107 @@
 import { auth } from "@/server/auth";
 import { redirect } from "next/navigation";
-import { getDashboardStats } from "@/server/actions/admin.actions";
-import { LinkButton } from "@/components/shared/link-button";
-import { StatusBadge } from "@/components/shared/status-badge";
+import Link from "next/link";
 import {
   FileText,
-  Users,
-  Clock,
-  CheckCircle2,
-  TrendingUp,
-  DollarSign,
-  GraduationCap,
+  School,
   ArrowRight,
+  Users,
+  CreditCard,
+  Sparkles,
 } from "lucide-react";
 
-export default async function AdminDashboard() {
+export default async function AdminDashboardPicker() {
   const session = await auth();
-
   if (!session?.user || session.user.role !== "ADMIN") {
     redirect("/dashboard");
   }
 
-  const stats = await getDashboardStats();
-
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="space-y-1">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-          Admin Dashboard
+    <div className="max-w-5xl mx-auto space-y-8">
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
+          Welcome to JETS Admin
         </h1>
         <p className="text-muted-foreground">
-          Overview of applications, students, and school operations for{" "}
-          {stats.academicYear}.
+          Choose which system you'd like to work in. You can switch anytime from
+          the sidebar.
         </p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          {
-            label: "Total Applications",
-            value: stats.total.toString(),
-            change: stats.academicYear,
-            icon: FileText,
-            color: "text-primary bg-primary/10",
-          },
-          {
-            label: "Pending Review",
-            value: stats.pending.toString(),
-            change: stats.pending > 0 ? "Needs attention" : "All clear",
-            icon: Clock,
-            color: "text-amber-600 bg-amber-500/10",
-          },
-          {
-            label: "Accepted",
-            value: stats.accepted.toString(),
-            change: "This year",
-            icon: CheckCircle2,
-            color: "text-emerald-600 bg-emerald-500/10",
-          },
-          {
-            label: "Enrolled",
-            value: stats.enrolled.toString(),
-            change: "Active students",
-            icon: GraduationCap,
-            color: "text-blue-600 bg-blue-500/10",
-          },
-        ].map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-xl border bg-card p-5 hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
-              <div
-                className={`w-9 h-9 rounded-lg flex items-center justify-center ${stat.color}`}
-              >
-                <stat.icon className="h-4 w-4" />
+      <div className="grid md:grid-cols-2 gap-6">
+        <Link
+          href="/admin/admissions"
+          className="group relative overflow-hidden rounded-2xl border bg-card p-8 hover:shadow-xl transition-all hover:-translate-y-1"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform" />
+          <div className="relative space-y-5">
+            <div className="w-14 h-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center">
+              <FileText className="h-7 w-7" />
+            </div>
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-primary">
+                Pre-Enrollment
               </div>
-            </div>
-            <p className="text-2xl font-bold">{stat.value}</p>
-            <p className="text-xs text-muted-foreground mt-1">{stat.change}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Two column layout */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Recent Applications */}
-        <div className="rounded-xl border bg-card">
-          <div className="px-6 py-4 border-b flex items-center justify-between">
-            <h2 className="font-semibold">Recent Applications</h2>
-            <LinkButton
-              href="/admin/applications"
-              variant="ghost"
-              size="xs"
-            >
-              View all
-              <ArrowRight className="h-3 w-3 ml-1" />
-            </LinkButton>
-          </div>
-          {stats.recentApplications.length > 0 ? (
-            <div className="divide-y">
-              {stats.recentApplications.map((app: any) => (
-                <a
-                  key={app.id}
-                  href={`/admin/applications/${app.id}`}
-                  className="flex items-center justify-between px-6 py-3 hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
-                      {app.student
-                        ? `${app.student.firstName[0]}${app.student.lastName[0]}`
-                        : "--"}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">
-                        {app.student
-                          ? `${app.student.firstName} ${app.student.lastName}`
-                          : app.referenceNumber}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(app.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  <StatusBadge status={app.status} />
-                </a>
-              ))}
-            </div>
-          ) : (
-            <div className="p-12 text-center">
-              <FileText className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
+              <h2 className="text-2xl font-bold">Admissions</h2>
               <p className="text-sm text-muted-foreground">
-                No applications yet
+                Manage applications, review candidates, scholarships, and
+                enrollment documents for the upcoming school year.
               </p>
             </div>
-          )}
-        </div>
+            <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1">
+                <FileText className="h-3 w-3" /> Applications
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1">
+                <Sparkles className="h-3 w-3" /> Scholarships
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1">
+                Reviews
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+              Enter Admissions
+              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </div>
+        </Link>
 
-        {/* Quick Actions */}
-        <div className="rounded-xl border bg-card">
-          <div className="px-6 py-4 border-b">
-            <h2 className="font-semibold">Quick Actions</h2>
+        <Link
+          href="/admin/students"
+          className="group relative overflow-hidden rounded-2xl border bg-card p-8 hover:shadow-xl transition-all hover:-translate-y-1"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform" />
+          <div className="relative space-y-5">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-600 text-white dark:bg-emerald-500 flex items-center justify-center">
+              <School className="h-7 w-7" />
+            </div>
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                Post-Enrollment
+              </div>
+              <h2 className="text-2xl font-bold">School Year</h2>
+              <p className="text-sm text-muted-foreground">
+                Manage enrolled students, families, tuition, payments, and
+                student records for the current academic year.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1">
+                <Users className="h-3 w-3" /> Students
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1">
+                <CreditCard className="h-3 w-3" /> Tuition
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1">
+                Families
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+              Enter School Year
+              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </div>
           </div>
-          <div className="p-4 space-y-2">
-            {[
-              {
-                label: "Review Applications",
-                desc: `${stats.pending} pending review`,
-                icon: FileText,
-                href: "/admin/applications?status=SUBMITTED",
-              },
-              {
-                label: "All Applications",
-                desc: "Browse and manage all applications",
-                icon: Users,
-                href: "/admin/applications",
-              },
-              {
-                label: "Manage Billing",
-                desc: "Invoices and payments",
-                icon: DollarSign,
-                href: "/admin/billing",
-              },
-              {
-                label: "View Reports",
-                desc: "Analytics and insights",
-                icon: TrendingUp,
-                href: "/admin/settings",
-              },
-            ].map((action) => (
-              <a
-                key={action.label}
-                href={action.href}
-                className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors"
-              >
-                <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                  <action.icon className="h-4 w-4 text-muted-foreground" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">{action.label}</p>
-                  <p className="text-xs text-muted-foreground">{action.desc}</p>
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
+        </Link>
       </div>
     </div>
   );
