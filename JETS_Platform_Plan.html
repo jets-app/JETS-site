@@ -100,6 +100,16 @@
   }
   .info-box strong { color: #A30018; }
 
+  /* Success box */
+  .success-box {
+    background: #f0fdf4;
+    border-left: 4px solid #16a34a;
+    padding: 12px 16px;
+    margin: 12px 0;
+    border-radius: 0 6px 6px 0;
+  }
+  .success-box strong { color: #16a34a; }
+
   /* Sprint box */
   .sprint {
     background: #f9f9fb;
@@ -107,6 +117,15 @@
     border-radius: 8px;
     padding: 16px 20px;
     margin: 15px 0;
+    position: relative;
+  }
+  .sprint.done {
+    background: #f0fdf4;
+    border-color: #86efac;
+  }
+  .sprint.in-progress {
+    background: #fffbeb;
+    border-color: #fcd34d;
   }
   .sprint-header {
     display: flex;
@@ -123,6 +142,25 @@
     border-radius: 12px;
   }
   .sprint-title { font-weight: 600; font-size: 11.5pt; }
+  .sprint-status {
+    margin-left: auto;
+    font-size: 8.5pt;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 12px;
+  }
+  .status-done {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+  .status-progress {
+    background: #fef3c7;
+    color: #d97706;
+  }
+  .status-pending {
+    background: #f1f5f9;
+    color: #64748b;
+  }
 
   /* Flow diagram */
   .flow {
@@ -170,6 +208,7 @@
   .tag.green { background: #0a8754; }
   .tag.blue { background: #1a56db; }
   .tag.gray { background: #6b7280; }
+  .tag.amber { background: #d97706; }
 
   .footer-note {
     text-align: center;
@@ -178,6 +217,36 @@
     margin-top: 40px;
     padding-top: 20px;
     border-top: 1px solid #eee;
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 15px 0;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #16a34a, #22c55e);
+    border-radius: 4px;
+    transition: width 0.3s;
+  }
+
+  /* New feature highlight */
+  .new-badge {
+    display: inline-block;
+    background: #1a56db;
+    color: white;
+    font-size: 7pt;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    vertical-align: middle;
+    margin-left: 4px;
   }
 </style>
 </head>
@@ -193,9 +262,34 @@
   <div class="subtitle" style="font-size:12pt; margin-bottom:10px;">Implementation Plan</div>
   <div class="meta">
     Jewish Educational Trade School &bull; Granada Hills, Los Angeles, CA<br>
-    Prepared April 2026
+    Prepared April 2026 &bull; Last updated April 15, 2026
   </div>
 </div>
+
+<!-- PROGRESS OVERVIEW -->
+<h2>Build Progress</h2>
+<p>Overall completion across all sprints:</p>
+<div class="progress-bar"><div class="progress-fill" style="width: 85%"></div></div>
+<p style="text-align:center; font-size:10pt; color:#666;">
+  <strong>85% complete</strong> &mdash; 10 of 12 sprints built, 2 in progress
+</p>
+
+<table>
+  <tr><th>Sprint</th><th>Feature</th><th>Status</th></tr>
+  <tr><td>1</td><td>Foundation (database, auth, design system)</td><td><span class="tag green">DONE</span></td></tr>
+  <tr><td>2</td><td>Parent Application Portal (10-step form)</td><td><span class="tag green">DONE</span></td></tr>
+  <tr><td>3</td><td>Recommendation System</td><td><span class="tag green">DONE</span></td></tr>
+  <tr><td>4</td><td>Admin Dashboard</td><td><span class="tag green">DONE</span></td></tr>
+  <tr><td>5</td><td>Review &amp; Acceptance Workflow</td><td><span class="tag green">DONE</span></td></tr>
+  <tr><td>6</td><td>Documents &amp; E-Signing</td><td><span class="tag green">DONE</span></td></tr>
+  <tr><td>7</td><td>Payments &amp; Billing</td><td><span class="tag green">DONE</span></td></tr>
+  <tr><td>8</td><td>Scholarships, Messaging &amp; Polish</td><td><span class="tag green">DONE</span></td></tr>
+  <tr><td>8.5</td><td>Public Website (editorial redesign)</td><td><span class="tag green">DONE</span></td></tr>
+  <tr><td>9</td><td>Alumni Management</td><td><span class="tag green">DONE</span></td></tr>
+  <tr><td>10</td><td>QuickBooks + Donor Management</td><td><span class="tag green">DONE</span></td></tr>
+  <tr><td>11</td><td>Pipeline Board, Notifications, Reports, Leads</td><td><span class="tag green">DONE</span></td></tr>
+  <tr><td>12</td><td>Stripe live integration + SMS delivery</td><td><span class="tag amber">NEXT</span></td></tr>
+</table>
 
 <!-- WHAT WE'RE BUILDING -->
 <h2>What We're Building</h2>
@@ -210,7 +304,7 @@
       <li>Pay $500 application fee online</li>
       <li>Track application status</li>
       <li>Sign documents electronically</li>
-      <li>Pay tuition online</li>
+      <li>Pay tuition online (autopay available)</li>
       <li>Apply for scholarships</li>
       <li>Receive messages from school</li>
     </ul>
@@ -219,13 +313,40 @@
     <h4>For the Office & Principals</h4>
     <ul>
       <li>Dashboard showing all applications</li>
+      <li>Drag-and-drop pipeline board <span class="new-badge">new</span></li>
       <li>Review & approve applications</li>
+      <li>Automated email notifications <span class="new-badge">new</span></li>
+      <li>Reports &amp; analytics dashboard <span class="new-badge">new</span></li>
+      <li>Lead capture &amp; inquiry management <span class="new-badge">new</span></li>
       <li>Send documents for signing</li>
       <li>Send invoices & collect tuition</li>
       <li>Message parents (email + SMS)</li>
       <li>Manage donors & donations</li>
       <li>Track alumni by year</li>
       <li>QuickBooks sync for accounting</li>
+    </ul>
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="col-box">
+    <h4>For the Public (Website)</h4>
+    <ul>
+      <li>Premium editorial design <span class="new-badge">redesigned</span></li>
+      <li>Home, About, Programs, Faculty, Contact</li>
+      <li>Admissions inquiry form <span class="new-badge">new</span></li>
+      <li>&ldquo;Apply Now&rdquo; flows into application portal</li>
+      <li>Responsive, scroll-animated pages</li>
+    </ul>
+  </div>
+  <div class="col-box">
+    <h4>Automated Systems</h4>
+    <ul>
+      <li>Notifications per status change <span class="new-badge">new</span></li>
+      <li>Notification log &amp; delivery tracking <span class="new-badge">new</span></li>
+      <li>Enrollment funnel analytics <span class="new-badge">new</span></li>
+      <li>Financial reporting <span class="new-badge">new</span></li>
+      <li>Lead pipeline tracking <span class="new-badge">new</span></li>
     </ul>
   </div>
 </div>
@@ -316,6 +437,29 @@
 <!-- HOW IT WORKS -->
 <h2>How the System Works (Step by Step)</h2>
 
+<h3>0. Lead Capture (Before Application) <span class="new-badge">new</span></h3>
+<div class="flow">
+  <span class="flow-step">Parent visits website</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Submits inquiry form</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Appears in admin leads</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Office follows up</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Schedules campus visit</span>
+  <span class="flow-arrow">&rarr;</span>
+  <span class="flow-step">Converts to applicant</span>
+</div>
+<ul>
+  <li>Public inquiry form on the website captures: parent name, email, phone, student age, program interests, preferred visit date, and questions</li>
+  <li>Contact form submissions are also captured as leads</li>
+  <li>Admin sees all leads in a dedicated <strong>Leads &amp; Inquiries</strong> page</li>
+  <li>Each lead has a status pipeline: <strong>New &rarr; Contacted &rarr; Tour Scheduled &rarr; Tour Completed &rarr; Converted &rarr; Closed</strong></li>
+  <li>Admin can add internal notes, change status, and track follow-ups</li>
+  <li>Inspired by Playground&rsquo;s CRM &mdash; captures interest before the full application process begins</li>
+</ul>
+
 <h3>1. Parent Applies</h3>
 <div class="flow">
   <span class="flow-step">Parent creates account</span>
@@ -337,6 +481,7 @@
   <li>References automatically receive an email + SMS with a private link to fill out the recommendation form</li>
   <li>Parents can see recommendation <strong>status</strong> (Pending / Submitted checkmark) but <strong>cannot see the content</strong> &mdash; content goes directly to admin only</li>
   <li>Admin can track recommendation status and resend requests if needed</li>
+  <li><strong>Automatic notification:</strong> Parent receives a confirmation email upon submission; admin receives an alert <span class="new-badge">new</span></li>
 </ul>
 
 <div class="info-box">
@@ -360,8 +505,11 @@
 </div>
 <ul>
   <li>Dashboard shows: total applications, how many pending, what each student still needs</li>
+  <li><strong>Pipeline Board:</strong> Drag-and-drop Kanban view &mdash; see all applications as cards, drag between status columns <span class="new-badge">new</span></li>
+  <li>Table View: searchable, filterable list of all applications with sort options</li>
   <li>Can print entire application as a PDF</li>
   <li>Checklist per student: fee paid? Recommendations in? Photo uploaded?</li>
+  <li><strong>Automatic notification:</strong> Parent receives &ldquo;Application Under Review&rdquo; email <span class="new-badge">new</span></li>
 </ul>
 
 <h3>3. Principals Review &rarr; Move to Interview</h3>
@@ -394,10 +542,11 @@
   <span class="flow-step">Goes back to Office</span>
 </div>
 <ul>
-  <li>Automatic email + SMS sent to parents with Calendly link to book interview</li>
+  <li><strong>Automatic notification:</strong> Email sent to parents with Calendly link to book interview <span class="new-badge">new</span></li>
   <li>System tracks: interview scheduled, completed, or no-show</li>
   <li>After interview, principals decide: accept or reject</li>
   <li>Accepted &rarr; application goes back to office for next steps</li>
+  <li><strong>Automatic notification:</strong> Acceptance or rejection email sent to parents <span class="new-badge">new</span></li>
 </ul>
 
 <h3>5. Office Sends Enrollment Documents</h3>
@@ -414,6 +563,7 @@
   <li>All templates are editable by admin before sending</li>
   <li>System tracks which documents are sent, viewed, and signed</li>
   <li><strong>Student handbook goes out twice</strong> &mdash; one copy to parents, one copy to student, signed independently</li>
+  <li><strong>Automatic notification:</strong> &ldquo;Documents ready for signing&rdquo; email sent to parents <span class="new-badge">new</span></li>
 </ul>
 
 <h3>6. Scholarship (If Parents Want It)</h3>
@@ -448,7 +598,8 @@
   &check; Tuition contract (signed by parents)<br>
   &check; Enrollment agreement (signed by parents)<br>
   &check; Scholarship contract (signed by student) &mdash; <em>if applicable</em><br><br>
-  Once all documents are in, the student's status automatically changes to <strong>ENROLLED</strong> &mdash; they are officially a student in the system.
+  Once all documents are in, the student's status automatically changes to <strong>ENROLLED</strong> &mdash; they are officially a student in the system.<br><br>
+  <strong>Automatic notification:</strong> Welcome/enrollment confirmation email sent to parents. <span class="new-badge">new</span>
 </div>
 
 <h3>8. Tuition & Payments</h3>
@@ -457,11 +608,14 @@
   <li>Flexible payment plans: pay in full, semester, quarterly, or monthly</li>
   <li>Admin creates and sends invoices</li>
   <li>Parents pay by credit card through the portal</li>
+  <li>Autopay: parents can save a payment method and enable recurring charges <span class="new-badge">built</span></li>
+  <li>Payment methods: credit card or bank account (ACH) <span class="new-badge">built</span></li>
+  <li>Processing fees: 3% credit card, $0.50 ACH <span class="new-badge">built</span></li>
   <li>Automatic receipts sent via email</li>
   <li>All payments sync to QuickBooks Online automatically</li>
 </ul>
 
-<h3>6. Scholarship Applications</h3>
+<h3>9. Scholarship Applications</h3>
 <p>Matches the current "Pay It Forward" application with all sections:</p>
 <ul>
   <li>Family info, father's &amp; mother's income/assets/employment details</li>
@@ -471,7 +625,7 @@
   <li>Admin reviews and approves/denies with amount</li>
 </ul>
 
-<h3>7. Tuition Affordability Assessment</h3>
+<h3>10. Tuition Affordability Assessment</h3>
 <p>Built-in tool that determines how much tuition a family can actually afford &mdash; no third-party cost.</p>
 
 <div class="info-box">
@@ -513,6 +667,62 @@
 <!-- ADDITIONAL FEATURES -->
 <h2>Additional Features</h2>
 
+<h3>Pipeline Board (Kanban) <span class="new-badge">new</span></h3>
+<p>Inspired by <a href="https://www.tryplayground.com/" style="color:#A30018;">Playground</a>&rsquo;s enrollment management system:</p>
+<ul>
+  <li><strong>Visual drag-and-drop board</strong> showing all applications as cards across status columns</li>
+  <li>8 active pipeline columns: Submitted &rarr; Office Review &rarr; Principal Review &rarr; Interview &rarr; Interviewed &rarr; Accepted &rarr; Docs Pending &rarr; Enrolled</li>
+  <li>4 terminal status rows: Draft, Waitlisted, Rejected, Withdrawn</li>
+  <li>Each card shows: student name, parent name, reference number, fee status, recommendation progress</li>
+  <li>Drag a card between columns to change status &mdash; validates transitions automatically</li>
+  <li>Optimistic UI: cards move instantly, server validates in the background</li>
+  <li>All status changes are logged with timestamps and who made the change</li>
+  <li>Toggle between Pipeline View and Table View with one click</li>
+</ul>
+
+<h3>Automated Notifications <span class="new-badge">new</span></h3>
+<p>Every status change triggers the right email automatically:</p>
+<table>
+  <tr><th>Status Change</th><th>Who Gets Notified</th><th>What It Says</th></tr>
+  <tr><td>Application Submitted</td><td>Parent + Admin</td><td>Confirmation with reference number; admin alert</td></tr>
+  <tr><td>Moved to Office Review</td><td>Parent</td><td>Application is being reviewed</td></tr>
+  <tr><td>Interview Scheduled</td><td>Parent</td><td>Invitation with Calendly link</td></tr>
+  <tr><td>Accepted</td><td>Parent</td><td>Congratulations + next steps</td></tr>
+  <tr><td>Documents Pending</td><td>Parent</td><td>Documents ready for signing</td></tr>
+  <tr><td>Enrolled</td><td>Parent</td><td>Welcome to JETS</td></tr>
+  <tr><td>Rejected</td><td>Parent</td><td>Respectful decline</td></tr>
+  <tr><td>Waitlisted</td><td>Parent</td><td>Waitlist notification</td></tr>
+</table>
+<ul>
+  <li>All notifications logged in a <strong>Notification Log</strong> with delivery status (Queued / Sent / Failed)</li>
+  <li>Admin can view the full notification history for any application</li>
+  <li>Admin notifications page shows stats: total sent, failed, queued</li>
+  <li>Ready for Resend email integration &mdash; currently logging, just needs API key to go live</li>
+</ul>
+
+<h3>Reports & Analytics Dashboard <span class="new-badge">new</span></h3>
+<p>Comprehensive analytics for enrollment, finances, and operations:</p>
+<ul>
+  <li><strong>Enrollment Funnel:</strong> Visual funnel showing conversion from Submitted &rarr; Office Review &rarr; Interview &rarr; Accepted &rarr; Enrolled with percentages</li>
+  <li><strong>Financial Summary:</strong> Total collected, total invoiced, outstanding balance, application fees vs. tuition breakdown, invoice status breakdown</li>
+  <li><strong>Application Timeline:</strong> Monthly table showing applications received, submitted, accepted, and enrolled per month</li>
+  <li><strong>Recommendation Tracking:</strong> Total requested, completed, pending, expired, with completion rate percentage</li>
+  <li><strong>Fundraising Report:</strong> Total donors, total raised, donations by campaign, recent donation list</li>
+  <li><strong>Top-level KPI cards:</strong> Total applications, total collected, outstanding balance, total raised</li>
+</ul>
+
+<h3>Lead Capture & Inquiry Management <span class="new-badge">new</span></h3>
+<p>Capture interest before families even start an application:</p>
+<ul>
+  <li><strong>Public inquiry form</strong> at <code>/inquire</code> &mdash; captures parent name, email, phone, student age, program interest, preferred visit date, and questions</li>
+  <li>Contact form submissions also stored as leads</li>
+  <li>Admin <strong>Leads &amp; Inquiries</strong> page with expandable rows</li>
+  <li>Status pipeline per lead: New &rarr; Contacted &rarr; Tour Scheduled &rarr; Tour Completed &rarr; Converted &rarr; Closed</li>
+  <li>Inline status dropdowns &mdash; change status with one click</li>
+  <li>Internal notes per lead for tracking follow-ups</li>
+  <li>Summary cards: count of New, Contacted, Tour Scheduled, Converted leads</li>
+</ul>
+
 <h3>Messaging Center</h3>
 <ul>
   <li><strong>Individual:</strong> Send a message to one parent via email + SMS</li>
@@ -553,27 +763,31 @@
   <li>Dashboard shows sync status and flags any errors</li>
 </ul>
 
-<h3>Public Website (Replaces jetsschool.org)</h3>
-<p>Built into the same platform &mdash; no separate Webflow needed:</p>
+<h3>Public Website</h3>
+<p>Premium editorial-style design, built into the platform:</p>
 <table>
   <tr><th>Page</th><th>Content</th></tr>
-  <tr><td><strong>Home</strong></td><td>Hero section, school mission, program highlights, "Apply Now" button</td></tr>
-  <tr><td><strong>About</strong></td><td>School history, Torah V'avodah mission, campus photos</td></tr>
-  <tr><td><strong>Programs</strong></td><td>Trade programs, Judaic studies, extracurricular activities</td></tr>
-  <tr><td><strong>Faculty</strong></td><td>Staff directory with photos and bios</td></tr>
-  <tr><td><strong>Apply</strong></td><td>Flows directly into the application portal</td></tr>
-  <tr><td><strong>Contact</strong></td><td>Address, phone, email, Calendly booking for consultations</td></tr>
+  <tr><td><strong>Home</strong></td><td>Editorial hero, founder's mission, statistics woven into prose, 6 program cards, alumni testimonials, dual CTA</td></tr>
+  <tr><td><strong>About</strong></td><td>6-part essay: history, founder tribute, five core values, campus description</td></tr>
+  <tr><td><strong>Programs</strong></td><td>Full course catalogue organized by 7 disciplines with course descriptions and accrediting partners</td></tr>
+  <tr><td><strong>Faculty</strong></td><td>Featured profiles with editorial bios and pull quotes</td></tr>
+  <tr><td><strong>Contact</strong></td><td>Campus address, phone, email, hours table, working inquiry form, illustrated map</td></tr>
+  <tr><td><strong>Inquire</strong> <span class="new-badge">new</span></td><td>Detailed admissions inquiry form for prospective families</td></tr>
 </table>
+<div class="success-box">
+  <strong>Design upgrade (April 2026):</strong> The public website was redesigned from a modern/cinematic dark theme to a premium <strong>editorial/literary aesthetic</strong> &mdash; parchment tones, EB Garamond &amp; Playfair Display typography, drop caps, pull quotes, and ornamental dividers. It reads like a luxury institutional prospectus. The original design is archived at <code>/v1</code>.
+</div>
 
 <div class="page-break"></div>
 
 <!-- BUILD ORDER -->
-<h2>Build Order (10 Sprints)</h2>
+<h2>Build Order (12 Sprints)</h2>
 
-<div class="sprint">
+<div class="sprint done">
   <div class="sprint-header">
     <span class="sprint-number">SPRINT 1</span>
     <span class="sprint-title">Foundation</span>
+    <span class="sprint-status status-done">DONE</span>
   </div>
   <p>Set up the project, database, login system, and base design. Everything else is built on top of this.</p>
   <ul>
@@ -584,10 +798,11 @@
   </ul>
 </div>
 
-<div class="sprint">
+<div class="sprint done">
   <div class="sprint-header">
     <span class="sprint-number">SPRINT 2</span>
     <span class="sprint-title">Parent Application Portal</span>
+    <span class="sprint-status status-done">DONE</span>
   </div>
   <p>The heart of the system &mdash; parents can create an account and fill out the full 10-step application.</p>
   <ul>
@@ -599,28 +814,29 @@
   </ul>
 </div>
 
-<div class="sprint">
+<div class="sprint done">
   <div class="sprint-header">
     <span class="sprint-number">SPRINT 3</span>
     <span class="sprint-title">Recommendation System</span>
+    <span class="sprint-status status-done">DONE</span>
   </div>
   <p>Automated, confidential recommendation requests &mdash; references get an email + SMS, fill out a form, it goes directly to the school.</p>
   <ul>
-    <li>Parent adds 2 references: name, email, phone number, relationship (past teacher, principal, rabbi, etc.)</li>
-    <li>System automatically emails each reference a unique private link (+ SMS notification)</li>
+    <li>Parent adds 2 references: name, email, phone number, relationship</li>
+    <li>System automatically emails each reference a unique private link</li>
     <li>Reference fills out the structured recommendation form (no account needed)</li>
-    <li><strong>Recommendation content goes directly to admin only &mdash; parents see status (Pending/Submitted) but NOT the content</strong></li>
-    <li><strong>Both recommendations must be completed before the parent can submit the application</strong></li>
-    <li>Admin/office/principals can view all recommendations for any application</li>
-    <li>Status tracking per referee: Pending &rarr; Sent &rarr; Viewed &rarr; Completed</li>
+    <li>Recommendation content goes directly to admin only</li>
+    <li>Both recommendations must be completed before submission</li>
+    <li>Status tracking: Pending &rarr; Sent &rarr; Viewed &rarr; Completed</li>
     <li>Admin can resend the request if a referee hasn't responded</li>
   </ul>
 </div>
 
-<div class="sprint">
+<div class="sprint done">
   <div class="sprint-header">
     <span class="sprint-number">SPRINT 4</span>
     <span class="sprint-title">Admin Dashboard</span>
+    <span class="sprint-status status-done">DONE</span>
   </div>
   <p>The office staff's home base &mdash; see everything at a glance and manage applications.</p>
   <ul>
@@ -632,10 +848,11 @@
   </ul>
 </div>
 
-<div class="sprint">
+<div class="sprint done">
   <div class="sprint-header">
     <span class="sprint-number">SPRINT 5</span>
     <span class="sprint-title">Review & Acceptance Workflow</span>
+    <span class="sprint-status status-done">DONE</span>
   </div>
   <p>The full pipeline from application received to student accepted.</p>
   <ul>
@@ -644,35 +861,31 @@
     <li>If good fit &rarr; click "Move to Interview" &rarr; system auto-emails Calendly link to parents</li>
     <li>Track interview status: Scheduled / Completed / No-show</li>
     <li>After interview, principals click "Accept" or "Reject"</li>
-    <li>Accepted &rarr; goes back to office to send documents</li>
     <li>Full timeline of every step and who did what</li>
     <li>Email + SMS notifications at each stage</li>
   </ul>
 </div>
 
-<div class="sprint">
+<div class="sprint done">
   <div class="sprint-header">
     <span class="sprint-number">SPRINT 6</span>
     <span class="sprint-title">Documents & E-Signing</span>
+    <span class="sprint-status status-done">DONE</span>
   </div>
   <p>Send documents to parents AND students for electronic signing &mdash; works like DocuSign.</p>
   <ul>
-    <li>Medical form &rarr; sent to parents</li>
-    <li>Student handbook &rarr; sent <strong>separately</strong> to parents AND student (each signs their own copy)</li>
-    <li>Tuition contract &rarr; sent to parents</li>
-    <li>Enrollment agreement &rarr; sent to parents</li>
-    <li>Scholarship contract &rarr; sent to student (if scholarship awarded)</li>
+    <li>Medical form, student handbook (parent + student copies), tuition contract, enrollment agreement, scholarship contract</li>
     <li>Admin can edit any template before sending</li>
-    <li>Tuition contract can be UPDATED after scholarship decision (adjusted amount)</li>
     <li>All documents signed electronically, stored as PDFs</li>
-    <li><strong>Once ALL documents are signed &rarr; student status automatically changes to ENROLLED</strong></li>
+    <li>Once ALL documents signed &rarr; status automatically changes to ENROLLED</li>
   </ul>
 </div>
 
-<div class="sprint">
+<div class="sprint done">
   <div class="sprint-header">
     <span class="sprint-number">SPRINT 7</span>
     <span class="sprint-title">Payments & Billing</span>
+    <span class="sprint-status status-done">DONE</span>
   </div>
   <p>Full payment system for application fees and tuition.</p>
   <ul>
@@ -680,46 +893,51 @@
     <li>Discount/promo codes</li>
     <li>Custom tuition amount per student</li>
     <li>Flexible plans: full, semester, quarterly, monthly</li>
+    <li>Autopay with saved payment methods</li>
+    <li>Processing fees (3% card, $0.50 ACH)</li>
     <li>Admin creates and sends invoices</li>
-    <li>Parents pay tuition online</li>
     <li>Automatic email receipts</li>
   </ul>
 </div>
 
-<div class="sprint">
+<div class="sprint done">
   <div class="sprint-header">
     <span class="sprint-number">SPRINT 8</span>
     <span class="sprint-title">Scholarships, Tuition Assessment, Messaging & Polish</span>
+    <span class="sprint-status status-done">DONE</span>
   </div>
   <p>Scholarship applications, tuition affordability assessment, messaging center, and final polish.</p>
   <ul>
     <li>Full scholarship application (matching "Pay It Forward" form)</li>
-    <li><strong>Tuition affordability assessment:</strong> detailed financial form, tax return upload, automatic recommended contribution calculation, admin review dashboard with override capability</li>
+    <li>Tuition affordability assessment with admin review dashboard</li>
     <li>Messaging center: individual + bulk, email + SMS</li>
     <li>Message templates for common communications</li>
     <li>Print full application as PDF</li>
-    <li>Final polish: loading states, error handling, mobile responsiveness</li>
   </ul>
 </div>
 
-<div class="sprint">
+<div class="sprint done">
   <div class="sprint-header">
     <span class="sprint-number">SPRINT 8.5</span>
-    <span class="sprint-title">Public Website</span>
+    <span class="sprint-title">Public Website (Editorial Redesign)</span>
+    <span class="sprint-status status-done">DONE</span>
   </div>
-  <p>Replace jetsschool.org with a modern, premium public website built into the platform.</p>
+  <p>Replace jetsschool.org with a premium editorial-style website built into the platform.</p>
   <ul>
-    <li>Home, About, Programs, Faculty, Apply, Contact pages</li>
-    <li>Burgundy/maroon brand design, mobile responsive</li>
+    <li>Home, About, Programs, Faculty, Contact, Inquire pages</li>
+    <li>Editorial design: parchment palette, EB Garamond &amp; Playfair Display fonts</li>
+    <li>Scroll animations, drop caps, pull quotes, ornamental dividers</li>
     <li>"Apply Now" flows directly into the application portal</li>
-    <li>Calendly embed for booking consultations</li>
+    <li>Contact form wired to server action &mdash; saves as inquiry/lead</li>
+    <li>Inquiry form captures prospective student details</li>
   </ul>
 </div>
 
-<div class="sprint">
+<div class="sprint done">
   <div class="sprint-header">
     <span class="sprint-number">SPRINT 9</span>
     <span class="sprint-title">Alumni Management</span>
+    <span class="sprint-status status-done">DONE</span>
   </div>
   <p>Track all JETS alumni organized by graduation year.</p>
   <ul>
@@ -731,10 +949,11 @@
   </ul>
 </div>
 
-<div class="sprint">
+<div class="sprint done">
   <div class="sprint-header">
     <span class="sprint-number">SPRINT 10</span>
     <span class="sprint-title">QuickBooks + Donor Management</span>
+    <span class="sprint-status status-done">DONE</span>
   </div>
   <p>Replace CMS ($79/mo) and connect to QuickBooks for seamless accounting.</p>
   <ul>
@@ -746,6 +965,41 @@
   </ul>
 </div>
 
+<div class="sprint done">
+  <div class="sprint-header">
+    <span class="sprint-number">SPRINT 11</span>
+    <span class="sprint-title">Pipeline Board, Notifications, Reports & Leads</span>
+    <span class="sprint-status status-done">DONE</span>
+  </div>
+  <p>Advanced admin tools inspired by <a href="https://www.tryplayground.com/" style="color:#A30018;">Playground</a>&rsquo;s childcare management platform.</p>
+  <ul>
+    <li><strong>Pipeline Board:</strong> Drag-and-drop Kanban board for the full application lifecycle</li>
+    <li><strong>Automated Notifications:</strong> Status-change-triggered emails to parents &amp; admin with full delivery log</li>
+    <li><strong>Reports Dashboard:</strong> Enrollment funnel, financial summary, timeline, recommendation tracking, fundraising analytics</li>
+    <li><strong>Lead Capture:</strong> Public inquiry form + admin leads management with status pipeline and internal notes</li>
+    <li>Updated admin sidebar with new navigation items</li>
+    <li>Database models: NotificationTemplate, NotificationLog, Inquiry</li>
+  </ul>
+</div>
+
+<div class="sprint">
+  <div class="sprint-header">
+    <span class="sprint-number">SPRINT 12</span>
+    <span class="sprint-title">Go-Live Readiness</span>
+    <span class="sprint-status status-pending">NEXT UP</span>
+  </div>
+  <p>Final integration and production readiness.</p>
+  <ul>
+    <li><strong>Stripe live mode:</strong> Switch payment processing from mock to live</li>
+    <li><strong>Resend integration:</strong> Connect email delivery (notifications currently logged, just needs API key)</li>
+    <li><strong>Twilio SMS:</strong> Wire up SMS notifications for key status changes</li>
+    <li><strong>Domain &amp; deployment:</strong> Deploy to production, configure DNS</li>
+    <li><strong>Seed data:</strong> Import existing donor database (2,000+ records)</li>
+    <li><strong>QA pass:</strong> Full end-to-end testing of application &rarr; enrollment &rarr; payment flow</li>
+    <li><strong>Admin training:</strong> Walk the office team through every feature</li>
+  </ul>
+</div>
+
 <div class="page-break"></div>
 
 <!-- TECH STACK -->
@@ -753,16 +1007,59 @@
 <p>Modern, industry-standard tools chosen for reliability, security, and premium design:</p>
 <table>
   <tr><th style="width:30%">Technology</th><th>What It Does</th></tr>
-  <tr><td><strong>Next.js 15</strong></td><td>The main framework &mdash; builds both the website and the application (used by Netflix, TikTok, Hulu)</td></tr>
-  <tr><td><strong>PostgreSQL</strong></td><td>The database &mdash; stores all student, application, payment, and donor data securely</td></tr>
+  <tr><td><strong>Next.js 16</strong></td><td>The main framework &mdash; builds both the website and the application (used by Netflix, TikTok, Hulu)</td></tr>
+  <tr><td><strong>React 19</strong></td><td>Latest version with Server Components and Server Actions for fast, secure data handling</td></tr>
+  <tr><td><strong>PostgreSQL</strong></td><td>The database &mdash; stores all student, application, payment, donor, notification, and lead data securely</td></tr>
+  <tr><td><strong>Prisma ORM</strong></td><td>Type-safe database access with automatic migrations and schema management</td></tr>
   <tr><td><strong>Stripe</strong></td><td>Handles all credit card payments &mdash; application fees, tuition, donations (used by Shopify, Amazon, Google)</td></tr>
   <tr><td><strong>Twilio</strong></td><td>Sends SMS text messages to parents</td></tr>
-  <tr><td><strong>Resend</strong></td><td>Sends branded emails (application confirmations, document links, receipts)</td></tr>
+  <tr><td><strong>Resend</strong></td><td>Sends branded emails (application confirmations, document links, receipts, automated notifications)</td></tr>
   <tr><td><strong>QuickBooks Online API</strong></td><td>Connects to your QuickBooks for automatic invoice &amp; payment syncing</td></tr>
   <tr><td><strong>Calendly</strong></td><td>Embedded for interview scheduling (you already use this)</td></tr>
-  <tr><td><strong>Tailwind + shadcn/ui</strong></td><td>Premium design components &mdash; makes everything look world-class</td></tr>
-  <tr><td><strong>UploadThing</strong></td><td>Handles student photo and document uploads securely</td></tr>
+  <tr><td><strong>Tailwind CSS v4 + shadcn/ui</strong></td><td>Premium design components &mdash; makes everything look world-class</td></tr>
+  <tr><td><strong>Motion (Framer Motion)</strong></td><td>Scroll animations and transitions on the public website</td></tr>
+  <tr><td><strong>Zod</strong></td><td>Form validation and data integrity checking</td></tr>
 </table>
+
+<!-- ADMIN NAVIGATION -->
+<h2>Admin Navigation</h2>
+<p>The admin dashboard is organized into two modes plus general tools:</p>
+
+<div class="two-col">
+  <div class="col-box">
+    <h4>Admissions System</h4>
+    <ul>
+      <li>Dashboard</li>
+      <li>Leads &amp; Inquiries <span class="new-badge">new</span></li>
+      <li>Applications (Table View)</li>
+      <li>Pipeline Board (Kanban) <span class="new-badge">new</span></li>
+      <li>Scholarships</li>
+      <li>Enrollment Documents</li>
+      <li>Recommendations</li>
+    </ul>
+  </div>
+  <div class="col-box">
+    <h4>Current School Year</h4>
+    <ul>
+      <li>Dashboard</li>
+      <li>Students</li>
+      <li>Tuition &amp; Billing</li>
+      <li>Student Records</li>
+    </ul>
+  </div>
+</div>
+
+<div class="col-box" style="margin-top:15px;">
+  <h4>General Tools</h4>
+  <ul style="columns:2;">
+    <li>Reports &amp; Analytics <span class="new-badge">new</span></li>
+    <li>Notifications Log <span class="new-badge">new</span></li>
+    <li>Messages</li>
+    <li>Alumni</li>
+    <li>Donors</li>
+    <li>Settings</li>
+  </ul>
+</div>
 
 <!-- WHO SEES WHAT -->
 <h2>Who Sees What</h2>
@@ -770,11 +1067,11 @@
   <tr><th>User Type</th><th>What They Can Access</th></tr>
   <tr>
     <td><span class="tag">PARENT</span></td>
-    <td>Their own dashboard, applications, documents to sign, payments, messages, scholarship application</td>
+    <td>Their own dashboard, applications, documents to sign, payments, autopay settings, messages, scholarship application</td>
   </tr>
   <tr>
     <td><span class="tag blue">ADMIN (Office)</span></td>
-    <td>Everything &mdash; all applications, all students, dashboard, documents, billing, donors, alumni, messaging, settings</td>
+    <td>Everything &mdash; all applications, pipeline board, leads, students, dashboard, documents, billing, reports, notifications, donors, alumni, messaging, settings</td>
   </tr>
   <tr>
     <td><span class="tag green">PRINCIPAL</span></td>
@@ -786,7 +1083,7 @@
   </tr>
   <tr>
     <td><span class="tag gray">PUBLIC</span></td>
-    <td>Website pages (Home, About, Programs, Faculty, Contact), recommendation form (via email link), document signing (via email link)</td>
+    <td>Website pages (Home, About, Programs, Faculty, Contact, Inquire), inquiry form, recommendation form (via email link), document signing (via email link)</td>
   </tr>
 </table>
 
@@ -799,6 +1096,23 @@
   <tr><td>Webflow (new website)</td><td>Varies</td><td>Sprint 8.5: Public website built into the platform</td></tr>
   <tr><td>Manual document signing</td><td>&mdash;</td><td>Sprint 6: Electronic document signing</td></tr>
   <tr><td>Manual invoicing</td><td>&mdash;</td><td>Sprint 7: Automated billing + QuickBooks sync</td></tr>
+  <tr><td>No lead tracking</td><td>&mdash;</td><td>Sprint 11: Lead capture &amp; inquiry management</td></tr>
+  <tr><td>No automated notifications</td><td>&mdash;</td><td>Sprint 11: Status-triggered email notifications</td></tr>
+  <tr><td>No analytics / reporting</td><td>&mdash;</td><td>Sprint 11: Reports &amp; analytics dashboard</td></tr>
+</table>
+
+<!-- PLAYGROUND INSPIRATION -->
+<h2>Playground Inspiration</h2>
+<p>Sprint 11 features were inspired by <a href="https://www.tryplayground.com/" style="color:#A30018;">Playground</a> (tryplayground.com), a childcare management platform serving 4,000+ programs. Key ideas adopted:</p>
+
+<table>
+  <tr><th>Playground Feature</th><th>JETS Implementation</th></tr>
+  <tr><td>Drag-and-drop enrollment pipeline</td><td>Pipeline Board with 12 status columns and optimistic drag-and-drop</td></tr>
+  <tr><td>Automated stage-based notifications</td><td>Status-triggered emails for 8 key transitions with full delivery logging</td></tr>
+  <tr><td>Lead capture &amp; CRM</td><td>Public inquiry form + admin leads page with 6-stage follow-up pipeline</td></tr>
+  <tr><td>Real-time financial dashboards</td><td>Reports page with enrollment funnel, financial summary, and KPI cards</td></tr>
+  <tr><td>100+ pre-built reports</td><td>5 report types: funnel, financial, timeline, recommendations, fundraising</td></tr>
+  <tr><td>Family self-service portal</td><td>Parent portal with autopay, payment methods, and enrolled student dashboard</td></tr>
 </table>
 
 <div class="footer-note">
