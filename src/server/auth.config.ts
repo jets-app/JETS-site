@@ -30,6 +30,7 @@ export const authConfig: NextAuthConfig = {
         "/programs",
         "/faculty",
         "/contact",
+        "/inquire",
         "/login",
         "/register",
         "/verify-email",

@@ -82,6 +82,16 @@ export async function loginUser(formData: {
         return { error: "Invalid email or password" };
       }
     }
+    // NextAuth v5 throws a NEXT_REDIRECT "error" on successful sign-in
+    // when using server actions. This is expected behavior, not a real error.
+    if (
+      error instanceof Error &&
+      "digest" in error &&
+      typeof (error as { digest?: string }).digest === "string" &&
+      (error as { digest: string }).digest.includes("NEXT_REDIRECT")
+    ) {
+      return { success: true };
+    }
     return { error: "Something went wrong. Please try again." };
   }
 }
