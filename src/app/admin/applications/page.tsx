@@ -1,5 +1,6 @@
 import { auth } from "@/server/auth";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getAllApplications, getApplicationStats, getAcademicYears } from "@/server/actions/admin.actions";
 import { ApplicationsTable } from "./_components/applications-table";
 import type { ApplicationStatus } from "@prisma/client";
@@ -39,13 +40,26 @@ export default async function AdminApplicationsPage({ searchParams }: PageProps)
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      <div className="space-y-1">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-          Applications
-        </h1>
-        <p className="text-muted-foreground">
-          Manage and review all student applications for {stats.academicYear}.
-        </p>
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            Applications
+          </h1>
+          <p className="text-muted-foreground">
+            Manage and review all student applications for {stats.academicYear}.
+          </p>
+        </div>
+        <Link
+          href="/admin/applications/pipeline"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="opacity-60">
+            <rect x="1" y="1" width="4" height="14" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+            <rect x="6" y="4" width="4" height="11" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+            <rect x="11" y="7" width="4" height="8" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+          </svg>
+          Pipeline View
+        </Link>
       </div>
 
       {/* Status summary cards */}

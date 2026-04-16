@@ -4,6 +4,7 @@ import { db } from "@/server/db";
 import { auth } from "@/server/auth";
 import { revalidatePath } from "next/cache";
 import type { ApplicationStatus } from "@prisma/client";
+import { triggerStatusNotifications } from "@/server/notifications";
 
 // ---------- Helpers ----------
 
@@ -290,6 +291,9 @@ export async function updateApplicationStatus(
   revalidatePath(`/admin/applications/${applicationId}`);
   revalidatePath("/admin/applications");
   revalidatePath("/admin/dashboard");
+
+  triggerStatusNotifications(applicationId, newStatus).catch(console.error);
+
   return updatedApplication;
 }
 
@@ -380,4 +384,88 @@ export async function getValidTransitions(
   currentStatus: ApplicationStatus
 ): Promise<ApplicationStatus[]> {
   return STATUS_TRANSITIONS[currentStatus] ?? [];
+}
+
+export async function getApplicationsByStatus(academicYear?: string) {
+  await requireAdmin();
+
+  const settings = await db.systemSettings.findFirst();
+  const year = academicYear ?? settings?.currentAcademicYear ?? "2026-2027";
+
+  const applications = await db.application.findMany({
+    where: { academicYear: year },
+    include: {
+      student: {
+        select: {
+          firstName: true,
+          lastName: true,
+          photoUrl: true,
+        },
+      },
+      parent: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+      recommendations: {
+        select: { status: true },
+      },
+    },
+    orderBy: { updatedAt: "desc" },
+  });
+
+  const grouped: Record<string, typeof applications> = {};
+  for (const app of applications) {
+    if (!grouped[app.status]) grouped[app.status] = [];
+    grouped[app.status].push(app);
+  }
+
+  return { grouped, academicYear: year };
+}
+
+export async function moveApplicationStatus(
+  applicationId: string,
+  newStatus: ApplicationStatus
+) {
+  const user = await requireAdmin();
+
+  const application = await db.application.findUnique({
+    where: { id: applicationId },
+    select: { id: true, status: true },
+  });
+
+  if (!application) {
+    throw new Error("Application not found");
+  }
+
+  const allowedTransitions = STATUS_TRANSITIONS[application.status];
+  if (!allowedTransitions?.includes(newStatus)) {
+    return {
+      success: false,
+      error: `Cannot move from ${application.status} to ${newStatus}`,
+    };
+  }
+
+  await db.$transaction([
+    db.application.update({
+      where: { id: applicationId },
+      data: { status: newStatus },
+    }),
+    db.applicationNote.create({
+      data: {
+        applicationId,
+        authorId: user.id!,
+        content: `Status changed from ${application.status} to ${newStatus} (via pipeline board)`,
+        isInternal: true,
+      },
+    }),
+  ]);
+
+  revalidatePath("/admin/applications");
+  revalidatePath("/admin/applications/pipeline");
+
+  triggerStatusNotifications(applicationId, newStatus).catch(console.error);
+
+  return { success: true };
 }
