@@ -112,26 +112,31 @@ export function AdminSidebar() {
   return (
     <>
       {/* Mobile header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-b h-14 flex items-center px-4">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-14 flex items-center px-4"
+        style={{ background: "#0f0f12", borderBottom: "1px solid rgba(255,255,255,0.08)" }}
+      >
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setMobileOpen(!mobileOpen)}
+          className="text-white/80 hover:text-white hover:bg-white/10"
         >
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>
-        <div className="flex items-center gap-2 ml-3">
-          <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-xs">J</span>
+        <div className="flex items-center gap-2.5 ml-3">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+            style={{ background: "#A30018" }}
+          >
+            <Shield className="h-3.5 w-3.5 text-white" />
           </div>
-          <span className="font-semibold text-sm">JETS Admin</span>
+          <span className="font-semibold text-sm text-white tracking-tight">JETS Admin</span>
         </div>
       </div>
 
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="lg:hidden fixed inset-0 z-40 bg-black/50"
+          className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -139,22 +144,26 @@ export function AdminSidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-0 left-0 z-40 h-screen w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-transform duration-300 flex flex-col",
+          "admin-sidebar fixed top-0 left-0 z-40 h-screen w-[264px] transition-transform duration-300 ease-out flex flex-col",
           "lg:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         {/* Logo */}
-        <div className="h-14 lg:h-16 flex items-center px-5 border-b border-sidebar-border shrink-0">
+        <div className="h-14 lg:h-[60px] flex items-center px-5 shrink-0"
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+        >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-sidebar-primary rounded-lg flex items-center justify-center">
-              <Shield className="h-4 w-4 text-sidebar-primary-foreground" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ background: "#A30018" }}
+            >
+              <Shield className="h-4 w-4 text-white" />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-bold text-sidebar-foreground leading-none">
+              <span className="text-[13px] font-bold text-white leading-none tracking-tight">
                 JETS School
               </span>
-              <span className="text-[10px] text-sidebar-foreground/50 leading-none mt-1">
+              <span className="text-[10px] text-white/35 leading-none mt-1 font-medium">
                 Administration
               </span>
             </div>
@@ -163,19 +172,22 @@ export function AdminSidebar() {
 
         {/* Mode Switcher */}
         <div className="px-3 pt-4 pb-2 shrink-0">
-          <p className="px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/40 mb-2">
+          <p className="admin-section-label px-3 mb-2">
             Mode
           </p>
-          <div className="grid grid-cols-2 gap-1 rounded-lg bg-sidebar-accent/40 p-1">
+          <div className="grid grid-cols-2 gap-1 rounded-lg p-1"
+            style={{ background: "rgba(255,255,255,0.04)" }}
+          >
             <Link
               href="/admin/admissions"
               onClick={() => setMobileOpen(false)}
               className={cn(
-                "flex items-center justify-center gap-1.5 rounded-md px-2 py-2 text-xs font-semibold transition-all",
+                "flex items-center justify-center gap-1.5 rounded-md px-2 py-2 text-xs font-semibold transition-all duration-200",
                 mode === "admissions"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-sidebar-foreground/60 hover:text-sidebar-foreground"
+                  ? "text-white shadow-sm"
+                  : "text-white/45 hover:text-white/70"
               )}
+              style={mode === "admissions" ? { background: "#A30018" } : undefined}
             >
               <FileText className="h-3.5 w-3.5" />
               Admissions
@@ -184,10 +196,10 @@ export function AdminSidebar() {
               href="/admin/students"
               onClick={() => setMobileOpen(false)}
               className={cn(
-                "flex items-center justify-center gap-1.5 rounded-md px-2 py-2 text-xs font-semibold transition-all",
+                "flex items-center justify-center gap-1.5 rounded-md px-2 py-2 text-xs font-semibold transition-all duration-200",
                 mode === "school_year"
-                  ? "bg-emerald-600 text-white shadow-sm dark:bg-emerald-500"
-                  : "text-sidebar-foreground/60 hover:text-sidebar-foreground"
+                  ? "bg-emerald-600 text-white shadow-sm"
+                  : "text-white/45 hover:text-white/70"
               )}
             >
               <School className="h-3.5 w-3.5" />
@@ -197,15 +209,13 @@ export function AdminSidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-6 admin-sidebar-scroll">
           {/* Mode-specific section */}
           <div>
-            <p
-              className={cn(
-                "px-3 text-[10px] font-semibold uppercase tracking-[0.15em] mb-2",
-                activeNav.accentClass
-              )}
-            >
+            <p className={cn(
+              "admin-section-label px-3 mb-1.5",
+              mode === "admissions" ? "!text-[#e8687a]" : "!text-emerald-400"
+            )}>
               {activeNav.label}
             </p>
             <div className="space-y-0.5">
@@ -219,16 +229,14 @@ export function AdminSidebar() {
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                      isActive
-                        ? mode === "admissions"
-                          ? "bg-primary/15 text-primary"
-                          : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
-                        : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                      "admin-nav-item group",
+                      isActive && "admin-nav-item-active",
+                      isActive && mode === "admissions" && "admin-nav-item-active-admissions",
+                      isActive && mode === "school_year" && "admin-nav-item-active-school",
                     )}
                   >
-                    <item.icon className="h-4 w-4 shrink-0" />
-                    {item.label}
+                    <item.icon className="h-4 w-4 shrink-0 transition-colors duration-200" />
+                    <span>{item.label}</span>
                   </Link>
                 );
               })}
@@ -237,7 +245,7 @@ export function AdminSidebar() {
 
           {/* Shared section */}
           <div>
-            <p className="px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/40 mb-2">
+            <p className="admin-section-label px-3 mb-1.5">
               {sharedNav.label}
             </p>
             <div className="space-y-0.5">
@@ -251,14 +259,12 @@ export function AdminSidebar() {
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                      isActive
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                        : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                      "admin-nav-item group",
+                      isActive && "admin-nav-item-active admin-nav-item-active-general",
                     )}
                   >
-                    <item.icon className="h-4 w-4 shrink-0" />
-                    {item.label}
+                    <item.icon className="h-4 w-4 shrink-0 transition-colors duration-200" />
+                    <span>{item.label}</span>
                   </Link>
                 );
               })}
@@ -267,14 +273,16 @@ export function AdminSidebar() {
         </nav>
 
         {/* Sign out */}
-        <div className="px-3 pb-4 border-t border-sidebar-border pt-4 shrink-0">
+        <div className="px-3 pb-4 pt-3 shrink-0"
+          style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+        >
           <form action="/api/auth/signout" method="POST">
             <button
               type="submit"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-all duration-200 w-full"
+              className="admin-nav-item w-full !text-white/40 hover:!text-red-400"
             >
               <LogOut className="h-4 w-4 shrink-0" />
-              Sign Out
+              <span>Sign Out</span>
             </button>
           </form>
         </div>

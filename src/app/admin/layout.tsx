@@ -6,10 +6,10 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen" style={{ background: "#fafafa" }}>
       <AdminSidebar />
-      <main className="lg:ml-64 pt-14 lg:pt-0">
-        <div className="p-4 sm:p-6 lg:p-8">{children}</div>
+      <main className="lg:ml-[264px] pt-14 lg:pt-0 min-h-screen">
+        <div className="p-5 sm:p-7 lg:p-10">{children}</div>
       </main>
     </div>
   );
