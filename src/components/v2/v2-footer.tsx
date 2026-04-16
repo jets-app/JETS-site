@@ -21,10 +21,10 @@ export function V2Footer() {
               The School
             </div>
             <ul className="space-y-2 v2-editorial" style={{ fontSize: "15px" }}>
-              <li><Link href="/v2/about" className="v2-link-underline">About JETS</Link></li>
-              <li><Link href="/v2/faculty" className="v2-link-underline">Faculty</Link></li>
-              <li><Link href="/v2/programs" className="v2-link-underline">Programs</Link></li>
-              <li><Link href="/v2/contact" className="v2-link-underline">Contact</Link></li>
+              <li><Link href="/about" className="v2-link-underline">About JETS</Link></li>
+              <li><Link href="/faculty" className="v2-link-underline">Faculty</Link></li>
+              <li><Link href="/programs" className="v2-link-underline">Programs</Link></li>
+              <li><Link href="/contact" className="v2-link-underline">Contact</Link></li>
             </ul>
           </div>
 
@@ -34,7 +34,7 @@ export function V2Footer() {
             </div>
             <ul className="space-y-2 v2-editorial" style={{ fontSize: "15px" }}>
               <li><Link href="/register" className="v2-link-underline">Apply</Link></li>
-              <li><Link href="/v2/contact" className="v2-link-underline">Visit Campus</Link></li>
+              <li><Link href="/contact" className="v2-link-underline">Visit Campus</Link></li>
               <li><Link href="/login" className="v2-link-underline">Student Portal</Link></li>
             </ul>
           </div>

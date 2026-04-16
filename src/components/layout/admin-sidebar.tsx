@@ -23,6 +23,10 @@ import {
   HomeIcon,
   School,
   Sparkles,
+  Kanban,
+  BarChart3,
+  Bell,
+  UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -58,7 +62,9 @@ const admissionsNav = {
   accentClass: "text-primary",
   items: [
     { label: "Dashboard", href: "/admin/admissions", icon: LayoutDashboard },
+    { label: "Leads", href: "/admin/leads", icon: UserPlus },
     { label: "Applications", href: "/admin/applications", icon: FileText },
+    { label: "Pipeline Board", href: "/admin/applications/pipeline", icon: Kanban },
     { label: "Scholarships", href: "/admin/scholarships", icon: Sparkles },
     {
       label: "Enrollment Documents",
@@ -87,6 +93,8 @@ const schoolYearNav = {
 const sharedNav = {
   label: "General",
   items: [
+    { label: "Reports", href: "/admin/reports", icon: BarChart3 },
+    { label: "Notifications", href: "/admin/notifications", icon: Bell },
     { label: "Messages", href: "/admin/messages", icon: MessageSquare },
     { label: "Alumni", href: "/admin/alumni", icon: Users },
     { label: "Donors", href: "/admin/donors", icon: Heart },

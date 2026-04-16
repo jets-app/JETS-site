@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useState } from "react";
 
 const navLinks = [
-  { href: "/v2", label: "Home" },
-  { href: "/v2/about", label: "About" },
-  { href: "/v2/programs", label: "Programs" },
-  { href: "/v2/faculty", label: "Faculty" },
-  { href: "/v2/contact", label: "Contact" },
+  { href: "/", label: "Home" },
+  { href: "/about", label: "About" },
+  { href: "/programs", label: "Programs" },
+  { href: "/faculty", label: "Faculty" },
+  { href: "/contact", label: "Contact" },
+  { href: "/inquire", label: "Inquire" },
 ];
 
 export function V2Nav() {
@@ -44,7 +45,7 @@ export function V2Nav() {
           Jewish Educational Trade School
         </div>
         <Link
-          href="/v2"
+          href="/"
           className="v2-display inline-block"
           style={{
             fontSize: "clamp(2.5rem, 6vw, 4.5rem)",
