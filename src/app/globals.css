@@ -59,6 +59,19 @@
 }
 
 :root {
+  /* ===== Modern JETS Design System ===== */
+  --jet-bg: #ffffff;
+  --jet-bg-subtle: #f8f8f8;
+  --jet-bg-muted: #f1f1f1;
+  --jet-text: #0a0a0a;
+  --jet-text-muted: #6b6b6b;
+  --jet-primary: #A30018;
+  --jet-primary-light: #cc1a33;
+  --jet-primary-dark: #7a0012;
+  --jet-accent: #1a1a2e;
+  --jet-border: #e5e5e5;
+  --jet-radius: 12px;
+
   /* ===== JETS Burgundy/Maroon Brand Theme ===== */
 
   /* Background & Foreground */
