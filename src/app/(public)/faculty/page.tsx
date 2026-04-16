@@ -1,229 +1,111 @@
-import { V2Nav } from "@/components/v2/v2-nav";
-import { V2Footer } from "@/components/v2/v2-footer";
-import { EditorialSection, OrnamentDivider } from "@/components/v2/editorial-section";
-import { PullQuote } from "@/components/v2/pull-quote";
-import { DropCapParagraph } from "@/components/v2/drop-cap-paragraph";
-import { FadeIn } from "@/components/v2/fade-in";
+import { SiteNav } from "@/components/site/site-nav";
+import { SiteFooter } from "@/components/site/site-footer";
 
 export const metadata = {
   title: "Faculty",
-  description: "The Rabbeim, instructors, and leadership of the Jewish Educational Trade School.",
+  description:
+    "The Rabbeim, instructors, and leadership of the Jewish Educational Trade School.",
 };
 
-const otherLeaders = [
+const faculty = [
+  {
+    initials: "MS",
+    name: "Rabbi Mayer Schmukler",
+    role: "Founding Director",
+    bio: "Rabbi Schmukler founded JETS in 2008 with a straightforward conviction: Torah learning and vocational training belong together. Ordained at the Rabbinical College of America in Morristown, NJ, he spent a decade in the pulpit rabbinate before creating JETS. He is the first to arrive each morning and the last to leave. His door is always open.",
+  },
   {
     initials: "YBS",
     name: "Rabbi Y. Boruch Sufrin",
-    role: "Menahel · Head of Judaic Studies",
-    bio: [
-      "Rabbi Sufrin leads the morning curriculum and oversees the spiritual formation of the student body. A graduate of the Rabbinical College of America and a longtime educator in the Chabad network, he has served at JETS since 2011.",
-      "His chaburas in Gemara are, by reputation, the quietest hour of the JETS day — a quality he attributes less to his teaching than to the text itself.",
-    ],
-    pullquote:
-      "A Rebbe&apos;s first task is not to answer his students&apos; questions but to teach them which questions are worth asking.",
+    role: "Head of Judaic Studies",
+    bio: "Rabbi Sufrin leads the morning curriculum and oversees the spiritual formation of every student. A graduate of the Rabbinical College of America and a longtime Chabad educator, he has served at JETS since 2011. His Gemara chaburas are known for their depth and focus.",
   },
   {
     initials: "MBH",
     name: "Matthew B. Hintze",
     role: "Director of Vocational Programs",
-    bio: [
-      "Mr. Hintze directs the afternoon curriculum, oversees the relationships with our industry partners, and has personally built several of the workshops his students now use.",
-      "Before joining JETS in 2014, he spent eighteen years as a general contractor in the San Fernando Valley. He holds certifications in nine trades and, by his own admission, is still learning a tenth.",
-    ],
-    pullquote:
-      "A trade is a conversation between the craftsman and the material. Our job is to teach the boys to listen.",
+    bio: "Matt directs the afternoon curriculum and manages relationships with industry partners. Before joining JETS in 2014, he spent eighteen years as a general contractor in the San Fernando Valley. He holds certifications in nine trades and personally built several of the workshops his students now use.",
   },
 ];
 
-export default function V2FacultyPage() {
+export default function FacultyPage() {
   return (
     <>
-      <V2Nav />
+      <SiteNav />
 
-      {/* Title */}
-      <section>
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10 pt-10 pb-14 text-center">
-          <FadeIn>
-            <div className="v2-smallcaps mb-6" style={{ color: "var(--v2-ink-muted)" }}>
-              A Profile in Three Parts
-            </div>
-          </FadeIn>
-          <FadeIn delay={0.1}>
-            <h1
-              className="v2-display"
-              style={{
-                fontSize: "clamp(3rem, 8vw, 6.5rem)",
-                color: "var(--v2-ink)",
-              }}
-            >
-              Meet Our <em className="italic" style={{ color: "var(--v2-burgundy)" }}>Faculty.</em>
-            </h1>
-          </FadeIn>
-          <FadeIn delay={0.2}>
-            <div
-              className="mt-6 italic v2-editorial mx-auto"
-              style={{
-                fontSize: "19px",
-                maxWidth: "44rem",
-                color: "var(--v2-ink-muted)",
-                lineHeight: 1.55,
-              }}
-            >
-              The Rabbeim, craftsmen, and educators who have, between them, shaped
-              the character of the institution for the better part of two
-              decades.
-            </div>
-          </FadeIn>
-          <FadeIn delay={0.3}>
-            <div className="v2-ornament mt-12" style={{ color: "var(--v2-gold)" }}>
-              <span>✦</span>
-            </div>
-          </FadeIn>
+      {/* Hero */}
+      <section className="pt-28 lg:pt-36 pb-16 lg:pb-20">
+        <div className="max-w-[1280px] mx-auto px-6 lg:px-10 text-center">
+          <p className="text-sm font-semibold uppercase tracking-wider text-[var(--jet-primary)] mb-4">
+            Leadership
+          </p>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[var(--jet-text)]">
+            Our Faculty
+          </h1>
+          <p className="mt-4 text-lg text-[var(--jet-text-muted)] max-w-[540px] mx-auto">
+            The Rabbeim, tradesmen, and educators who have shaped JETS for
+            nearly two decades.
+          </p>
         </div>
       </section>
 
-      {/* Featured leader: Rabbi Schmukler */}
-      <EditorialSection kicker="I. The Founder">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          <FadeIn className="lg:col-span-5">
-            <div
-              className="aspect-[4/5] w-full relative flex items-center justify-center"
-              style={{
-                background: "var(--v2-parchment-deep)",
-                border: "1px solid var(--v2-rule)",
-              }}
-            >
-              <div className="absolute inset-4" style={{ border: "1px solid var(--v2-gold)" }} />
-              <div className="text-center">
-                <div
-                  className="v2-display"
-                  style={{
-                    fontSize: "7rem",
-                    color: "var(--v2-burgundy)",
-                    fontStyle: "italic",
-                    lineHeight: 1,
-                  }}
-                >
-                  MS
+      {/* Faculty cards */}
+      <section className="pb-20 lg:pb-28">
+        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {faculty.map((member) => (
+              <div
+                key={member.name}
+                className="bg-white rounded-2xl border border-[var(--jet-border)] overflow-hidden hover:shadow-lg transition-shadow"
+              >
+                {/* Initials avatar */}
+                <div className="bg-[var(--jet-bg-subtle)] flex items-center justify-center py-14">
+                  <div className="w-28 h-28 rounded-full bg-[var(--jet-primary)] flex items-center justify-center">
+                    <span className="text-4xl font-bold text-white tracking-tight">
+                      {member.initials}
+                    </span>
+                  </div>
                 </div>
-                <div className="mt-4 v2-byline" style={{ color: "var(--v2-ink-muted)" }}>
-                  A Portrait in Absentia
+
+                <div className="p-8">
+                  <h3 className="text-xl font-bold text-[var(--jet-text)]">
+                    {member.name}
+                  </h3>
+                  <p className="text-sm font-medium text-[var(--jet-primary)] mt-1 mb-4">
+                    {member.role}
+                  </p>
+                  <p className="text-[var(--jet-text-muted)] leading-relaxed">
+                    {member.bio}
+                  </p>
                 </div>
               </div>
-            </div>
-          </FadeIn>
-
-          <div className="lg:col-span-7">
-            <FadeIn delay={0.1}>
-              <div className="v2-kicker mb-3">Founding Director</div>
-              <h2
-                className="v2-display mb-8"
-                style={{ fontSize: "clamp(2.25rem, 4.5vw, 3.5rem)", color: "var(--v2-ink)" }}
-              >
-                Rabbi <em className="italic" style={{ color: "var(--v2-burgundy)" }}>Mayer Schmukler.</em>
-              </h2>
-            </FadeIn>
-            <div className="v2-editorial space-y-5" style={{ fontSize: "17.5px", lineHeight: 1.75 }}>
-              <FadeIn delay={0.15}>
-                <DropCapParagraph>
-                  Rabbi Mayer Schmukler founded the Jewish Educational Trade
-                  School in 2008, and has served as its director continuously
-                  ever since. He was ordained at the Rabbinical College of
-                  America in Morristown, New Jersey, and spent the first decade
-                  of his career in the classical pulpit rabbinate before
-                  arriving at the conviction that would become, in due course,
-                  JETS.
-                </DropCapParagraph>
-              </FadeIn>
-              <FadeIn delay={0.2}>
-                <p>
-                  That conviction — that Torah learning and vocational
-                  formation are not rivals but partners in the making of a
-                  serious Jewish life — is not, he is the first to admit, his
-                  own invention. It is the plain implication of the Mishnah in
-                  Pirkei Avos, read honestly. What he has done, and what the
-                  school that bears his fingerprints continues to do, is take
-                  that implication seriously.
-                </p>
-              </FadeIn>
-              <FadeIn delay={0.25}>
-                <PullQuote attribution="Rabbi Mayer Schmukler">
-                  If a graduate of ours, twenty years hence, should say of JETS only that it taught him how to learn and how to labor — then we will have succeeded.
-                </PullQuote>
-              </FadeIn>
-              <FadeIn delay={0.3}>
-                <p>
-                  He remains, at the time of this writing, the first into the
-                  beis medrash each morning and, more often than he admits, the
-                  last out of it in the evening. His office is on the second
-                  floor of the main building; the door, almost invariably, is
-                  open.
-                </p>
-              </FadeIn>
-            </div>
+            ))}
           </div>
         </div>
-      </EditorialSection>
+      </section>
 
-      <OrnamentDivider />
-
-      {/* Other leaders */}
-      {otherLeaders.map((leader, i) => (
-        <EditorialSection
-          key={leader.name}
-          kicker={`${i === 0 ? "II" : "III"}. ${leader.role.split(" · ")[0]}`}
-        >
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-            <FadeIn className={`lg:col-span-4 ${i % 2 === 1 ? "lg:order-2" : ""}`}>
-              <div
-                className="aspect-[4/5] w-full relative flex items-center justify-center"
-                style={{
-                  background: "var(--v2-parchment-deep)",
-                  border: "1px solid var(--v2-rule)",
-                }}
-              >
-                <div className="absolute inset-4" style={{ border: "1px solid var(--v2-rule-soft)" }} />
-                <div
-                  className="v2-display italic"
-                  style={{
-                    fontSize: "5rem",
-                    color: "var(--v2-navy)",
-                    lineHeight: 1,
-                  }}
-                >
-                  {leader.initials}
-                </div>
-              </div>
-            </FadeIn>
-
-            <div className={`lg:col-span-8 ${i % 2 === 1 ? "lg:order-1" : ""}`}>
-              <FadeIn delay={0.1}>
-                <div className="v2-kicker mb-3">{leader.role}</div>
-                <h2
-                  className="v2-display mb-6"
-                  style={{ fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)", color: "var(--v2-ink)" }}
-                >
-                  {leader.name}
-                </h2>
-              </FadeIn>
-              <div className="v2-editorial space-y-5" style={{ fontSize: "17px", lineHeight: 1.75 }}>
-                {leader.bio.map((p, pi) => (
-                  <FadeIn key={pi} delay={0.15 + pi * 0.05}>
-                    <p>{p}</p>
-                  </FadeIn>
-                ))}
-                <FadeIn delay={0.3}>
-                  <PullQuote size="md">
-                    <span dangerouslySetInnerHTML={{ __html: leader.pullquote }} />
-                  </PullQuote>
-                </FadeIn>
-              </div>
-            </div>
+      {/* CTA */}
+      <section className="py-16 lg:py-20 bg-[var(--jet-accent)]">
+        <div className="max-w-[700px] mx-auto px-6 text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
+            Want to meet the team?
+          </h2>
+          <p className="mt-4 text-lg text-white/70">
+            Schedule a campus visit and see JETS in action. Meet the Rabbeim,
+            tour the workshops, and ask any question you have.
+          </p>
+          <div className="mt-8">
+            <a
+              href="/contact"
+              className="inline-flex items-center justify-center px-8 py-3.5 text-base font-semibold text-white bg-[var(--jet-primary)] hover:bg-[var(--jet-primary-light)] rounded-full transition-colors"
+            >
+              Schedule a Visit
+            </a>
           </div>
-        </EditorialSection>
-      ))}
+        </div>
+      </section>
 
-      <V2Footer />
+      <SiteFooter />
     </>
   );
 }
