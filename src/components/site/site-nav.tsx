@@ -51,7 +51,13 @@ export function SiteNav() {
             </Link>
           ))}
           <Link
-            href="/inquire"
+            href="/login"
+            className="text-sm font-medium text-[var(--jet-text-muted)] hover:text-[var(--jet-text)] transition-colors"
+          >
+            Sign In
+          </Link>
+          <Link
+            href="/register"
             className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold text-white bg-[var(--jet-primary)] hover:bg-[var(--jet-primary-light)] rounded-full transition-colors"
           >
             Apply Now
@@ -96,7 +102,14 @@ export function SiteNav() {
             </Link>
           ))}
           <Link
-            href="/inquire"
+            href="/login"
+            onClick={() => setMobileOpen(false)}
+            className="block text-base font-medium text-[var(--jet-text)] hover:text-[var(--jet-primary)]"
+          >
+            Sign In
+          </Link>
+          <Link
+            href="/register"
             onClick={() => setMobileOpen(false)}
             className="block text-center px-5 py-3 text-sm font-semibold text-white bg-[var(--jet-primary)] rounded-full"
           >
