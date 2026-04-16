@@ -41,7 +41,10 @@ export const authConfig: NextAuthConfig = {
         publicRoutes.includes(path) ||
         path.startsWith("/r/") ||
         path.startsWith("/d/") ||
-        path.startsWith("/api/webhooks");
+        path.startsWith("/api/auth") ||
+        path.startsWith("/api/webhooks") ||
+        path.startsWith("/v1") ||
+        path.startsWith("/v2");
 
       if (isPublicRoute) return true;
 
