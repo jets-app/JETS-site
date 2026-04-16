@@ -42,16 +42,16 @@ export default async function AdminApplicationsPage({ searchParams }: PageProps)
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+          <h1 className="admin-page-title">
             Applications
           </h1>
-          <p className="text-muted-foreground">
+          <p className="admin-page-subtitle">
             Manage and review all student applications for {stats.academicYear}.
           </p>
         </div>
         <Link
           href="/admin/applications/pipeline"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="admin-btn-secondary"
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="opacity-60">
             <rect x="1" y="1" width="4" height="14" rx="1" stroke="currentColor" strokeWidth="1.5"/>
@@ -65,19 +65,19 @@ export default async function AdminApplicationsPage({ searchParams }: PageProps)
       {/* Status summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
-          { label: "Draft", key: "DRAFT", color: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300" },
-          { label: "Submitted", key: "SUBMITTED", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
-          { label: "In Review", key: "OFFICE_REVIEW", color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300" },
-          { label: "Accepted", key: "ACCEPTED", color: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300" },
-          { label: "Enrolled", key: "ENROLLED", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" },
-          { label: "Rejected", key: "REJECTED", color: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300" },
+          { label: "Draft", key: "DRAFT", badgeClass: "admin-badge admin-badge-gray" },
+          { label: "Submitted", key: "SUBMITTED", badgeClass: "admin-badge admin-badge-blue" },
+          { label: "In Review", key: "OFFICE_REVIEW", badgeClass: "admin-badge admin-badge-yellow" },
+          { label: "Accepted", key: "ACCEPTED", badgeClass: "admin-badge admin-badge-green" },
+          { label: "Enrolled", key: "ENROLLED", badgeClass: "admin-badge admin-badge-emerald" },
+          { label: "Rejected", key: "REJECTED", badgeClass: "admin-badge admin-badge-red" },
         ].map((s) => (
           <div
             key={s.key}
-            className="rounded-xl border bg-card p-3 text-center"
+            className="admin-stat-card text-center"
           >
-            <p className="text-2xl font-bold">{stats.statusMap[s.key] ?? 0}</p>
-            <p className={`text-xs font-medium mt-1 inline-flex px-2 py-0.5 rounded-full ${s.color}`}>
+            <p className="admin-stat-value !text-2xl">{stats.statusMap[s.key] ?? 0}</p>
+            <p className={`mt-2 ${s.badgeClass}`}>
               {s.label}
             </p>
           </div>
