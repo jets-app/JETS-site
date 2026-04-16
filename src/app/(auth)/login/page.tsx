@@ -26,15 +26,14 @@ export default function LoginPage() {
 
   async function onSubmit(data: LoginInput) {
     setError(null);
-    const result = await loginUser(data);
-
-    if (result.error) {
-      setError(result.error);
-      return;
+    try {
+      const result = await loginUser(data);
+      if (result?.error) {
+        setError(result.error);
+      }
+    } catch {
+      // Redirect throws are expected on success — Next.js handles it
     }
-
-    router.push("/dashboard");
-    router.refresh();
   }
 
   return (

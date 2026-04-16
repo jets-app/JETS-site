@@ -72,25 +72,18 @@ export async function loginUser(formData: {
     await signIn("credentials", {
       email: formData.email.toLowerCase(),
       password: formData.password,
-      redirect: false,
+      redirectTo: "/dashboard",
     });
-
-    return { success: true };
   } catch (error) {
+    // NextAuth v5 throws a NEXT_REDIRECT on successful sign-in via server actions.
+    // This must be re-thrown so Next.js can handle the redirect.
+    if (error instanceof Error && "digest" in error) {
+      throw error;
+    }
     if (error instanceof AuthError) {
       if (error.type === "CredentialsSignin") {
         return { error: "Invalid email or password" };
       }
-    }
-    // NextAuth v5 throws a NEXT_REDIRECT "error" on successful sign-in
-    // when using server actions. This is expected behavior, not a real error.
-    if (
-      error instanceof Error &&
-      "digest" in error &&
-      typeof (error as { digest?: string }).digest === "string" &&
-      (error as { digest: string }).digest.includes("NEXT_REDIRECT")
-    ) {
-      return { success: true };
     }
     return { error: "Something went wrong. Please try again." };
   }
