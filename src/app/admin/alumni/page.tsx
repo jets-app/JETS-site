@@ -1,10 +1,21 @@
 import { auth } from "@/server/auth";
 import { redirect } from "next/navigation";
-import { getAlumni, getAlumniYears } from "@/server/actions/alumni.actions";
+import {
+  getAlumni,
+  getAlumniYears,
+  getAlumniStats,
+  getAlumniPrograms,
+} from "@/server/actions/alumni.actions";
 import { AlumniDashboard } from "./_components/alumni-dashboard";
 
 interface PageProps {
-  searchParams: Promise<{ year?: string; search?: string; page?: string }>;
+  searchParams: Promise<{
+    year?: string;
+    search?: string;
+    page?: string;
+    program?: string;
+    location?: string;
+  }>;
 }
 
 export default async function AlumniPage({ searchParams }: PageProps) {
@@ -17,15 +28,21 @@ export default async function AlumniPage({ searchParams }: PageProps) {
   const yearParam = params.year ? parseInt(params.year, 10) : undefined;
   const search = params.search ?? "";
   const page = params.page ? parseInt(params.page, 10) : 1;
+  const program = params.program ?? undefined;
+  const location = params.location ?? undefined;
 
-  const [alumniData, years] = await Promise.all([
+  const [alumniData, years, stats, programs] = await Promise.all([
     getAlumni({
       graduationYear: yearParam,
       search: search || undefined,
+      program,
+      city: location,
       page,
       pageSize: 100,
     }),
     getAlumniYears(),
+    getAlumniStats(),
+    getAlumniPrograms(),
   ]);
 
   return (
@@ -34,8 +51,12 @@ export default async function AlumniPage({ searchParams }: PageProps) {
         alumni={alumniData.alumni}
         total={alumniData.total}
         years={years}
+        programs={programs}
         selectedYear={yearParam ?? null}
+        selectedProgram={program ?? null}
+        selectedLocation={location ?? null}
         search={search}
+        stats={stats}
       />
     </div>
   );

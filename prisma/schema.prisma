@@ -600,10 +600,151 @@ model Alumni {
   programCompleted String?
   notes            String? @db.Text
 
+  // Enhanced alumni fields
+  currentRole     String?
+  currentCompany  String?
+  city            String?
+  state           String?
+  linkedinUrl     String?
+  isFeatured      Boolean  @default(false)
+  lastContactedAt DateTime?
+  engagementScore Int      @default(0)
+
+  mentorProfile MentorProfile?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([graduationYear])
+}
+
+// ==================== JOB BOARD ====================
+
+enum JobStatus {
+  ACTIVE
+  CLOSED
+  EXPIRED
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  APPRENTICESHIP
+  INTERNSHIP
+  CONTRACT
+  VOLUNTEER
+}
+
+model JobPosting {
+  id          String    @id @default(cuid())
+  title       String
+  company     String
+  description String    @db.Text
+  location    String?
+  type        JobType   @default(FULL_TIME)
+  trade       String?
+  salary      String?
+  contactEmail String?
+  contactPhone String?
+  applyUrl    String?
+  status      JobStatus @default(ACTIVE)
+
+  postedById  String?
+
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status])
+  @@index([trade])
+}
+
+// ==================== MENTORSHIP ====================
+
+enum MentorshipStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+model MentorProfile {
+  id          String   @id @default(cuid())
+  alumniId    String   @unique
+  alumni      Alumni   @relation(fields: [alumniId], references: [id], onDelete: Cascade)
+  trades      String[]
+  bio         String?  @db.Text
+  maxMentees  Int      @default(2)
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model MentorshipMatch {
+  id          String           @id @default(cuid())
+  mentorId    String
+  menteeName  String
+  menteeEmail String?
+  menteePhone String?
+  trade       String?
+  status      MentorshipStatus @default(PENDING)
+  notes       String?          @db.Text
+  startedAt   DateTime?
+  endedAt     DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([mentorId])
+  @@index([status])
+}
+
+// ==================== ALUMNI EVENTS ====================
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
+enum RsvpStatus {
+  INVITED
+  ATTENDING
+  DECLINED
+  MAYBE
+}
+
+model AlumniEvent {
+  id          String      @id @default(cuid())
+  title       String
+  description String?     @db.Text
+  location    String?
+  date        DateTime
+  endDate     DateTime?
+  status      EventStatus @default(DRAFT)
+  maxAttendees Int?
+  imageUrl    String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  rsvps EventRsvp[]
+
+  @@index([date])
+  @@index([status])
+}
+
+model EventRsvp {
+  id        String      @id @default(cuid())
+  eventId   String
+  event     AlumniEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  alumniId  String?
+  name      String
+  email     String?
+  status    RsvpStatus  @default(INVITED)
+  createdAt DateTime    @default(now())
+
+  @@unique([eventId, email])
+  @@index([eventId])
 }
 
 // ==================== DONORS ====================
