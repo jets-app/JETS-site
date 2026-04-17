@@ -170,42 +170,30 @@ export function AdminSidebar() {
           </div>
         </div>
 
-        {/* Mode Switcher */}
+        {/* Mode Toggle */}
         <div className="px-3 pt-4 pb-2 shrink-0">
-          <p className="admin-section-label px-3 mb-2">
-            Mode
-          </p>
-          <div className="grid grid-cols-2 gap-1 rounded-lg p-1"
-            style={{ background: "rgba(255,255,255,0.04)" }}
+          <Link
+            href={mode === "admissions" ? "/admin/students" : "/admin/admissions"}
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 hover:bg-white/5 group"
           >
-            <Link
-              href="/admin/admissions"
-              onClick={() => setMobileOpen(false)}
-              className={cn(
-                "flex items-center justify-center gap-1.5 rounded-md px-2 py-2 text-xs font-semibold transition-all duration-200",
-                mode === "admissions"
-                  ? "text-white shadow-sm"
-                  : "text-white/45 hover:text-white/70"
-              )}
-              style={mode === "admissions" ? { background: "#A30018" } : undefined}
+            <div className="relative w-9 h-5 rounded-full transition-colors duration-300"
+              style={{ background: mode === "admissions" ? "#A30018" : "#059669" }}
             >
-              <FileText className="h-3.5 w-3.5" />
-              Admissions
-            </Link>
-            <Link
-              href="/admin/students"
-              onClick={() => setMobileOpen(false)}
-              className={cn(
-                "flex items-center justify-center gap-1.5 rounded-md px-2 py-2 text-xs font-semibold transition-all duration-200",
-                mode === "school_year"
-                  ? "bg-emerald-600 text-white shadow-sm"
-                  : "text-white/45 hover:text-white/70"
-              )}
-            >
-              <School className="h-3.5 w-3.5" />
-              School Year
-            </Link>
-          </div>
+              <div
+                className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-300"
+                style={{ left: mode === "admissions" ? "2px" : "18px" }}
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-semibold text-white/90 leading-none">
+                {mode === "admissions" ? "Admissions" : "School Year"}
+              </span>
+              <span className="text-[10px] text-white/35 leading-none mt-1">
+                Switch to {mode === "admissions" ? "School Year" : "Admissions"}
+              </span>
+            </div>
+          </Link>
         </div>
 
         {/* Navigation */}
