@@ -19,6 +19,10 @@ async function requireAdmin() {
 export interface AlumniFilters {
   search?: string;
   graduationYear?: number;
+  program?: string;
+  city?: string;
+  state?: string;
+  isFeatured?: boolean;
   page?: number;
   pageSize?: number;
 }
@@ -33,6 +37,11 @@ export interface AlumniFormData {
   programCompleted?: string;
   photoUrl?: string;
   notes?: string;
+  currentRole?: string;
+  currentCompany?: string;
+  city?: string;
+  state?: string;
+  linkedinUrl?: string;
 }
 
 // ---------- Actions ----------
@@ -50,19 +59,40 @@ export async function getAlumni(filters?: AlumniFilters) {
     where.graduationYear = filters.graduationYear;
   }
 
+  if (filters?.program) {
+    where.programCompleted = { contains: filters.program, mode: "insensitive" };
+  }
+
+  if (filters?.city) {
+    where.city = { contains: filters.city, mode: "insensitive" };
+  }
+
+  if (filters?.state) {
+    where.state = { contains: filters.state, mode: "insensitive" };
+  }
+
+  if (filters?.isFeatured !== undefined) {
+    where.isFeatured = filters.isFeatured;
+  }
+
   if (filters?.search) {
     const search = filters.search.trim();
     where.OR = [
       { firstName: { contains: search, mode: "insensitive" } },
       { lastName: { contains: search, mode: "insensitive" } },
       { email: { contains: search, mode: "insensitive" } },
+      { programCompleted: { contains: search, mode: "insensitive" } },
+      { currentRole: { contains: search, mode: "insensitive" } },
+      { currentCompany: { contains: search, mode: "insensitive" } },
+      { notes: { contains: search, mode: "insensitive" } },
+      { city: { contains: search, mode: "insensitive" } },
     ];
   }
 
   const [alumni, total] = await Promise.all([
     db.alumni.findMany({
       where,
-      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+      orderBy: [{ isFeatured: "desc" }, { lastName: "asc" }, { firstName: "asc" }],
       skip,
       take: pageSize,
     }),
@@ -137,6 +167,11 @@ export async function updateAlumni(id: string, data: AlumniFormData) {
       programCompleted: data.programCompleted?.trim() || null,
       photoUrl: data.photoUrl?.trim() || null,
       notes: data.notes?.trim() || null,
+      currentRole: data.currentRole?.trim() || null,
+      currentCompany: data.currentCompany?.trim() || null,
+      city: data.city?.trim() || null,
+      state: data.state?.trim() || null,
+      linkedinUrl: data.linkedinUrl?.trim() || null,
     },
   });
 
@@ -286,4 +321,104 @@ export async function exportAlumniToCSV() {
   );
 
   return [headers.join(","), ...rows].join("\n");
+}
+
+// ---------- Enhanced Alumni Actions ----------
+
+export async function updateAlumniProfile(
+  id: string,
+  data: {
+    currentRole?: string;
+    currentCompany?: string;
+    city?: string;
+    state?: string;
+    linkedinUrl?: string;
+  }
+) {
+  await requireAdmin();
+
+  const alumni = await db.alumni.update({
+    where: { id },
+    data: {
+      currentRole: data.currentRole?.trim() || null,
+      currentCompany: data.currentCompany?.trim() || null,
+      city: data.city?.trim() || null,
+      state: data.state?.trim() || null,
+      linkedinUrl: data.linkedinUrl?.trim() || null,
+    },
+  });
+
+  revalidatePath("/admin/alumni");
+  return alumni;
+}
+
+export async function toggleFeaturedAlumni(id: string) {
+  await requireAdmin();
+
+  const current = await db.alumni.findUnique({ where: { id } });
+  if (!current) throw new Error("Alumni not found");
+
+  const alumni = await db.alumni.update({
+    where: { id },
+    data: { isFeatured: !current.isFeatured },
+  });
+
+  revalidatePath("/admin/alumni");
+  return alumni;
+}
+
+export async function getAlumniStats() {
+  await requireAdmin();
+
+  const [total, byYear, byProgram, featured] = await Promise.all([
+    db.alumni.count(),
+    db.alumni.groupBy({
+      by: ["graduationYear"],
+      _count: { id: true },
+      orderBy: { graduationYear: "desc" },
+    }),
+    db.alumni.groupBy({
+      by: ["programCompleted"],
+      _count: { id: true },
+      orderBy: { _count: { id: "desc" } },
+    }),
+    db.alumni.count({ where: { isFeatured: true } }),
+  ]);
+
+  return {
+    total,
+    featured,
+    byYear: byYear.map((y) => ({ year: y.graduationYear, count: y._count.id })),
+    byProgram: byProgram
+      .filter((p) => p.programCompleted)
+      .map((p) => ({ program: p.programCompleted!, count: p._count.id })),
+  };
+}
+
+export async function getAlumniPrograms() {
+  await requireAdmin();
+
+  const programs = await db.alumni.groupBy({
+    by: ["programCompleted"],
+    _count: { id: true },
+    orderBy: { _count: { id: "desc" } },
+  });
+
+  return programs
+    .filter((p) => p.programCompleted)
+    .map((p) => p.programCompleted!);
+}
+
+export async function updateEngagementScore(id: string, points: number) {
+  await requireAdmin();
+
+  const alumni = await db.alumni.update({
+    where: { id },
+    data: {
+      engagementScore: { increment: points },
+    },
+  });
+
+  revalidatePath("/admin/alumni");
+  return alumni;
 }
