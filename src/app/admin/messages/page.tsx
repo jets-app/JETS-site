@@ -8,6 +8,7 @@ import {
   getAcademicYears,
 } from "@/server/actions/message.actions";
 import { AdminMessagesClient } from "./_components/admin-messages-client";
+import { CommsTabs } from "./_components/comms-tabs";
 
 export default async function AdminMessagesPage() {
   const session = await auth();
@@ -27,11 +28,13 @@ export default async function AdminMessagesPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Messages</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Communications</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Send and manage messages to parents.
         </p>
       </div>
+
+      <CommsTabs />
 
       <AdminMessagesClient
         initialInbox={JSON.parse(JSON.stringify(inbox))}

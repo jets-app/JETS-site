@@ -17,21 +17,10 @@ import {
   Menu,
   X,
   Shield,
-  UserCircle,
   Mail,
   ClipboardList,
-  HomeIcon,
-  School,
   Sparkles,
-  Kanban,
   BarChart3,
-  Bell,
-  UserPlus,
-  Briefcase,
-  Handshake,
-  Calendar,
-  ChevronDown,
-  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -41,6 +30,7 @@ type Mode = "admissions" | "school_year";
 const admissionsPaths = [
   "/admin/admissions",
   "/admin/applications",
+  "/admin/leads",
   "/admin/scholarships",
   "/admin/documents",
   "/admin/recommendations",
@@ -64,51 +54,31 @@ function detectMode(pathname: string): Mode {
 
 const admissionsNav = {
   label: "Admissions",
-  accentClass: "text-primary",
   items: [
     { label: "Dashboard", href: "/admin/admissions", icon: LayoutDashboard },
-    { label: "Leads", href: "/admin/leads", icon: UserPlus },
-    { label: "Applications", href: "/admin/applications", icon: FileText },
-    { label: "Pipeline Board", href: "/admin/applications/pipeline", icon: Kanban },
+    { label: "Leads & Applications", href: "/admin/applications", icon: FileText },
     { label: "Scholarships", href: "/admin/scholarships", icon: Sparkles },
-    {
-      label: "Enrollment Documents",
-      href: "/admin/documents",
-      icon: FileSignature,
-    },
-    {
-      label: "Recommendations",
-      href: "/admin/recommendations",
-      icon: Mail,
-    },
+    { label: "Documents", href: "/admin/documents", icon: FileSignature },
+    { label: "Recommendations", href: "/admin/recommendations", icon: Mail },
   ],
 };
 
 const schoolYearNav = {
-  label: "Current School Year",
-  accentClass: "text-emerald-600 dark:text-emerald-400",
+  label: "School Year",
   items: [
     { label: "Dashboard", href: "/admin/students", icon: LayoutDashboard },
-    { label: "Students", href: "/admin/students/list", icon: GraduationCap },
-    { label: "Tuition & Billing", href: "/admin/billing", icon: CreditCard },
-    { label: "Student Records", href: "/admin/records", icon: ClipboardList },
+    { label: "Students & Families", href: "/admin/students/list", icon: GraduationCap },
+    { label: "Billing", href: "/admin/billing", icon: CreditCard },
+    { label: "Records", href: "/admin/records", icon: ClipboardList },
   ],
 };
-
-const alumniSubItems = [
-  { label: "Directory", href: "/admin/alumni", icon: Users },
-  { label: "Job Board", href: "/admin/alumni/jobs", icon: Briefcase },
-  { label: "Mentorship", href: "/admin/alumni/mentors", icon: Handshake },
-  { label: "Events", href: "/admin/alumni/events", icon: Calendar },
-];
 
 const sharedNav = {
   label: "General",
   items: [
     { label: "Reports", href: "/admin/reports", icon: BarChart3 },
-    { label: "Notifications", href: "/admin/notifications", icon: Bell },
-    { label: "Messages", href: "/admin/messages", icon: MessageSquare },
-    { label: "Alumni", href: "/admin/alumni", icon: Users, hasChildren: true },
+    { label: "Communications", href: "/admin/messages", icon: MessageSquare },
+    { label: "Alumni", href: "/admin/alumni", icon: Users },
     { label: "Donors", href: "/admin/donors", icon: Heart },
     { label: "Settings", href: "/admin/settings", icon: Settings },
   ],
@@ -117,12 +87,30 @@ const sharedNav = {
 export function AdminSidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [alumniExpanded, setAlumniExpanded] = useState(
-    () => typeof window !== "undefined" && window.location.pathname.startsWith("/admin/alumni")
-  );
   const mode = detectMode(pathname);
 
   const activeNav = mode === "admissions" ? admissionsNav : schoolYearNav;
+
+  // For "Leads & Applications" nav item, also highlight when on /admin/leads or /admin/applications/pipeline
+  function isNavItemActive(href: string) {
+    if (href === "/admin/applications") {
+      return (
+        pathname === "/admin/applications" ||
+        pathname.startsWith("/admin/applications/") ||
+        pathname === "/admin/leads" ||
+        pathname.startsWith("/admin/leads/")
+      );
+    }
+    if (href === "/admin/messages") {
+      return (
+        pathname === "/admin/messages" ||
+        pathname.startsWith("/admin/messages/") ||
+        pathname === "/admin/notifications" ||
+        pathname.startsWith("/admin/notifications/")
+      );
+    }
+    return pathname === href || pathname.startsWith(href + "/");
+  }
 
   return (
     <>
@@ -223,9 +211,7 @@ export function AdminSidebar() {
             </p>
             <div className="space-y-0.5">
               {activeNav.items.map((item) => {
-                const isActive =
-                  pathname === item.href ||
-                  pathname.startsWith(item.href + "/");
+                const isActive = isNavItemActive(item.href);
                 return (
                   <Link
                     key={item.href}
@@ -253,59 +239,7 @@ export function AdminSidebar() {
             </p>
             <div className="space-y-0.5">
               {sharedNav.items.map((item) => {
-                const isAlumni = "hasChildren" in item && item.hasChildren;
-                const isActive =
-                  pathname === item.href ||
-                  pathname.startsWith(item.href + "/");
-
-                if (isAlumni) {
-                  const isAlumniSection = pathname.startsWith("/admin/alumni");
-                  return (
-                    <div key={item.href}>
-                      <button
-                        onClick={() => setAlumniExpanded(!alumniExpanded)}
-                        className={cn(
-                          "admin-nav-item group w-full",
-                          isAlumniSection && "admin-nav-item-active admin-nav-item-active-general",
-                        )}
-                      >
-                        <item.icon className="h-4 w-4 shrink-0 transition-colors duration-200" />
-                        <span className="flex-1 text-left">{item.label}</span>
-                        {alumniExpanded ? (
-                          <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
-                        ) : (
-                          <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-50" />
-                        )}
-                      </button>
-                      {alumniExpanded && (
-                        <div className="ml-4 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
-                          {alumniSubItems.map((sub) => {
-                            const subActive = pathname === sub.href ||
-                              (sub.href !== "/admin/alumni" && pathname.startsWith(sub.href + "/"));
-                            const subExactActive = sub.href === "/admin/alumni"
-                              ? pathname === "/admin/alumni"
-                              : pathname.startsWith(sub.href);
-                            return (
-                              <Link
-                                key={sub.href}
-                                href={sub.href}
-                                onClick={() => setMobileOpen(false)}
-                                className={cn(
-                                  "admin-nav-item group text-[12px]",
-                                  subExactActive && "admin-nav-item-active admin-nav-item-active-general",
-                                )}
-                              >
-                                <sub.icon className="h-3.5 w-3.5 shrink-0 transition-colors duration-200" />
-                                <span>{sub.label}</span>
-                              </Link>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                }
-
+                const isActive = isNavItemActive(item.href);
                 return (
                   <Link
                     key={item.href}

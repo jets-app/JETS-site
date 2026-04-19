@@ -4,6 +4,7 @@ import {
   getNotificationLogs,
   getNotificationStats,
 } from "@/server/actions/notification.actions";
+import { CommsTabs } from "../messages/_components/comms-tabs";
 
 export default async function NotificationsPage() {
   const session = await auth();
@@ -20,12 +21,14 @@ export default async function NotificationsPage() {
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="space-y-1">
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-          Notifications
+          Communications
         </h1>
         <p className="text-muted-foreground">
           Automated email and SMS notification log.
         </p>
       </div>
+
+      <CommsTabs />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatCard label="Total" value={stats.total} />

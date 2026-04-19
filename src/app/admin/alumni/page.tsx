@@ -7,6 +7,7 @@ import {
   getAlumniPrograms,
 } from "@/server/actions/alumni.actions";
 import { AlumniDashboard } from "./_components/alumni-dashboard";
+import { AlumniTabs } from "./_components/alumni-tabs";
 
 interface PageProps {
   searchParams: Promise<{
@@ -46,7 +47,14 @@ export default async function AlumniPage({ searchParams }: PageProps) {
   ]);
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto space-y-6">
+      <div className="space-y-1">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Alumni</h1>
+        <p className="text-muted-foreground">Manage alumni directory and engagement.</p>
+      </div>
+
+      <AlumniTabs />
+
       <AlumniDashboard
         alumni={alumniData.alumni}
         total={alumniData.total}
