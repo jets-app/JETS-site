@@ -2,6 +2,7 @@ import { auth } from "@/server/auth";
 import { redirect } from "next/navigation";
 import { getInquiries } from "@/server/actions/inquiry.actions";
 import { LeadsTable } from "./_components/leads-table";
+import { ApplicationsTabs } from "../applications/_components/applications-tabs";
 
 export default async function LeadsPage() {
   const session = await auth();
@@ -25,13 +26,15 @@ export default async function LeadsPage() {
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="space-y-1">
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-          Leads & Inquiries
+          Leads &amp; Applications
         </h1>
         <p className="text-muted-foreground">
           {total} total inquiries{newCount > 0 ? ` — ${newCount} new` : ""}.
           Manage leads from website contact and inquiry forms.
         </p>
       </div>
+
+      <ApplicationsTabs />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
