@@ -173,7 +173,7 @@ export const parentQuestionsSchema = z.object({
 export type ParentQuestionsData = z.infer<typeof parentQuestionsSchema>;
 
 // ==================== Step 7: Applicant Assessment ====================
-const ratingValues = ["Excellent", "Above Average", "Average", "Needs Development", "Poor"] as const;
+const ratingValues = ["Poor", "Needs Development", "Average", "Above Average", "Excellent"] as const;
 
 const assessmentItemSchema = z.object({
   rating: z.string().min(1, "Please select a rating"),

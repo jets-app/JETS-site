@@ -11,6 +11,8 @@ import { updateApplicationStep } from "@/server/actions/application.actions";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PhoneInput } from "@/components/forms/phone-input";
+import { EmailInput } from "@/components/forms/email-input";
 import React from "react";
 
 interface StepProps {
@@ -97,10 +99,8 @@ function ParentSection({
       <div className="grid sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Phone <span className="text-destructive">*</span></Label>
-          <Input
-            type="tel"
+          <PhoneInput
             {...register(`${prefix}.phone`)}
-            placeholder="(555) 123-4567"
             aria-invalid={!!errors[`${prefix}.phone`]}
             disabled={readOnly}
           />
@@ -113,8 +113,7 @@ function ParentSection({
 
         <div className="space-y-2">
           <Label>Email <span className="text-destructive">*</span></Label>
-          <Input
-            type="email"
+          <EmailInput
             {...register(`${prefix}.email`)}
             placeholder="parent@example.com"
             aria-invalid={!!errors[`${prefix}.email`]}
@@ -370,16 +369,14 @@ export function ParentsInfoStep({
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Phone</Label>
-                <Input
-                  type="tel"
+                <PhoneInput
                   {...register("guardian.phone")}
                   disabled={readOnly}
                 />
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>
-                <Input
-                  type="email"
+                <EmailInput
                   {...register("guardian.email")}
                   disabled={readOnly}
                 />
