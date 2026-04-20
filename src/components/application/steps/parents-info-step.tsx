@@ -441,8 +441,7 @@ export function ParentsInfoStep({
             <Label>
               Phone <span className="text-destructive">*</span>
             </Label>
-            <Input
-              type="tel"
+            <PhoneInput
               {...register("emergencyContact.phone")}
               aria-invalid={!!errors.emergencyContact?.phone}
               disabled={readOnly}
