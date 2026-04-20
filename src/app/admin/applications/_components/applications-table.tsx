@@ -25,8 +25,17 @@ import {
   ChevronRight,
   ArrowUpDown,
   Eye,
+  MoreHorizontal,
+  Archive,
+  ArchiveRestore,
+  Trash2,
 } from "lucide-react";
 import type { ApplicationStatus } from "@prisma/client";
+import {
+  archiveApplication,
+  unarchiveApplication,
+  deleteApplication,
+} from "@/server/actions/admin.actions";
 
 interface ApplicationRow {
   id: string;
@@ -36,6 +45,7 @@ interface ApplicationRow {
   completionPct: number;
   createdAt: Date;
   submittedAt: Date | null;
+  archivedAt?: Date | null;
   student: {
     firstName: string;
     lastName: string;
@@ -220,16 +230,7 @@ export function ApplicationsTable({
       id: "actions",
       header: "",
       cell: ({ row }) => (
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          onClick={(e) => {
-            e.stopPropagation();
-            router.push(`/admin/applications/${row.original.id}`);
-          }}
-        >
-          <Eye className="h-3.5 w-3.5" />
-        </Button>
+        <RowActions row={row.original} />
       ),
     },
   ];
@@ -276,11 +277,14 @@ export function ApplicationsTable({
           onChange={(e) => updateParams({ year: e.target.value })}
         >
           <option value="">All Years</option>
-          {academicYears.map((y) => (
-            <option key={y} value={y}>
-              {y}
-            </option>
-          ))}
+          {(() => {
+            const uniqueYears = Array.from(new Set([...academicYears, currentFilters.year].filter(Boolean)));
+            return uniqueYears.sort().reverse().map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ));
+          })()}
         </select>
 
         <Button variant="outline" size="default" onClick={handleSearch}>
@@ -386,6 +390,101 @@ export function ApplicationsTable({
           </Button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function RowActions({ row }: { row: ApplicationRow }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const isArchived = !!row.archivedAt;
+
+  function handleArchive(e: React.MouseEvent) {
+    e.stopPropagation();
+    setOpen(false);
+    startTransition(async () => {
+      if (isArchived) {
+        await unarchiveApplication(row.id);
+      } else {
+        await archiveApplication(row.id);
+      }
+      router.refresh();
+    });
+  }
+
+  function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation();
+    setOpen(false);
+    const name = row.student
+      ? `${row.student.firstName} ${row.student.lastName}`
+      : row.referenceNumber;
+    if (!confirm(`Permanently delete the application for ${name}? This cannot be undone.`)) {
+      return;
+    }
+    startTransition(async () => {
+      await deleteApplication(row.id);
+      router.refresh();
+    });
+  }
+
+  function handleView(e: React.MouseEvent) {
+    e.stopPropagation();
+    router.push(`/admin/applications/${row.id}`);
+  }
+
+  return (
+    <div className="relative" onClick={(e) => e.stopPropagation()}>
+      <Button
+        variant="ghost"
+        size="icon-xs"
+        onClick={() => setOpen(!open)}
+        disabled={isPending}
+      >
+        <MoreHorizontal className="h-3.5 w-3.5" />
+      </Button>
+
+      {open && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setOpen(false)}
+          />
+          <div className="absolute right-0 mt-1 w-44 rounded-lg border bg-popover shadow-lg z-50 py-1">
+            <button
+              onClick={handleView}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted text-left"
+            >
+              <Eye className="h-3.5 w-3.5" />
+              View Details
+            </button>
+            <button
+              onClick={handleArchive}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted text-left"
+            >
+              {isArchived ? (
+                <>
+                  <ArchiveRestore className="h-3.5 w-3.5" />
+                  Unarchive
+                </>
+              ) : (
+                <>
+                  <Archive className="h-3.5 w-3.5" />
+                  Archive
+                </>
+              )}
+            </button>
+            <div className="border-t my-1" />
+            <button
+              onClick={handleDelete}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-red-50 text-red-600 text-left"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -26,17 +26,20 @@ export default async function AdminApplicationsPage({ searchParams }: PageProps)
 
   const params = await searchParams;
 
-  const [data, stats, academicYears] = await Promise.all([
+  // Default to current academic year if no year specified
+  const stats = await getApplicationStats();
+  const defaultYear = params.year ?? stats.academicYear;
+
+  const [data, academicYears] = await Promise.all([
     getAllApplications({
       search: params.search,
       status: params.status,
-      academicYear: params.year,
+      academicYear: defaultYear,
       page: params.page ? parseInt(params.page) : 1,
       pageSize: 20,
       sortBy: params.sortBy,
       sortOrder: params.sortOrder,
     }),
-    getApplicationStats(),
     getAcademicYears(),
   ]);
 
@@ -89,7 +92,7 @@ export default async function AdminApplicationsPage({ searchParams }: PageProps)
         currentFilters={{
           search: params.search ?? "",
           status: params.status ?? "",
-          year: params.year ?? "",
+          year: defaultYear,
         }}
       />
     </div>
