@@ -388,7 +388,7 @@ export default async function PortalDashboard() {
             <div className="flex items-center gap-2 mb-1">
               <h3 className="font-semibold">{statusConfig.label}</h3>
               <span className="text-xs opacity-60">
-                {application.referenceNumber}
+                {application.referenceNumber} · {application.academicYear}
               </span>
             </div>
             <p className="text-sm opacity-80">{statusConfig.description}</p>
