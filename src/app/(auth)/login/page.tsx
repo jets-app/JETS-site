@@ -10,11 +10,12 @@ import { loginUser } from "@/server/actions/auth.actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -40,11 +41,11 @@ export default function LoginPage() {
     <div className="space-y-8">
       {/* Logo + name */}
       <div className="flex flex-col items-center text-center space-y-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground font-semibold">
+        <Link href="/" className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity">
           J
-        </div>
+        </Link>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">JETS School</h1>
+          <Link href="/" className="text-lg font-semibold tracking-tight hover:text-primary transition-colors">JETS School</Link>
           <p className="text-xs text-muted-foreground mt-0.5">
             Sign in to your account
           </p>
@@ -82,14 +83,24 @@ export default function LoginPage() {
               Forgot?
             </Link>
           </div>
-          <Input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            className="h-10"
-            aria-invalid={!!errors.password}
-            {...register("password")}
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              className="h-10 pr-10"
+              aria-invalid={!!errors.password}
+              {...register("password")}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
           {errors.password && (
             <p className="text-xs text-destructive">
               {errors.password.message}
