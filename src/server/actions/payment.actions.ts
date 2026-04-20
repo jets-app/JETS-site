@@ -4,6 +4,7 @@ import { db } from "@/server/db";
 import { auth } from "@/server/auth";
 import { revalidatePath } from "next/cache";
 import { triggerPaymentAutoSync } from "@/server/actions/quickbooks.actions";
+import { stripe } from "@/lib/stripe";
 
 // ==================== Helper: Format cents to dollars ====================
 export async function formatCents(cents: number): Promise<string> {
@@ -11,7 +12,6 @@ export async function formatCents(cents: number): Promise<string> {
 }
 
 // ==================== Create Application Fee Checkout ====================
-// Mock implementation — Stripe not yet configured
 export async function createApplicationFeeCheckout(applicationId: string) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -24,6 +24,7 @@ export async function createApplicationFeeCheckout(applicationId: string) {
       select: {
         id: true,
         parentId: true,
+        referenceNumber: true,
         applicationFeePaid: true,
         applicationFeeAmount: true,
         discountAmount: true,
@@ -42,34 +43,45 @@ export async function createApplicationFeeCheckout(applicationId: string) {
       return { error: "Application fee has already been paid." };
     }
 
-    const finalAmount = application.applicationFeeAmount - application.discountAmount;
+    const feeAmount = application.applicationFeeAmount - application.discountAmount;
 
-    // Mock: Mark fee as paid and create payment record
-    const [payment] = await db.$transaction([
-      db.payment.create({
-        data: {
-          applicationId,
-          type: "APPLICATION_FEE",
-          status: "SUCCEEDED",
-          amount: finalAmount,
-          description: "Application fee (mock payment)",
-          paidAt: new Date(),
-        },
-      }),
-      db.application.update({
+    if (feeAmount <= 0) {
+      // Fee is waived
+      await db.application.update({
         where: { id: applicationId },
         data: { applicationFeePaid: true },
-      }),
-    ]);
+      });
 
-    revalidatePath("/portal/payments");
-    revalidatePath(`/portal/applications/${applicationId}`);
+      revalidatePath("/portal/payments");
+      revalidatePath(`/portal/applications/${applicationId}`);
 
-    // Fire-and-forget QuickBooks auto-sync
-    void triggerPaymentAutoSync(payment.id);
+      return { success: true, waived: true };
+    }
 
-    // In production, this would return a Stripe checkout URL
-    return { success: true, message: "Application fee marked as paid (mock)." };
+    const checkoutSession = await stripe.checkout.sessions.create({
+      mode: "payment",
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            unit_amount: feeAmount,
+            product_data: {
+              name: "JETS Application Fee",
+              description: `Application ${application.referenceNumber}`,
+            },
+          },
+          quantity: 1,
+        },
+      ],
+      metadata: {
+        applicationId,
+        type: "application_fee",
+      },
+      success_url: `${process.env.AUTH_URL}/portal/applications/${applicationId}/payment?success=true`,
+      cancel_url: `${process.env.AUTH_URL}/portal/applications/${applicationId}/payment?cancelled=true`,
+    });
+
+    return { success: true, url: checkoutSession.url };
   } catch (error) {
     console.error("Error creating checkout:", error);
     return { error: "Failed to process payment." };

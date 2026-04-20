@@ -223,43 +223,55 @@ function ResponseDetails({
 }) {
   return (
     <div className="space-y-5 text-sm">
-      {/* Background */}
+      {/* Recommender Info */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <dt className="font-medium text-muted-foreground">
-            Known Duration
-          </dt>
-          <dd className="mt-0.5">{responses.knownDuration}</dd>
+          <dt className="font-medium text-muted-foreground">Recommender</dt>
+          <dd className="mt-0.5">{responses.recommenderName}</dd>
         </div>
         <div>
-          <dt className="font-medium text-muted-foreground">Capacity</dt>
-          <dd className="mt-0.5">{responses.capacity}</dd>
+          <dt className="font-medium text-muted-foreground">Email</dt>
+          <dd className="mt-0.5">{responses.recommenderEmail}</dd>
+        </div>
+        <div>
+          <dt className="font-medium text-muted-foreground">Phone</dt>
+          <dd className="mt-0.5">{responses.recommenderPhone}</dd>
+        </div>
+        <div>
+          <dt className="font-medium text-muted-foreground">
+            Known Duration / Capacity
+          </dt>
+          <dd className="mt-0.5">{responses.knownDuration}</dd>
         </div>
       </div>
 
       {/* Ratings Table */}
       <div>
-        <h4 className="mb-2 font-medium">Ratings</h4>
+        <h4 className="mb-2 font-medium">Assessment Ratings (1-5 scale)</h4>
         <div className="overflow-hidden rounded-lg border">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/50">
                 <th className="px-3 py-2 text-left font-medium">Category</th>
                 <th className="px-3 py-2 text-left font-medium">Rating</th>
+                <th className="px-3 py-2 text-left font-medium">Comments</th>
               </tr>
             </thead>
             <tbody>
               {ratingCategories.map((cat) => {
-                const value = responses[
+                const entry = responses[
                   cat.key as keyof RecommendationResponse
-                ] as string;
+                ] as { rating: string; comments: string };
                 return (
                   <tr key={cat.key} className="border-b last:border-0">
                     <td className="px-3 py-2 text-muted-foreground">
                       {cat.label}
                     </td>
                     <td className="px-3 py-2">
-                      <RatingBadge rating={value} />
+                      <RatingBadge rating={entry?.rating ?? "—"} />
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground text-xs">
+                      {entry?.comments || "—"}
                     </td>
                   </tr>
                 );
@@ -272,20 +284,39 @@ function ResponseDetails({
       {/* Written Responses */}
       <div className="space-y-4">
         <div>
-          <h4 className="mb-1 font-medium">Greatest Strengths</h4>
+          <h4 className="mb-1 font-medium">Strengths and Weaknesses</h4>
           <p className="whitespace-pre-wrap text-muted-foreground">
-            {responses.greatestStrengths}
+            {responses.strengthsAndWeaknesses}
           </p>
         </div>
 
-        {responses.areasOfConcern && (
-          <div>
-            <h4 className="mb-1 font-medium">Areas of Concern</h4>
-            <p className="whitespace-pre-wrap text-muted-foreground">
-              {responses.areasOfConcern}
-            </p>
-          </div>
-        )}
+        <div>
+          <h4 className="mb-1 font-medium">Special Needs</h4>
+          <p className="whitespace-pre-wrap text-muted-foreground">
+            {responses.specialNeeds}
+          </p>
+        </div>
+
+        <div>
+          <h4 className="mb-1 font-medium">Social Skills</h4>
+          <p className="whitespace-pre-wrap text-muted-foreground">
+            {responses.socialSkills}
+          </p>
+        </div>
+
+        <div>
+          <h4 className="mb-1 font-medium">Academic Skills</h4>
+          <p className="whitespace-pre-wrap text-muted-foreground">
+            {responses.academicSkills}
+          </p>
+        </div>
+
+        <div>
+          <h4 className="mb-1 font-medium">Discipline Issues</h4>
+          <p className="whitespace-pre-wrap text-muted-foreground">
+            {responses.disciplineIssues}
+          </p>
+        </div>
 
         <div>
           <h4 className="mb-1 font-medium">Overall Recommendation</h4>
@@ -300,11 +331,6 @@ function ResponseDetails({
             </p>
           </div>
         )}
-
-        <div>
-          <h4 className="mb-1 font-medium">Signed By</h4>
-          <p className="font-serif italic">{responses.signature}</p>
-        </div>
       </div>
     </div>
   );
@@ -313,41 +339,29 @@ function ResponseDetails({
 // ==================== Rating Badge ====================
 
 function RatingBadge({ rating }: { rating: string }) {
+  const num = parseInt(rating, 10);
   const variant = (() => {
-    switch (rating) {
-      case "Excellent":
-        return "default" as const;
-      case "Good":
-        return "secondary" as const;
-      case "Average":
-        return "outline" as const;
-      case "Below Average":
-      case "Poor":
-        return "destructive" as const;
-      default:
-        return "outline" as const;
-    }
+    if (num >= 4) return "default" as const;
+    if (num === 3) return "secondary" as const;
+    if (num <= 2 && num >= 1) return "destructive" as const;
+    return "outline" as const;
   })();
 
-  return <Badge variant={variant}>{rating}</Badge>;
+  const label = num >= 1 && num <= 5 ? `${rating} / 5` : rating;
+
+  return <Badge variant={variant}>{label}</Badge>;
 }
 
 // ==================== Overall Recommendation Badge ====================
 
 function OverallBadge({ value }: { value: string }) {
   const variant = (() => {
-    switch (value) {
-      case "Strongly Recommend":
-        return "default" as const;
-      case "Recommend":
-        return "secondary" as const;
-      case "Recommend with Reservations":
-        return "outline" as const;
-      case "Do Not Recommend":
-        return "destructive" as const;
-      default:
-        return "outline" as const;
-    }
+    if (value.includes("highly recommend")) return "default" as const;
+    if (value.includes("would recommend") && !value.includes("reservation") && !value.includes("not"))
+      return "secondary" as const;
+    if (value.includes("reservation")) return "outline" as const;
+    if (value.includes("would not")) return "destructive" as const;
+    return "outline" as const;
   })();
 
   return <Badge variant={variant}>{value}</Badge>;
