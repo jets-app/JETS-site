@@ -30,7 +30,43 @@ export function PhotoUploader({
 
   const displayUrl = preview ?? currentPhotoUrl;
 
-  function handleFile(file: File) {
+  async function compressImage(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const maxDim = 800;
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = (height / width) * maxDim;
+              width = maxDim;
+            } else {
+              width = (width / height) * maxDim;
+              height = maxDim;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            reject(new Error("Canvas not supported"));
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", 0.85));
+        };
+        img.onerror = () => reject(new Error("Failed to load image"));
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handleFile(file: File) {
     setError(null);
     setSuccess(null);
 
@@ -44,22 +80,18 @@ export function PhotoUploader({
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setPreview(reader.result);
-        setFileName(file.name);
-      }
-    };
-    reader.onerror = () => {
-      setError("Failed to read the file. Please try again.");
-    };
-    reader.readAsDataURL(file);
+    try {
+      const compressed = await compressImage(file);
+      setPreview(compressed);
+      setFileName(file.name);
+    } catch {
+      setError("Failed to process the image. Please try a different file.");
+    }
   }
 
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file) handleFile(file);
+    if (file) void handleFile(file);
   }
 
   function onSave() {
