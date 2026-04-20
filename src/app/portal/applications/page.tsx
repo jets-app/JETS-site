@@ -486,7 +486,7 @@ export default async function ApplicationsPage() {
                   </p>
                 </div>
                 <LinkButton
-                  href={`/portal/applications/${application.id}/edit`}
+                  href={`/portal/applications/${application.id}/submit`}
                   size="lg"
                 >
                   Review & Submit
