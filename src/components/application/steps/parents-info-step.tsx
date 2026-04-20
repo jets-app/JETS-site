@@ -20,7 +20,8 @@ interface StepProps {
   onSaved?: () => void;
 }
 
-const SALUTATIONS = ["Rabbi", "Mr.", "Dr.", "Rev.", "Cantor", "Hon.", "Prof."];
+const FATHER_SALUTATIONS = ["Mr.", "Rabbi", "Dr."];
+const MOTHER_SALUTATIONS = ["Ms.", "Mrs.", "Dr."];
 
 function ParentSection({
   title,
@@ -28,12 +29,14 @@ function ParentSection({
   register,
   errors,
   readOnly,
+  salutations,
 }: {
   title: string;
   prefix: "father" | "mother";
   register: ReturnType<typeof useForm<ParentsInfoData>>["register"];
   errors: Record<string, { message?: string }>;
   readOnly?: boolean;
+  salutations: string[];
 }) {
   return (
     <div className="space-y-4">
@@ -50,7 +53,7 @@ function ParentSection({
             disabled={readOnly}
           >
             <option value="">Select...</option>
-            {SALUTATIONS.map((s) => (
+            {salutations.map((s) => (
               <option key={s} value={s}>
                 {s}
               </option>

@@ -56,7 +56,7 @@ export function HebrewNameStep({ applicationId, readOnly, formRef, onSaved }: St
       <div className="space-y-1">
         <h2 className="text-xl font-semibold">Hebrew Name</h2>
         <p className="text-sm text-muted-foreground">
-          These names are used for Torah reading and official Yeshiva records.
+          These names are used for Torah reading and official Yeshiva records. You may type in English or Hebrew.
         </p>
       </div>
 
