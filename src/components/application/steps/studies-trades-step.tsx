@@ -153,7 +153,7 @@ export function StudiesTradesStep({
   };
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <form ref={formRef} onSubmit={handleSubmit(onSubmit)} className="step-form space-y-8">
       <div className="space-y-1">
         <h2 className="text-xl font-semibold">Studies &amp; Trades</h2>
         <p className="text-sm text-muted-foreground">
