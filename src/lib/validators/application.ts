@@ -56,8 +56,8 @@ const parentInfoSchema = z.object({
 export { MARITAL_STATUS_OPTIONS };
 
 const guardianSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
   phone: z.string().optional(),
   email: z.string().email("Please enter a valid email").optional().or(z.literal("")),
   relationship: z.string().optional(),
@@ -73,12 +73,23 @@ const emergencyContactSchema = z.object({
   relationship: z.string().min(1, "Relationship is required"),
 });
 
-export const parentsInfoSchema = z.object({
+const parentsInfoBase = z.object({
   father: parentInfoSchema,
   mother: parentInfoSchema,
   hasGuardian: z.boolean().optional(),
   guardian: guardianSchema.optional(),
   emergencyContact: emergencyContactSchema,
+});
+
+export const parentsInfoSchema = parentsInfoBase.superRefine((data, ctx) => {
+  if (data.hasGuardian) {
+    if (!data.guardian?.firstName || data.guardian.firstName.trim() === "") {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Guardian first name is required", path: ["guardian", "firstName"] });
+    }
+    if (!data.guardian?.lastName || data.guardian.lastName.trim() === "") {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Guardian last name is required", path: ["guardian", "lastName"] });
+    }
+  }
 });
 
 export type ParentsInfoData = z.infer<typeof parentsInfoSchema>;

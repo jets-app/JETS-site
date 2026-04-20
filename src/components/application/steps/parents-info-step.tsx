@@ -267,6 +267,16 @@ export function ParentsInfoStep({
       flatErrors[`mother.${key}`] = val as { message?: string };
     }
   }
+  if (errors.guardian) {
+    for (const [key, val] of Object.entries(errors.guardian)) {
+      flatErrors[`guardian.${key}`] = val as { message?: string };
+    }
+  }
+  if (errors.emergencyContact) {
+    for (const [key, val] of Object.entries(errors.emergencyContact)) {
+      flatErrors[`emergencyContact.${key}`] = val as { message?: string };
+    }
+  }
 
   const onSubmit = async (data: ParentsInfoData) => {
     store.setIsSaving(true);
