@@ -69,6 +69,7 @@ export interface ApplicationFilters {
   pageSize?: number;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
+  includeArchived?: boolean;
 }
 
 export async function getAllApplications(filters?: ApplicationFilters) {
@@ -79,6 +80,10 @@ export async function getAllApplications(filters?: ApplicationFilters) {
   const skip = (page - 1) * pageSize;
 
   const where: Record<string, unknown> = {};
+
+  if (!filters?.includeArchived) {
+    where.archivedAt = null;
+  }
 
   if (filters?.status) {
     where.status = filters.status;
@@ -384,6 +389,35 @@ export async function getValidTransitions(
   currentStatus: ApplicationStatus
 ): Promise<ApplicationStatus[]> {
   return STATUS_TRANSITIONS[currentStatus] ?? [];
+}
+
+export async function archiveApplication(applicationId: string) {
+  await requireAdmin();
+  await db.application.update({
+    where: { id: applicationId },
+    data: { archivedAt: new Date() },
+  });
+  revalidatePath("/admin/applications");
+  revalidatePath("/admin/applications/pipeline");
+  return { success: true };
+}
+
+export async function unarchiveApplication(applicationId: string) {
+  await requireAdmin();
+  await db.application.update({
+    where: { id: applicationId },
+    data: { archivedAt: null },
+  });
+  revalidatePath("/admin/applications");
+  return { success: true };
+}
+
+export async function deleteApplication(applicationId: string) {
+  await requireAdmin();
+  await db.application.delete({ where: { id: applicationId } });
+  revalidatePath("/admin/applications");
+  revalidatePath("/admin/applications/pipeline");
+  return { success: true };
 }
 
 export async function getApplicationsByStatus(academicYear?: string) {
