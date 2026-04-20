@@ -37,7 +37,25 @@ export default async function PhotoUploadPage({ params }: PageProps) {
   }
 
   if (!application.student) {
-    redirect(`/portal/applications/${id}/edit`);
+    return (
+      <div className="mx-auto w-full max-w-3xl space-y-6">
+        <div>
+          <LinkButton href="/portal/dashboard" variant="ghost" size="sm" className="-ml-2">
+            <ChevronLeft className="size-4" />
+            Back to Dashboard
+          </LinkButton>
+        </div>
+        <div className="rounded-xl border bg-card p-12 text-center space-y-3">
+          <h2 className="text-xl font-semibold">Complete Student Information First</h2>
+          <p className="text-sm text-muted-foreground">
+            Please fill out the student information (Step 1) before uploading a photo.
+          </p>
+          <LinkButton href={`/portal/applications/${id}/edit`} className="mt-4">
+            Go to Application Form
+          </LinkButton>
+        </div>
+      </div>
+    );
   }
 
   const studentName =

@@ -232,20 +232,20 @@ export default async function PortalDashboard() {
     const step3HasReferees = application.recommendations.length >= 2;
     const step4Complete = application.applicationFeePaid;
 
-    if (!step1Complete) {
-      tasks.push({
-        title: "Complete Application Form",
-        description:
-          application.completionPct > 0
-            ? `Continue where you left off — ${application.completionPct}% done`
-            : "Fill out the 10-section application form",
-        icon: FileText,
-        href: `/portal/applications/${application.id}/edit`,
-        action: application.completionPct > 0 ? "Continue" : "Start",
-        color: "text-primary bg-primary/10",
-        priority: 1,
-      });
-    }
+    // Always show continue application button
+    tasks.push({
+      title: step1Complete ? "Continue Application" : "Complete Application Form",
+      description: step1Complete
+        ? "Review your application or update your information."
+        : application.completionPct > 0
+          ? `Continue where you left off — ${application.completionPct}% done`
+          : "Fill out the 10-section application form",
+      icon: FileText,
+      href: `/portal/applications/${application.id}/edit`,
+      action: step1Complete ? "Open Application" : (application.completionPct > 0 ? "Continue" : "Start"),
+      color: "text-primary bg-primary/10",
+      priority: 1,
+    });
     if (!step2Complete) {
       tasks.push({
         title: "Upload Student Photo",
@@ -388,7 +388,7 @@ export default async function PortalDashboard() {
             <div className="flex items-center gap-2 mb-1">
               <h3 className="font-semibold">{statusConfig.label}</h3>
               <span className="text-xs opacity-60">
-                {application.referenceNumber} · {application.academicYear}
+                {application.academicYear}
               </span>
             </div>
             <p className="text-sm opacity-80">{statusConfig.description}</p>
