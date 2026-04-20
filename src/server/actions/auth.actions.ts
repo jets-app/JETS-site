@@ -85,6 +85,7 @@ export async function loginUser(formData: {
         return { error: "Invalid email or password" };
       }
     }
+    console.error("Login error:", error);
     return { error: "Something went wrong. Please try again." };
   }
 }
