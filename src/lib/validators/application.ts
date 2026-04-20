@@ -113,7 +113,7 @@ const relatableContactSchema = z.object({
 });
 
 const schoolHistoryBaseSchema = z.object({
-  wasInSchool: z.enum(["yes", "no"], { required_error: "Please indicate if you were enrolled in school" }),
+  wasInSchool: z.enum(["yes", "no"], { message: "Please indicate if you were enrolled in school" }),
   notInSchoolExplanation: z.string().optional(),
   lastSchoolName: z.string().optional(),
   principal: contactInfoSchema.optional(),

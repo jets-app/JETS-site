@@ -94,7 +94,9 @@ export function ApplicantAssessmentStep({
               key={field.key}
               className="p-4 rounded-lg border bg-card space-y-3"
             >
-              <Label className="text-base font-medium">{field.label}</Label>
+              <Label className="text-base font-medium">
+                {field.label} <span className="text-destructive">*</span>
+              </Label>
 
               <div className="flex flex-wrap gap-2">
                 {ratingValues.map((rating) => (
@@ -118,6 +120,11 @@ export function ApplicantAssessmentStep({
                   </button>
                 ))}
               </div>
+              {errors[field.key]?.rating && (
+                <p className="text-xs text-destructive">
+                  {errors[field.key]!.rating!.message}
+                </p>
+              )}
 
               <Textarea
                 placeholder="Additional comments (optional)"

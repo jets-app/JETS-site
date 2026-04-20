@@ -96,23 +96,35 @@ function ParentSection({
 
       <div className="grid sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Phone</Label>
+          <Label>Phone <span className="text-destructive">*</span></Label>
           <Input
             type="tel"
             {...register(`${prefix}.phone`)}
             placeholder="(555) 123-4567"
+            aria-invalid={!!errors[`${prefix}.phone`]}
             disabled={readOnly}
           />
+          {errors[`${prefix}.phone`] && (
+            <p className="text-xs text-destructive">
+              {errors[`${prefix}.phone`].message}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
-          <Label>Email</Label>
+          <Label>Email <span className="text-destructive">*</span></Label>
           <Input
             type="email"
             {...register(`${prefix}.email`)}
             placeholder="parent@example.com"
+            aria-invalid={!!errors[`${prefix}.email`]}
             disabled={readOnly}
           />
+          {errors[`${prefix}.email`] && (
+            <p className="text-xs text-destructive">
+              {errors[`${prefix}.email`].message}
+            </p>
+          )}
         </div>
       </div>
 
@@ -137,24 +149,38 @@ function ParentSection({
 
       <div className="grid sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Marital Status</Label>
+          <Label>Marital Status <span className="text-destructive">*</span></Label>
           <select
             {...register(`${prefix}.maritalStatus`)}
             className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             disabled={readOnly}
           >
             <option value="">Select...</option>
-            <option value="married">Married</option>
-            <option value="divorced">Divorced</option>
-            <option value="separated">Separated</option>
-            <option value="widowed">Widowed</option>
-            <option value="single">Single</option>
+            <option value="Married">Married</option>
+            <option value="Divorced">Divorced</option>
+            <option value="Separated">Separated</option>
+            <option value="Widowed">Widowed</option>
+            <option value="Single">Single</option>
           </select>
+          {errors[`${prefix}.maritalStatus`] && (
+            <p className="text-xs text-destructive">
+              {errors[`${prefix}.maritalStatus`].message}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
-          <Label>Occupation</Label>
-          <Input {...register(`${prefix}.occupation`)} disabled={readOnly} />
+          <Label>Occupation <span className="text-destructive">*</span></Label>
+          <Input
+            {...register(`${prefix}.occupation`)}
+            aria-invalid={!!errors[`${prefix}.occupation`]}
+            disabled={readOnly}
+          />
+          {errors[`${prefix}.occupation`] && (
+            <p className="text-xs text-destructive">
+              {errors[`${prefix}.occupation`].message}
+            </p>
+          )}
         </div>
       </div>
     </div>
@@ -272,6 +298,7 @@ export function ParentsInfoStep({
         register={register}
         errors={flatErrors}
         readOnly={readOnly}
+        salutations={FATHER_SALUTATIONS}
       />
 
       <div className="border-t pt-6">
@@ -281,6 +308,7 @@ export function ParentsInfoStep({
           register={register}
           errors={flatErrors}
           readOnly={readOnly}
+          salutations={MOTHER_SALUTATIONS}
         />
       </div>
 
@@ -417,11 +445,19 @@ export function ParentsInfoStep({
             )}
           </div>
           <div className="space-y-2">
-            <Label>Relationship</Label>
+            <Label>
+              Relationship <span className="text-destructive">*</span>
+            </Label>
             <Input
               {...register("emergencyContact.relationship")}
+              aria-invalid={!!errors.emergencyContact?.relationship}
               disabled={readOnly}
             />
+            {errors.emergencyContact?.relationship && (
+              <p className="text-xs text-destructive">
+                {errors.emergencyContact.relationship.message}
+              </p>
+            )}
           </div>
         </div>
       </div>
