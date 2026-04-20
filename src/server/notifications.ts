@@ -154,14 +154,30 @@ export async function triggerStatusNotifications(
       },
     });
 
-    await sendEmail(recipientEmail, subject, body);
+    await sendNotificationEmail(recipientEmail, subject, body);
   }
 }
 
-async function sendEmail(to: string, subject: string, body: string) {
-  // When Resend is configured, this will send real emails.
-  // For now, log to the notification table and mark as sent.
-  console.log(`[NOTIFICATION] To: ${to} | Subject: ${subject}`);
+async function sendNotificationEmail(to: string, subject: string, body: string) {
+  const { sendEmail } = await import("@/server/email");
+
+  const htmlBody = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #A30018;">
+        <h1 style="color: #A30018; font-size: 24px; margin: 0;">JETS School</h1>
+      </div>
+      <div style="padding: 30px 0; white-space: pre-wrap; line-height: 1.6; color: #333;">
+        ${body.replace(/\n/g, "<br>")}
+      </div>
+      <div style="border-top: 1px solid #eee; padding: 20px 0; text-align: center; color: #999; font-size: 12px;">
+        Jewish Educational Trade School<br>
+        16601 Rinaldi Street, Granada Hills, CA 91344<br>
+        (818) 831-3000
+      </div>
+    </div>
+  `;
+
+  const result = await sendEmail({ to, subject, html: htmlBody });
 
   await db.notificationLog.updateMany({
     where: {
@@ -170,8 +186,9 @@ async function sendEmail(to: string, subject: string, body: string) {
       status: "QUEUED",
     },
     data: {
-      status: "SENT",
-      sentAt: new Date(),
+      status: result.success ? "SENT" : "FAILED",
+      sentAt: result.success ? new Date() : undefined,
+      errorMessage: result.success ? undefined : result.error,
     },
   });
 }

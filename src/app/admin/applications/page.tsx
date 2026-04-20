@@ -1,5 +1,7 @@
 import { auth } from "@/server/auth";
 import { redirect } from "next/navigation";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 import { getAllApplications, getApplicationStats, getAcademicYears } from "@/server/actions/admin.actions";
 import { ApplicationsTable } from "./_components/applications-table";
 import { ApplicationsTabs } from "./_components/applications-tabs";
@@ -40,13 +42,19 @@ export default async function AdminApplicationsPage({ searchParams }: PageProps)
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      <div className="space-y-1">
-        <h1 className="admin-page-title">
-          Leads &amp; Applications
-        </h1>
-        <p className="admin-page-subtitle">
-          Manage and review all student applications for {stats.academicYear}.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="admin-page-title">
+            Leads &amp; Applications
+          </h1>
+          <p className="admin-page-subtitle">
+            Manage and review all student applications for {stats.academicYear}.
+          </p>
+        </div>
+        <Link href="/admin/applications/new" className="admin-btn-primary shrink-0">
+          <Plus className="h-4 w-4" />
+          Add Application
+        </Link>
       </div>
 
       <ApplicationsTabs />

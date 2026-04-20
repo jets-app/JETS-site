@@ -36,9 +36,34 @@ export async function requestPasswordReset(formData: { email: string }) {
       },
     });
 
-    // TODO: Send email with reset link via Resend
-    // For now, log the token (remove in production)
-    console.log(`Password reset link: /reset-password?token=${token}`);
+    const { sendEmail } = await import("@/server/email");
+    const appUrl = process.env.AUTH_URL || "https://jets-crm.vercel.app";
+    const resetLink = `${appUrl}/reset-password?token=${token}`;
+
+    await sendEmail({
+      to: email,
+      subject: "Password Reset — JETS School",
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #A30018;">
+            <h1 style="color: #A30018; font-size: 24px; margin: 0;">JETS School</h1>
+          </div>
+          <div style="padding: 30px 0; line-height: 1.6; color: #333;">
+            <p>Dear ${user.name},</p>
+            <p>We received a request to reset your password. Click the button below to set a new password:</p>
+            <p style="text-align: center; margin: 30px 0;">
+              <a href="${resetLink}" style="background: #A30018; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
+                Reset Password
+              </a>
+            </p>
+            <p style="color: #666; font-size: 14px;">This link expires in 1 hour. If you did not request a password reset, you can safely ignore this email.</p>
+          </div>
+          <div style="border-top: 1px solid #eee; padding: 20px 0; text-align: center; color: #999; font-size: 12px;">
+            Jewish Educational Trade School<br>16601 Rinaldi Street, Granada Hills, CA 91344
+          </div>
+        </div>
+      `,
+    });
 
     return {
       success:

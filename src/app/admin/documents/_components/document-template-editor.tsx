@@ -14,7 +14,7 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
-import { ArrowLeft, Save, Eye, EyeOff, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Eye, EyeOff, Loader2, Plus, Trash2 } from "lucide-react";
 import {
   createDocumentTemplate,
   updateDocumentTemplate,
@@ -29,6 +29,15 @@ const TEMPLATE_TYPES = [
   { value: "PHOTO_RELEASE", label: "Photo Release" },
   { value: "CUSTOM", label: "Custom" },
 ];
+
+const FIELD_TYPES = ["text", "date", "signature", "initials", "textarea", "tel", "email", "select"];
+
+interface TemplateField {
+  name: string;
+  label: string;
+  type: string;
+  required: boolean;
+}
 
 interface TemplateData {
   id: string;
@@ -56,8 +65,23 @@ export function DocumentTemplateEditor({
   const [htmlContent, setHtmlContent] = useState(
     template?.htmlContent ?? ""
   );
+  const [fields, setFields] = useState<TemplateField[]>(
+    template?.content?.fields ?? []
+  );
 
   const isNew = template === null;
+
+  const addField = () => {
+    setFields([...fields, { name: "", label: "", type: "text", required: false }]);
+  };
+
+  const removeField = (index: number) => {
+    setFields(fields.filter((_, i) => i !== index));
+  };
+
+  const updateFieldProp = (index: number, prop: keyof TemplateField, value: string | boolean) => {
+    setFields(fields.map((f, i) => i === index ? { ...f, [prop]: value } : f));
+  };
 
   const handleSave = () => {
     if (!name.trim()) {
@@ -77,12 +101,14 @@ export function DocumentTemplateEditor({
             name: name.trim(),
             type: type as any,
             htmlContent: htmlContent,
+            fields: fields.filter((f) => f.name.trim()) as unknown as Record<string, unknown>[],
           });
         } else {
           await updateDocumentTemplate(template.id, {
             name: name.trim(),
             type: type as any,
             htmlContent: htmlContent,
+            fields: fields.filter((f) => f.name.trim()) as unknown as Record<string, unknown>[],
           });
         }
         router.push("/admin/documents");
@@ -203,6 +229,95 @@ export function DocumentTemplateEditor({
                 className="min-h-[400px] font-mono text-xs"
               />
             )}
+          </div>
+          {/* Fields Management */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Template Fields</Label>
+              <Button variant="outline" size="xs" onClick={addField} type="button">
+                <Plus className="h-3 w-3 mr-1" />
+                Add Field
+              </Button>
+            </div>
+            {fields.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic">
+                No fields defined. Fields are form inputs the signer fills in (e.g. allergies, insurance info).
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {fields.map((field, i) => (
+                  <div
+                    key={i}
+                    className="grid grid-cols-[1fr_1fr_auto_auto_auto] gap-2 items-center rounded-lg border p-2"
+                  >
+                    <Input
+                      placeholder="Field name (e.g. allergies)"
+                      value={field.name}
+                      onChange={(e) => updateFieldProp(i, "name", e.target.value)}
+                      className="text-xs"
+                    />
+                    <Input
+                      placeholder="Label (e.g. Known Allergies)"
+                      value={field.label}
+                      onChange={(e) => updateFieldProp(i, "label", e.target.value)}
+                      className="text-xs"
+                    />
+                    <select
+                      value={field.type}
+                      onChange={(e) => updateFieldProp(i, "type", e.target.value)}
+                      className="h-8 rounded-lg border border-input bg-transparent px-2 py-1 text-xs outline-none"
+                    >
+                      {FIELD_TYPES.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </select>
+                    <label className="flex items-center gap-1 text-xs cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={field.required}
+                        onChange={(e) => updateFieldProp(i, "required", e.target.checked)}
+                        className="h-3.5 w-3.5 rounded border-gray-300"
+                      />
+                      Req
+                    </label>
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      onClick={() => removeField(i)}
+                      type="button"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Placeholder Reference */}
+          <div className="rounded-lg border bg-muted/30 p-4">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              Available Placeholders
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-xs">
+              {[
+                { placeholder: "{{studentName}}", desc: "Student full name" },
+                { placeholder: "{{parentName}}", desc: "Parent/guardian name" },
+                { placeholder: "{{dateOfBirth}}", desc: "Student date of birth" },
+                { placeholder: "{{academicYear}}", desc: "Academic year (e.g. 2026-2027)" },
+                { placeholder: "{{date}}", desc: "Current date" },
+                { placeholder: "{{tuitionAmount}}", desc: "Tuition amount" },
+                { placeholder: "{{scholarshipAmount}}", desc: "Scholarship amount" },
+              ].map((p) => (
+                <div key={p.placeholder} className="flex flex-col">
+                  <code className="font-mono text-primary font-medium">{p.placeholder}</code>
+                  <span className="text-muted-foreground">{p.desc}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </CardContent>
         <CardFooter>

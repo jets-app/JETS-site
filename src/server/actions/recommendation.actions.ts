@@ -82,8 +82,44 @@ export async function createRecommendation(
       },
     });
 
-    // TODO: Send email to referee with the recommendation link
-    // The link will be: ${process.env.NEXT_PUBLIC_APP_URL}/r/${recommendation.token}
+    // Send email to referee with the recommendation link
+    const { sendEmail } = await import("@/server/email");
+    const appUrl = process.env.AUTH_URL || "https://jets-crm.vercel.app";
+    const recLink = `${appUrl}/r/${recommendation.token}`;
+
+    const appWithStudent = await db.application.findUnique({
+      where: { id: applicationId },
+      include: { student: { select: { firstName: true, lastName: true } } },
+    });
+    const studentName = appWithStudent?.student
+      ? `${appWithStudent.student.firstName} ${appWithStudent.student.lastName}`
+      : "the applicant";
+
+    await sendEmail({
+      to: email.toLowerCase(),
+      subject: `Recommendation Request for ${studentName} — JETS School`,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #A30018;">
+            <h1 style="color: #A30018; font-size: 24px; margin: 0;">JETS School</h1>
+          </div>
+          <div style="padding: 30px 0; line-height: 1.6; color: #333;">
+            <p>Dear ${name},</p>
+            <p>You have been listed as a reference for <strong>${studentName}</strong>, who is applying to the Jewish Educational Trade School.</p>
+            <p>We would greatly appreciate if you could complete a brief recommendation form. Your responses are confidential and will only be reviewed by our admissions team.</p>
+            <p style="text-align: center; margin: 30px 0;">
+              <a href="${recLink}" style="background: #A30018; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
+                Complete Recommendation
+              </a>
+            </p>
+            <p style="color: #666; font-size: 14px;">This link expires in 30 days. No account is needed — simply click the link above.</p>
+          </div>
+          <div style="border-top: 1px solid #eee; padding: 20px 0; text-align: center; color: #999; font-size: 12px;">
+            Jewish Educational Trade School<br>16601 Rinaldi Street, Granada Hills, CA 91344<br>(818) 831-3000
+          </div>
+        </div>
+      `,
+    });
 
     return { success: true, recommendationId: recommendation.id };
   } catch (error) {
@@ -259,8 +295,37 @@ export async function resendRecommendationRequest(
       },
     });
 
-    // TODO: Send email to referee with the recommendation link
-    // The link will be: ${process.env.NEXT_PUBLIC_APP_URL}/r/${recommendation.token}
+    const { sendEmail } = await import("@/server/email");
+    const appUrl = process.env.AUTH_URL || "https://jets-crm.vercel.app";
+    const recLink = `${appUrl}/r/${recommendation.token}`;
+    const studentName = recommendation.application.student
+      ? `${recommendation.application.student.firstName} ${recommendation.application.student.lastName}`
+      : "the applicant";
+
+    await sendEmail({
+      to: recommendation.refereeEmail,
+      subject: `Reminder: Recommendation Request for ${studentName} — JETS School`,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #A30018;">
+            <h1 style="color: #A30018; font-size: 24px; margin: 0;">JETS School</h1>
+          </div>
+          <div style="padding: 30px 0; line-height: 1.6; color: #333;">
+            <p>Dear ${recommendation.refereeName},</p>
+            <p>This is a friendly reminder that we are still awaiting your recommendation for <strong>${studentName}</strong>.</p>
+            <p style="text-align: center; margin: 30px 0;">
+              <a href="${recLink}" style="background: #A30018; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
+                Complete Recommendation
+              </a>
+            </p>
+            <p style="color: #666; font-size: 14px;">This link expires in 30 days. No account is needed.</p>
+          </div>
+          <div style="border-top: 1px solid #eee; padding: 20px 0; text-align: center; color: #999; font-size: 12px;">
+            Jewish Educational Trade School<br>16601 Rinaldi Street, Granada Hills, CA 91344
+          </div>
+        </div>
+      `,
+    });
 
     return { success: true };
   } catch (error) {
