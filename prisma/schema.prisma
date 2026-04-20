@@ -918,9 +918,10 @@ model Inquiry {
 model SystemSettings {
   id String @id @default("settings")
 
-  currentAcademicYear    String  @default("2026-2027")
-  applicationFeeAmount   Int     @default(50000)
-  applicationsOpen       Boolean @default(true)
+  currentAcademicYear    String   @default("2026-2027")
+  openSchoolYears        String[] @default(["2026-2027"])
+  applicationFeeAmount   Int      @default(50000)
+  applicationsOpen       Boolean  @default(true)
 
   schoolName      String @default("JETS School")
   schoolLegalName String @default("JETS Synagogue")
