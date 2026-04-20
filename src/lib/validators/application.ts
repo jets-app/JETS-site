@@ -30,19 +30,23 @@ export const hebrewNameSchema = z.object({
 export type HebrewNameData = z.infer<typeof hebrewNameSchema>;
 
 // ==================== Step 3: Parents Info ====================
+const MARITAL_STATUS_OPTIONS = ["Married", "Divorced", "Separated", "Widowed", "Single"] as const;
+
 const parentInfoSchema = z.object({
   salutation: z.string().optional(),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  phone: z.string().optional(),
-  email: z.string().email("Please enter a valid email").optional().or(z.literal("")),
+  phone: z.string().min(1, "Phone number is required"),
+  email: z.string().min(1, "Email is required").email("Please enter a valid email"),
   addressLine1: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
   zipCode: z.string().optional(),
-  maritalStatus: z.string().optional(),
-  occupation: z.string().optional(),
+  maritalStatus: z.string().min(1, "Marital status is required"),
+  occupation: z.string().min(1, "Occupation is required"),
 });
+
+export { MARITAL_STATUS_OPTIONS };
 
 const guardianSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -59,7 +63,7 @@ const guardianSchema = z.object({
 const emergencyContactSchema = z.object({
   name: z.string().min(1, "Emergency contact name is required"),
   phone: z.string().min(1, "Emergency contact phone is required"),
-  relationship: z.string().optional(),
+  relationship: z.string().min(1, "Relationship is required"),
 });
 
 export const parentsInfoSchema = z.object({
@@ -108,7 +112,9 @@ const relatableContactSchema = z.object({
   role: z.string().optional(),
 });
 
-export const schoolHistorySchema = z.object({
+const schoolHistoryBaseSchema = z.object({
+  wasInSchool: z.enum(["yes", "no"], { required_error: "Please indicate if you were enrolled in school" }),
+  notInSchoolExplanation: z.string().optional(),
   lastSchoolName: z.string().optional(),
   principal: contactInfoSchema.optional(),
   teacher: contactInfoSchema.optional(),
@@ -116,23 +122,45 @@ export const schoolHistorySchema = z.object({
   relatableContacts: z.array(relatableContactSchema).optional(),
 });
 
+export const schoolHistorySchema = schoolHistoryBaseSchema.superRefine((data, ctx) => {
+  if (data.wasInSchool === "yes") {
+    if (!data.lastSchoolName || data.lastSchoolName.trim() === "") {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Last school name is required", path: ["lastSchoolName"] });
+    }
+    if (!data.principal?.name || data.principal.name.trim() === "") {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Principal name is required", path: ["principal", "name"] });
+    }
+    if (!data.teacher?.name || data.teacher.name.trim() === "") {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Teacher/Rebbi name is required", path: ["teacher", "name"] });
+    }
+    if (!data.previousSchools || data.previousSchools.trim() === "") {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous schools are required", path: ["previousSchools"] });
+    }
+  }
+  if (data.wasInSchool === "no") {
+    if (!data.notInSchoolExplanation || data.notInSchoolExplanation.trim() === "") {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Please explain what you were doing during this time", path: ["notInSchoolExplanation"] });
+    }
+  }
+});
+
 export type SchoolHistoryData = z.infer<typeof schoolHistorySchema>;
 
 // ==================== Step 6: Parent Questions ====================
 export const parentQuestionsSchema = z.object({
-  timeElapsed: z.boolean().optional(),
+  timeElapsed: z.boolean(),
   timeElapsedDetails: z.string().optional(),
-  lastTwoSummers: z.string().optional(),
-  learningStrengths: z.string().optional(),
-  socialStrengths: z.string().optional(),
-  midosTovos: z.string().optional(),
-  specialLearningNeeds: z.boolean().optional(),
+  lastTwoSummers: z.string().min(1, "Please describe the applicant's last two summers"),
+  learningStrengths: z.string().min(1, "Learning strengths & limitations is required"),
+  socialStrengths: z.string().min(1, "Social strengths & limitations is required"),
+  midosTovos: z.string().min(1, "Midos Tovos is required"),
+  specialLearningNeeds: z.boolean(),
   specialLearningNeedsDetails: z.string().optional(),
-  physicalEmotionalNeeds: z.boolean().optional(),
+  physicalEmotionalNeeds: z.boolean(),
   physicalEmotionalNeedsDetails: z.string().optional(),
-  counselingHistory: z.boolean().optional(),
+  counselingHistory: z.boolean(),
   counselingHistoryDetails: z.string().optional(),
-  maturityAssessment: z.string().optional(),
+  maturityAssessment: z.string().min(1, "Maturity assessment is required"),
 });
 
 export type ParentQuestionsData = z.infer<typeof parentQuestionsSchema>;
@@ -141,7 +169,7 @@ export type ParentQuestionsData = z.infer<typeof parentQuestionsSchema>;
 const ratingValues = ["Excellent", "Above Average", "Average", "Needs Development", "Poor"] as const;
 
 const assessmentItemSchema = z.object({
-  rating: z.string().optional(),
+  rating: z.string().min(1, "Please select a rating"),
   comments: z.string().optional(),
 });
 
@@ -184,7 +212,13 @@ export const studiesTradesSchema = z.object({
     webDevelopment: z.string().optional(),
     emt: z.string().optional(),
     otherTrades: z.string().optional(),
-  }),
+  }).refine(
+    (trades) => {
+      const { otherTrades, ...tradeSelections } = trades;
+      return Object.values(tradeSelections).some((v) => v && v.trim() !== "") || (otherTrades && otherTrades.trim() !== "");
+    },
+    { message: "Please select at least one trade interest" }
+  ),
   extracurricular: z.object({
     culinary: z.string().optional(),
     musicCoaching: z.string().optional(),
@@ -201,10 +235,23 @@ export { tradeInterestValues };
 export const essayAdditionalSchema = z.object({
   essay: z.string().min(50, "Please write at least a few sentences for your essay"),
   gedInterest: z.boolean().optional(),
+  wasInSchool: z.enum(["yes", "no"]).optional(),
   gemarahMaterial: z.string().optional(),
   chassidusMaterial: z.string().optional(),
   halachaMaterial: z.string().optional(),
   otherFactors: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.wasInSchool === "yes") {
+    if (!data.gemarahMaterial || data.gemarahMaterial.trim() === "") {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Gemarah material is required if you were in school", path: ["gemarahMaterial"] });
+    }
+    if (!data.chassidusMaterial || data.chassidusMaterial.trim() === "") {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Chassidus material is required if you were in school", path: ["chassidusMaterial"] });
+    }
+    if (!data.halachaMaterial || data.halachaMaterial.trim() === "") {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Halacha material is required if you were in school", path: ["halachaMaterial"] });
+    }
+  }
 });
 
 export type EssayAdditionalData = z.infer<typeof essayAdditionalSchema>;

@@ -49,13 +49,13 @@ export default async function PhotoUploadPage({ params }: PageProps) {
       {/* Back link */}
       <div>
         <LinkButton
-          href={`/portal/applications/${id}/edit`}
+          href="/portal"
           variant="ghost"
           size="sm"
           className="-ml-2"
         >
           <ChevronLeft className="size-4" />
-          Back to Application
+          Back to Dashboard
         </LinkButton>
       </div>
 
