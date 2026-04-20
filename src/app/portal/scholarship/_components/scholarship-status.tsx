@@ -70,7 +70,7 @@ export function ScholarshipStatus({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>Scholarship Application for {studentName}</CardTitle>
-            <CardDescription>Application: {referenceNumber}</CardDescription>
+            <CardDescription>Scholarship Application</CardDescription>
           </div>
           <Badge
             variant="outline"

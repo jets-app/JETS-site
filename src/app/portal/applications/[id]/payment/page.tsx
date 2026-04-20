@@ -82,7 +82,7 @@ export default async function ApplicationPaymentPage({ params }: PageProps) {
             Application Fee
           </h1>
           <p className="text-muted-foreground">
-            {studentName} · {application.referenceNumber}
+            {studentName} · {application.academicYear}
           </p>
         </div>
 
@@ -107,9 +107,9 @@ export default async function ApplicationPaymentPage({ params }: PageProps) {
                 Receipt
               </div>
               <div className="grid grid-cols-2 gap-y-2 text-sm">
-                <span className="text-muted-foreground">Application</span>
+                <span className="text-muted-foreground">School Year</span>
                 <span className="text-right font-medium">
-                  {application.referenceNumber}
+                  {application.academicYear}
                 </span>
                 <span className="text-muted-foreground">Student</span>
                 <span className="text-right font-medium">{studentName}</span>
@@ -149,7 +149,7 @@ export default async function ApplicationPaymentPage({ params }: PageProps) {
           Pay Application Fee
         </h1>
         <p className="text-muted-foreground">
-          {studentName} · {application.referenceNumber}
+          {studentName} · {application.academicYear}
         </p>
       </div>
 

@@ -73,7 +73,7 @@ export default async function RecommendationsPage({ params }: PageProps) {
       {/* Header */}
       <div className="space-y-1">
         <p className="text-xs uppercase tracking-wider text-muted-foreground">
-          {application.referenceNumber}
+          Application for {application.academicYear}
         </p>
         <h1 className="font-heading text-2xl sm:text-3xl font-semibold text-foreground">
           Recommendation Letters

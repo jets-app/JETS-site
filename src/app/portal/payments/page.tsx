@@ -198,7 +198,7 @@ export default async function ParentPaymentsPage() {
     where: { applicationId: { in: applicationIds } },
     include: {
       application: {
-        select: { referenceNumber: true },
+        select: { referenceNumber: true, academicYear: true },
       },
     },
     orderBy: { createdAt: "desc" },
@@ -305,9 +305,6 @@ export default async function ParentPaymentsPage() {
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{studentName}</span>
-                        <span className="text-sm text-muted-foreground">
-                          ({app.referenceNumber})
-                        </span>
                       </div>
                       <div className="text-sm text-muted-foreground">
                         Fee: {formatCents(finalAmount)}
@@ -451,7 +448,7 @@ export default async function ParentPaymentsPage() {
                 <TableRow>
                   <TableHead>Date</TableHead>
                   <TableHead>Description</TableHead>
-                  <TableHead>Application</TableHead>
+                  <TableHead>School Year</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
@@ -470,7 +467,7 @@ export default async function ParentPaymentsPage() {
                       {payment.description || payment.type.replace(/_/g, " ")}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {payment.application?.referenceNumber ?? "N/A"}
+                      {payment.application?.academicYear ?? "—"}
                     </TableCell>
                     <TableCell className="font-medium">
                       {formatCents(payment.amount)}

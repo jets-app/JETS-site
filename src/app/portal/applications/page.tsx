@@ -138,7 +138,7 @@ export default async function ApplicationsPage() {
                 variant="outline"
                 className="border-transparent bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
               >
-                {application.referenceNumber}
+                {application.academicYear}
               </Badge>
             </div>
             <p className="text-sm text-emerald-800/80 dark:text-emerald-300/80">
@@ -192,10 +192,6 @@ export default async function ApplicationsPage() {
             <div className="grid sm:grid-cols-2 gap-x-6 gap-y-4">
               <InfoRow label="School" value="JETS School" />
               <InfoRow label="Academic Year" value={application.academicYear} />
-              <InfoRow
-                label="Reference #"
-                value={application.referenceNumber}
-              />
               <InfoRow
                 label="Current Status"
                 value={
@@ -366,7 +362,7 @@ export default async function ApplicationsPage() {
           {studentName}
         </h1>
         <p className="text-muted-foreground">
-          {application.referenceNumber} &middot; {application.academicYear}
+          Application for {application.academicYear}
           {isSubmitted && (
             <span className="ml-2 inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
               <CheckCircle2 className="h-3 w-3" />
