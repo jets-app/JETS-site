@@ -24,8 +24,7 @@ export default async function PortalMessagesPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Messages</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          View messages from JETS School administration and send questions to
-          the admin office.
+          Chat with the JETS admin office.
         </p>
       </div>
 
