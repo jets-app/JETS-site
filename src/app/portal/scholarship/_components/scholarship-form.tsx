@@ -172,7 +172,7 @@ export function ScholarshipForm({
             Scholarship Application for {studentName}
           </CardTitle>
           <CardDescription>
-            Application {referenceNumber} &mdash; All information is confidential.
+            All information is confidential.
           </CardDescription>
         </CardHeader>
       </Card>

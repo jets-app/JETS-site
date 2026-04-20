@@ -295,7 +295,7 @@ export function ApplicationFormWizard({
               {isSubmitted ? "Application" : "Application Form"}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {application.referenceNumber} &middot; {application.academicYear}
+              Application for {application.academicYear}
               {isSubmitted && (
                 <span className="ml-2 inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
                   <Check className="h-3 w-3" />
