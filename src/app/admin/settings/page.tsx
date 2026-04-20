@@ -93,6 +93,7 @@ export default async function AdminSettingsPage() {
       <SchoolInfoCard
         settings={{
           currentAcademicYear: settings.currentAcademicYear,
+          openSchoolYears: settings.openSchoolYears ?? [settings.currentAcademicYear],
           applicationFeeAmount: settings.applicationFeeAmount,
           applicationsOpen: settings.applicationsOpen,
           schoolName: settings.schoolName,
