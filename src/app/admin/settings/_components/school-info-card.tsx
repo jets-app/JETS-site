@@ -61,12 +61,35 @@ export function SchoolInfoCard({ settings }: SchoolInfoCardProps) {
   const [newYearStart, setNewYearStart] = useState("");
 
   function addYear() {
-    const start = parseInt(newYearStart, 10);
-    if (isNaN(start) || start < 2020 || start > 2050) {
-      alert("Please enter a valid starting year (e.g. 2027)");
+    const raw = newYearStart.trim();
+    let start: number;
+    let yearStr: string;
+
+    // Accept "2027-2028" or just "2027"
+    const rangeMatch = raw.match(/^(\d{4})\s*-\s*(\d{4})$/);
+    if (rangeMatch) {
+      start = parseInt(rangeMatch[1], 10);
+      const end = parseInt(rangeMatch[2], 10);
+      if (end !== start + 1) {
+        alert(
+          `School years must be consecutive. "${start}-${end}" should be "${start}-${start + 1}".`
+        );
+        return;
+      }
+      yearStr = `${start}-${end}`;
+    } else if (/^\d{4}$/.test(raw)) {
+      start = parseInt(raw, 10);
+      yearStr = `${start}-${start + 1}`;
+    } else {
+      alert("Please enter a year range like 2027-2028 (or just 2027).");
       return;
     }
-    const yearStr = `${start}-${start + 1}`;
+
+    if (start < 2020 || start > 2050) {
+      alert("Year must be between 2020 and 2050.");
+      return;
+    }
+
     if (openYears.includes(yearStr)) {
       alert("That year is already in the list");
       return;
@@ -219,13 +242,11 @@ export function SchoolInfoCard({ settings }: SchoolInfoCardProps) {
               </div>
               <div className="flex items-center gap-2 pt-1">
                 <Input
-                  type="number"
-                  min="2020"
-                  max="2050"
-                  placeholder="e.g. 2027"
+                  type="text"
+                  placeholder="e.g. 2027-2028"
                   value={newYearStart}
                   onChange={(e) => setNewYearStart(e.target.value)}
-                  className="max-w-[160px]"
+                  className="max-w-[200px]"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
@@ -242,12 +263,10 @@ export function SchoolInfoCard({ settings }: SchoolInfoCardProps) {
                   <Plus className="h-3.5 w-3.5" />
                   Add Year
                 </Button>
-                {newYearStart && !isNaN(parseInt(newYearStart)) && (
-                  <span className="text-xs text-muted-foreground">
-                    Will add: {newYearStart}-{parseInt(newYearStart) + 1}
-                  </span>
-                )}
               </div>
+              <p className="text-xs text-muted-foreground">
+                Format: 2027-2028 (school year runs September through June).
+              </p>
             </div>
 
             <div className="space-y-1.5">
