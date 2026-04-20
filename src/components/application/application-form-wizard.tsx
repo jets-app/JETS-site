@@ -251,6 +251,8 @@ export function ApplicationFormWizard({
         // Advance to next step after save
         if (currentStep < 10) {
           store.goToNextStep();
+          // Scroll to top so user sees the new step
+          window.scrollTo({ top: 0, behavior: "smooth" });
         }
       },
     };
