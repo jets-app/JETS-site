@@ -68,7 +68,6 @@ const schoolYearNav = {
     { label: "Dashboard", href: "/admin/students", icon: LayoutDashboard },
     { label: "Students & Families", href: "/admin/students/list", icon: GraduationCap },
     { label: "Billing", href: "/admin/billing", icon: CreditCard },
-    { label: "Records", href: "/admin/records", icon: ClipboardList },
   ],
 };
 
