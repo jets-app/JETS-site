@@ -279,7 +279,11 @@ export default async function ApplicationsPage() {
   const isSubmitted = application.status !== "DRAFT";
 
   // Determine completion of each of the 4 steps
-  const step1_FormComplete = application.completionPct >= 90;
+  const step1_FormComplete = application.completionPct >= 90 &&
+    !!application.student &&
+    !!application.hebrewNames &&
+    !!application.fatherInfo &&
+    !!application.essay;
   const step2_PhotoUploaded = !!application.student?.photoUrl;
   const step3_RecommendationsAdded = application.recommendations.length >= 2;
   const step3_RecommendationsCompleted =
@@ -457,7 +461,7 @@ export default async function ApplicationsPage() {
                         href={step.href}
                         variant={step.complete ? "outline" : "default"}
                         size="sm"
-                        className="shrink-0"
+                        className="shrink-0 min-w-[140px] justify-center"
                       >
                         {step.action}
                         <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
