@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Eye, EyeOff } from "lucide-react";
+import { PhoneInput } from "@/components/forms/phone-input";
+import { EmailInput } from "@/components/forms/email-input";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -107,11 +109,8 @@ export default function RegisterPage() {
           <Label htmlFor="email" className="text-sm">
             Email
           </Label>
-          <Input
+          <EmailInput
             id="email"
-            type="email"
-            autoComplete="email"
-            className="h-10"
             placeholder="you@example.com"
             aria-invalid={!!errors.email}
             {...register("email")}
@@ -128,12 +127,8 @@ export default function RegisterPage() {
               (optional)
             </span>
           </Label>
-          <Input
+          <PhoneInput
             id="phone"
-            type="tel"
-            autoComplete="tel"
-            className="h-10"
-            placeholder="(818) 831-3000"
             aria-invalid={!!errors.phone}
             {...register("phone")}
           />
