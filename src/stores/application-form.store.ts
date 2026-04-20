@@ -50,7 +50,7 @@ export const useApplicationFormStore = create<ApplicationFormState>(
     setApplicationId: (id) => set({ applicationId: id }),
 
     setCurrentStep: (step) =>
-      set({ currentStep: Math.max(1, Math.min(10, step)) }),
+      set({ currentStep: Math.max(1, Math.min(9, step)) }),
 
     setStepData: (key, data) =>
       set((state) => ({
@@ -78,7 +78,7 @@ export const useApplicationFormStore = create<ApplicationFormState>(
 
     goToNextStep: () =>
       set((state) => ({
-        currentStep: Math.min(10, state.currentStep + 1),
+        currentStep: Math.min(9, state.currentStep + 1),
       })),
 
     goToPrevStep: () =>

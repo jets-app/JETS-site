@@ -21,7 +21,7 @@ export default async function PhotoUploadPage({ params }: PageProps) {
 
   const session = await auth();
   if (!session?.user?.id) {
-    redirect(`/auth/login?callbackUrl=/portal/applications/${id}/photo`);
+    redirect("/login");
   }
 
   const application = await db.application.findUnique({

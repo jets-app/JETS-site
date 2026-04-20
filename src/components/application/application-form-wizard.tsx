@@ -4,6 +4,7 @@ import { useEffect, useCallback, useState, useRef } from "react";
 import { useApplicationFormStore } from "@/stores/application-form.store";
 import {
   STEP_LABELS,
+  TOTAL_STEPS,
   type ParentsInfoData,
   type FamilyInfoData,
   type SchoolHistoryData,
@@ -30,7 +31,6 @@ import { ParentQuestionsStep } from "./steps/parent-questions-step";
 import { ApplicantAssessmentStep } from "./steps/applicant-assessment-step";
 import { StudiesTradesStep } from "./steps/studies-trades-step";
 import { EssayAdditionalStep } from "./steps/essay-additional-step";
-import { ReviewSubmitStep } from "./steps/review-submit-step";
 
 interface ApplicationData {
   id: string;
@@ -98,11 +98,6 @@ export function ApplicationFormWizard({
     if (application.studiesInfo || application.tradePreferences)
       completedSteps.push(8);
     if (application.essay) completedSteps.push(9);
-    if (
-      application.recommendations.length >= 2 &&
-      application.applicationFeePaid
-    )
-      completedSteps.push(10);
 
     store.hydrateFromApplication({
       id: application.id,
@@ -239,7 +234,7 @@ export function ApplicationFormWizard({
       form.requestSubmit();
     } else {
       // No form found — just advance
-      if (store.currentStep < 10) {
+      if (store.currentStep < TOTAL_STEPS) {
         store.goToNextStep();
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -256,11 +251,12 @@ export function ApplicationFormWizard({
       formRef,
       onSaved: () => {
         showSaveNotification("Progress saved");
-        // Advance to next step after save
-        if (currentStep < 10) {
+        if (currentStep < TOTAL_STEPS) {
           store.goToNextStep();
-          // Scroll to top so user sees the new step
           window.scrollTo({ top: 0, behavior: "smooth" });
+        } else {
+          // Finished last step — redirect to application overview
+          window.location.href = "/portal/applications";
         }
       },
     };
@@ -284,13 +280,6 @@ export function ApplicationFormWizard({
         return <StudiesTradesStep {...stepProps} />;
       case 9:
         return <EssayAdditionalStep {...stepProps} />;
-      case 10:
-        return (
-          <ReviewSubmitStep
-            {...stepProps}
-            application={application}
-          />
-        );
       default:
         return null;
     }
@@ -328,10 +317,10 @@ export function ApplicationFormWizard({
       <div className="rounded-xl border bg-card p-4 sm:p-6">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium">
-            Step {currentStep} of 10
+            Step {currentStep} of {TOTAL_STEPS}
           </span>
           <span className="text-sm text-muted-foreground">
-            {Math.round((currentStep / 10) * 100)}%
+            {Math.round((currentStep / TOTAL_STEPS) * 100)}%
           </span>
         </div>
 
@@ -339,12 +328,12 @@ export function ApplicationFormWizard({
         <div className="h-2 bg-muted rounded-full overflow-hidden mb-4">
           <div
             className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${(currentStep / 10) * 100}%` }}
+            style={{ width: `${(currentStep / TOTAL_STEPS) * 100}%` }}
           />
         </div>
 
         {/* Step labels */}
-        <div className="hidden sm:grid grid-cols-10 gap-1">
+        <div className="hidden sm:grid grid-cols-9 gap-1">
           {STEP_LABELS.map((label, idx) => {
             const stepNum = idx + 1;
             const isActive = stepNum === currentStep;
@@ -427,25 +416,28 @@ export function ApplicationFormWizard({
                 Saving...
               </span>
             )}
-            {currentStep < 10 && (
-              <Button
-                onClick={handleNext}
-                disabled={store.isSaving}
-                className="shadow-md shadow-primary/20"
-              >
-                {store.isSaving ? (
-                  <>
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    Next
-                    <ArrowRight className="ml-1.5 h-4 w-4" />
-                  </>
-                )}
-              </Button>
-            )}
+            <Button
+              onClick={handleNext}
+              disabled={store.isSaving}
+              className="shadow-md shadow-primary/20"
+            >
+              {store.isSaving ? (
+                <>
+                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : currentStep === TOTAL_STEPS ? (
+                <>
+                  Finish Form
+                  <Check className="ml-1.5 h-4 w-4" />
+                </>
+              ) : (
+                <>
+                  Next
+                  <ArrowRight className="ml-1.5 h-4 w-4" />
+                </>
+              )}
+            </Button>
           </div>
         </div>
       )}

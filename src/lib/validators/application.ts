@@ -318,5 +318,6 @@ export const STEP_LABELS = [
   "Assessment",
   "Studies & Trades",
   "Essay",
-  "Review & Submit",
 ] as const;
+
+export const TOTAL_STEPS = 9;
