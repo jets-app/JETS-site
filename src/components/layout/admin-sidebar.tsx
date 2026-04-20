@@ -59,7 +59,6 @@ const admissionsNav = {
     { label: "Leads & Applications", href: "/admin/applications", icon: FileText },
     { label: "Scholarships", href: "/admin/scholarships", icon: Sparkles },
     { label: "Documents", href: "/admin/documents", icon: FileSignature },
-    { label: "Recommendations", href: "/admin/recommendations", icon: Mail },
   ],
 };
 
