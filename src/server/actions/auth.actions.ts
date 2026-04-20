@@ -7,7 +7,8 @@ import { registerSchema } from "@/lib/validators/auth";
 import { AuthError } from "next-auth";
 
 export async function registerUser(formData: {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone?: string;
   password: string;
@@ -19,7 +20,8 @@ export async function registerUser(formData: {
     return { error: validated.error.issues[0].message };
   }
 
-  const { name, email, phone, password } = validated.data;
+  const { firstName, lastName, email, phone, password } = validated.data;
+  const name = `${firstName} ${lastName}`;
 
   try {
     // Check if user already exists
