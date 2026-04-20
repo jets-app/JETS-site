@@ -394,11 +394,15 @@ export async function searchParents(query: string) {
 
 // ---------- Parent → Admin Messaging ----------
 
-export async function sendMessageToAdmin(subject: string, body: string) {
+export async function sendMessageToAdmin(subjectOrBody: string, bodyArg?: string) {
   const user = await requireAuth();
 
-  if (!subject.trim() || !body.trim()) {
-    throw new Error("Subject and body are required");
+  // Support both old (subject, body) and new (body only) call signatures
+  const body = bodyArg !== undefined ? bodyArg : subjectOrBody;
+  const subject = bodyArg !== undefined ? subjectOrBody : "Message";
+
+  if (!body.trim()) {
+    throw new Error("Message cannot be empty");
   }
 
   // Find an admin to route the message to. Prefer the oldest active admin.
