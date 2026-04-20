@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2, CheckCircle2, XCircle } from "lucide-react";
+import { Building2, CheckCircle2, XCircle, Plus, X as XIcon, Star } from "lucide-react";
 import {
   updateSettings,
   toggleApplicationsOpen,
@@ -48,12 +48,45 @@ export function SchoolInfoCard({ settings }: SchoolInfoCardProps) {
     schoolPhone: settings.schoolPhone,
     schoolEmail: settings.schoolEmail,
     currentAcademicYear: settings.currentAcademicYear,
-    openSchoolYears: settings.openSchoolYears.join(", "),
     applicationFeeAmountDollars: (settings.applicationFeeAmount / 100).toFixed(
       2
     ),
     calendlyUrl: settings.calendlyUrl ?? "",
   });
+  const [openYears, setOpenYears] = useState<string[]>(
+    settings.openSchoolYears.length > 0
+      ? settings.openSchoolYears
+      : [settings.currentAcademicYear]
+  );
+  const [newYearStart, setNewYearStart] = useState("");
+
+  function addYear() {
+    const start = parseInt(newYearStart, 10);
+    if (isNaN(start) || start < 2020 || start > 2050) {
+      alert("Please enter a valid starting year (e.g. 2027)");
+      return;
+    }
+    const yearStr = `${start}-${start + 1}`;
+    if (openYears.includes(yearStr)) {
+      alert("That year is already in the list");
+      return;
+    }
+    setOpenYears([...openYears, yearStr].sort());
+    setNewYearStart("");
+  }
+
+  function removeYear(year: string) {
+    if (openYears.length === 1) {
+      alert("You must keep at least one school year open");
+      return;
+    }
+    const filtered = openYears.filter((y) => y !== year);
+    setOpenYears(filtered);
+    // If removed year was the current year, switch to the first available
+    if (form.currentAcademicYear === year) {
+      setForm({ ...form, currentAcademicYear: filtered[0] });
+    }
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,10 +100,7 @@ export function SchoolInfoCard({ settings }: SchoolInfoCardProps) {
           schoolPhone: form.schoolPhone,
           schoolEmail: form.schoolEmail,
           currentAcademicYear: form.currentAcademicYear,
-          openSchoolYears: form.openSchoolYears
-            .split(",")
-            .map((y) => y.trim())
-            .filter(Boolean),
+          openSchoolYears: openYears,
           applicationFeeAmount: Math.round(
             parseFloat(form.applicationFeeAmountDollars || "0") * 100
           ),
@@ -131,59 +161,113 @@ export function SchoolInfoCard({ settings }: SchoolInfoCardProps) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Academic Year Section */}
-          <div className="space-y-3">
+          <div className="space-y-4">
             <h3 className="text-sm font-semibold">Academic Year</h3>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="currentAcademicYear">Current Academic Year</Label>
-                <Input
-                  id="currentAcademicYear"
-                  value={form.currentAcademicYear}
-                  onChange={(e) =>
-                    setForm({ ...form, currentAcademicYear: e.target.value })
-                  }
-                  placeholder="2026-2027"
-                />
-                <p className="text-xs text-muted-foreground">
-                  This is the default year shown across the CRM dashboards and
-                  reports.
-                </p>
+
+            {/* School Years list */}
+            <div className="space-y-2">
+              <Label>School Years</Label>
+              <p className="text-xs text-muted-foreground">
+                Manage all school years. Star the current year — it becomes the
+                default across the CRM. Years listed here are open for parent
+                applications.
+              </p>
+              <div className="rounded-lg border divide-y">
+                {openYears.map((year) => {
+                  const isCurrent = form.currentAcademicYear === year;
+                  return (
+                    <div
+                      key={year}
+                      className="flex items-center justify-between px-3 py-2"
+                    >
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setForm({ ...form, currentAcademicYear: year })
+                          }
+                          className={`p-1 rounded ${
+                            isCurrent
+                              ? "text-amber-500"
+                              : "text-muted-foreground hover:text-amber-500"
+                          }`}
+                          title={isCurrent ? "Current year" : "Set as current year"}
+                        >
+                          <Star
+                            className="h-4 w-4"
+                            fill={isCurrent ? "currentColor" : "none"}
+                          />
+                        </button>
+                        <span className="text-sm font-medium">{year}</span>
+                        {isCurrent && (
+                          <Badge variant="secondary" className="text-[10px]">
+                            Current
+                          </Badge>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeYear(year)}
+                        className="p-1 rounded text-muted-foreground hover:text-destructive"
+                        title="Remove year"
+                      >
+                        <XIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="applicationFeeAmountDollars">
-                  Application Fee (USD)
-                </Label>
+              <div className="flex items-center gap-2 pt-1">
                 <Input
-                  id="applicationFeeAmountDollars"
                   type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.applicationFeeAmountDollars}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      applicationFeeAmountDollars: e.target.value,
-                    })
-                  }
+                  min="2020"
+                  max="2050"
+                  placeholder="e.g. 2027"
+                  value={newYearStart}
+                  onChange={(e) => setNewYearStart(e.target.value)}
+                  className="max-w-[160px]"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addYear();
+                    }
+                  }}
                 />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addYear}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add Year
+                </Button>
+                {newYearStart && !isNaN(parseInt(newYearStart)) && (
+                  <span className="text-xs text-muted-foreground">
+                    Will add: {newYearStart}-{parseInt(newYearStart) + 1}
+                  </span>
+                )}
               </div>
             </div>
+
             <div className="space-y-1.5">
-              <Label htmlFor="openSchoolYears">
-                Open for Applications
+              <Label htmlFor="applicationFeeAmountDollars">
+                Application Fee (USD)
               </Label>
               <Input
-                id="openSchoolYears"
-                value={form.openSchoolYears}
+                id="applicationFeeAmountDollars"
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.applicationFeeAmountDollars}
                 onChange={(e) =>
-                  setForm({ ...form, openSchoolYears: e.target.value })
+                  setForm({
+                    ...form,
+                    applicationFeeAmountDollars: e.target.value,
+                  })
                 }
-                placeholder="2026-2027, 2027-2028"
+                className="max-w-[200px]"
               />
-              <p className="text-xs text-muted-foreground">
-                Comma-separated list of school years parents can apply for.
-                Remove a year to stop accepting applications for it.
-              </p>
             </div>
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
