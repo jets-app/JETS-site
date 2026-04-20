@@ -30,6 +30,7 @@ interface PhoneInputProps {
   className?: string;
   placeholder?: string;
   required?: boolean;
+  disabled?: boolean;
   "aria-invalid"?: boolean;
 }
 

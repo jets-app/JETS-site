@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PhoneInput } from "@/components/forms/phone-input";
+import { EmailInput } from "@/components/forms/email-input";
 import { Plus, Trash2 } from "lucide-react";
 import React from "react";
 
@@ -74,6 +76,14 @@ export function FamilyInfoStep({ applicationId, readOnly, formRef, onSaved }: St
         </p>
       </div>
 
+      {Object.keys(errors).length > 0 && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4">
+          <p className="text-sm font-medium text-destructive">
+            Please fix {Object.keys(errors).length} required field{Object.keys(errors).length > 1 ? "s" : ""} below (highlighted in red)
+          </p>
+        </div>
+      )}
+
       {/* Siblings */}
       <div className="space-y-4">
         <div className="flex items-center gap-3">
@@ -112,16 +122,14 @@ export function FamilyInfoStep({ applicationId, readOnly, formRef, onSaved }: St
                 </div>
                 <div className="space-y-2">
                   <Label>Phone</Label>
-                  <Input
-                    type="tel"
+                  <PhoneInput
                     {...register(`siblings.${index}.phone`)}
                     disabled={readOnly}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Email</Label>
-                  <Input
-                    type="email"
+                  <EmailInput
                     {...register(`siblings.${index}.email`)}
                     disabled={readOnly}
                   />
@@ -175,8 +183,7 @@ export function FamilyInfoStep({ applicationId, readOnly, formRef, onSaved }: St
             </div>
             <div className="space-y-2">
               <Label>Email</Label>
-              <Input
-                type="email"
+              <EmailInput
                 {...register("grandparentsFather.email")}
                 disabled={readOnly}
               />
@@ -197,8 +204,7 @@ export function FamilyInfoStep({ applicationId, readOnly, formRef, onSaved }: St
             </div>
             <div className="space-y-2">
               <Label>Email</Label>
-              <Input
-                type="email"
+              <EmailInput
                 {...register("grandparentsMother.email")}
                 disabled={readOnly}
               />

@@ -60,6 +60,14 @@ export function HebrewNameStep({ applicationId, readOnly, formRef, onSaved }: St
         </p>
       </div>
 
+      {Object.keys(errors).length > 0 && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4">
+          <p className="text-sm font-medium text-destructive">
+            Please fix {Object.keys(errors).length} required field{Object.keys(errors).length > 1 ? "s" : ""} below (highlighted in red)
+          </p>
+        </div>
+      )}
+
       <div className="space-y-6">
         <div className="space-y-2">
           <Label htmlFor="applicantHebrewName">

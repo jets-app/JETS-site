@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { PhoneInput } from "@/components/forms/phone-input";
+import { EmailInput } from "@/components/forms/email-input";
 import { Plus, Trash2 } from "lucide-react";
 import React from "react";
 
@@ -83,6 +85,14 @@ export function SchoolHistoryStep({
           Please provide information about the applicant&apos;s most recent schooling.
         </p>
       </div>
+
+      {Object.keys(errors).length > 0 && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4">
+          <p className="text-sm font-medium text-destructive">
+            Please fix {Object.keys(errors).length} required field{Object.keys(errors).length > 1 ? "s" : ""} below (highlighted in red)
+          </p>
+        </div>
+      )}
 
       {/* Were you in school? */}
       <div className="space-y-3">
@@ -179,11 +189,11 @@ export function SchoolHistoryStep({
               </div>
               <div className="space-y-2">
                 <Label>Phone</Label>
-                <Input type="tel" {...register("principal.phone")} disabled={readOnly} />
+                <PhoneInput {...register("principal.phone")} disabled={readOnly} />
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>
-                <Input type="email" {...register("principal.email")} disabled={readOnly} />
+                <EmailInput {...register("principal.email")} disabled={readOnly} />
               </div>
             </div>
           </div>
@@ -208,11 +218,11 @@ export function SchoolHistoryStep({
               </div>
               <div className="space-y-2">
                 <Label>Phone</Label>
-                <Input type="tel" {...register("teacher.phone")} disabled={readOnly} />
+                <PhoneInput {...register("teacher.phone")} disabled={readOnly} />
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>
-                <Input type="email" {...register("teacher.email")} disabled={readOnly} />
+                <EmailInput {...register("teacher.email")} disabled={readOnly} />
               </div>
             </div>
           </div>
@@ -268,16 +278,14 @@ export function SchoolHistoryStep({
             </div>
             <div className="space-y-2">
               <Label>Phone</Label>
-              <Input
-                type="tel"
+              <PhoneInput
                 {...register(`relatableContacts.${index}.phone`)}
                 disabled={readOnly}
               />
             </div>
             <div className="space-y-2">
               <Label>Email</Label>
-              <Input
-                type="email"
+              <EmailInput
                 {...register(`relatableContacts.${index}.email`)}
                 disabled={readOnly}
               />
