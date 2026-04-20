@@ -55,16 +55,19 @@ export default function RegisterPage() {
         </Link>
         <div>
           <h1 className="text-lg font-semibold tracking-tight">
-            Create your account
+            Parent / Guardian Account
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Start your application to JETS School
+            Create an account to apply on behalf of your son
           </p>
         </div>
       </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          Parent / Guardian Information
+        </p>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label htmlFor="firstName" className="text-sm">
