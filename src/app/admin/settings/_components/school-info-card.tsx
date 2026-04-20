@@ -23,6 +23,7 @@ import {
 interface SchoolInfoCardProps {
   settings: {
     currentAcademicYear: string;
+    openSchoolYears: string[];
     applicationFeeAmount: number;
     applicationsOpen: boolean;
     schoolName: string;
@@ -47,6 +48,7 @@ export function SchoolInfoCard({ settings }: SchoolInfoCardProps) {
     schoolPhone: settings.schoolPhone,
     schoolEmail: settings.schoolEmail,
     currentAcademicYear: settings.currentAcademicYear,
+    openSchoolYears: settings.openSchoolYears.join(", "),
     applicationFeeAmountDollars: (settings.applicationFeeAmount / 100).toFixed(
       2
     ),
@@ -65,6 +67,10 @@ export function SchoolInfoCard({ settings }: SchoolInfoCardProps) {
           schoolPhone: form.schoolPhone,
           schoolEmail: form.schoolEmail,
           currentAcademicYear: form.currentAcademicYear,
+          openSchoolYears: form.openSchoolYears
+            .split(",")
+            .map((y) => y.trim())
+            .filter(Boolean),
           applicationFeeAmount: Math.round(
             parseFloat(form.applicationFeeAmountDollars || "0") * 100
           ),
@@ -138,6 +144,10 @@ export function SchoolInfoCard({ settings }: SchoolInfoCardProps) {
                   }
                   placeholder="2026-2027"
                 />
+                <p className="text-xs text-muted-foreground">
+                  This is the default year shown across the CRM dashboards and
+                  reports.
+                </p>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="applicationFeeAmountDollars">
@@ -157,6 +167,23 @@ export function SchoolInfoCard({ settings }: SchoolInfoCardProps) {
                   }
                 />
               </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="openSchoolYears">
+                Open for Applications
+              </Label>
+              <Input
+                id="openSchoolYears"
+                value={form.openSchoolYears}
+                onChange={(e) =>
+                  setForm({ ...form, openSchoolYears: e.target.value })
+                }
+                placeholder="2026-2027, 2027-2028"
+              />
+              <p className="text-xs text-muted-foreground">
+                Comma-separated list of school years parents can apply for.
+                Remove a year to stop accepting applications for it.
+              </p>
             </div>
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>

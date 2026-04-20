@@ -38,6 +38,7 @@ export async function getSettings() {
 
 export interface UpdateSettingsInput {
   currentAcademicYear?: string;
+  openSchoolYears?: string[];
   applicationFeeAmount?: number; // in cents
   applicationsOpen?: boolean;
   schoolName?: string;
@@ -56,6 +57,8 @@ export async function updateSettings(data: UpdateSettingsInput) {
   const update: Record<string, unknown> = {};
   if (data.currentAcademicYear !== undefined)
     update.currentAcademicYear = data.currentAcademicYear.trim();
+  if (data.openSchoolYears !== undefined)
+    update.openSchoolYears = data.openSchoolYears.map((y) => y.trim()).filter(Boolean);
   if (data.applicationFeeAmount !== undefined)
     update.applicationFeeAmount = Math.max(0, Math.round(data.applicationFeeAmount));
   if (data.applicationsOpen !== undefined)
