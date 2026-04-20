@@ -26,7 +26,14 @@ async function generateReferenceNumber(): Promise<string> {
 }
 
 // ==================== Create Application ====================
-export async function createApplication() {
+export async function getOpenSchoolYears() {
+  const settings = await db.systemSettings.findFirst({
+    where: { id: "settings" },
+  });
+  return settings?.openSchoolYears ?? ["2026-2027"];
+}
+
+export async function createApplication(selectedYear?: string) {
   const session = await auth();
   if (!session?.user?.id) {
     return { error: "You must be logged in to create an application." };
@@ -52,7 +59,10 @@ export async function createApplication() {
       where: { id: "settings" },
     });
 
-    const academicYear = settings?.currentAcademicYear ?? "2026-2027";
+    const openYears = settings?.openSchoolYears ?? ["2026-2027"];
+    const academicYear = selectedYear && openYears.includes(selectedYear)
+      ? selectedYear
+      : settings?.currentAcademicYear ?? "2026-2027";
     const feeAmount = settings?.applicationFeeAmount ?? 50000;
 
     // Check if applications are open

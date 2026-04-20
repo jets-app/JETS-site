@@ -422,7 +422,7 @@ export default async function PortalDashboard() {
                         {task.description}
                       </p>
                     </div>
-                    <LinkButton href={task.href} size="sm" className="shrink-0">
+                    <LinkButton href={task.href} size="sm" className="shrink-0 min-w-[140px] justify-center">
                       {task.action}
                       <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
                     </LinkButton>
