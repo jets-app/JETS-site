@@ -65,20 +65,39 @@ export default function RegisterPage() {
 
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="name" className="text-sm">
-            Full name
-          </Label>
-          <Input
-            id="name"
-            autoComplete="name"
-            className="h-10"
-            aria-invalid={!!errors.name}
-            {...register("name")}
-          />
-          {errors.name && (
-            <p className="text-xs text-destructive">{errors.name.message}</p>
-          )}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="firstName" className="text-sm">
+              First name
+            </Label>
+            <Input
+              id="firstName"
+              autoComplete="given-name"
+              className="h-10"
+              placeholder="John"
+              aria-invalid={!!errors.firstName}
+              {...register("firstName")}
+            />
+            {errors.firstName && (
+              <p className="text-xs text-destructive">{errors.firstName.message}</p>
+            )}
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="lastName" className="text-sm">
+              Last name
+            </Label>
+            <Input
+              id="lastName"
+              autoComplete="family-name"
+              className="h-10"
+              placeholder="Doe"
+              aria-invalid={!!errors.lastName}
+              {...register("lastName")}
+            />
+            {errors.lastName && (
+              <p className="text-xs text-destructive">{errors.lastName.message}</p>
+            )}
+          </div>
         </div>
 
         <div className="space-y-1.5">
@@ -90,6 +109,7 @@ export default function RegisterPage() {
             type="email"
             autoComplete="email"
             className="h-10"
+            placeholder="you@example.com"
             aria-invalid={!!errors.email}
             {...register("email")}
           />
@@ -110,8 +130,13 @@ export default function RegisterPage() {
             type="tel"
             autoComplete="tel"
             className="h-10"
+            placeholder="(818) 831-3000"
+            aria-invalid={!!errors.phone}
             {...register("phone")}
           />
+          {errors.phone && (
+            <p className="text-xs text-destructive">{errors.phone.message}</p>
+          )}
         </div>
 
         <div className="space-y-1.5">
