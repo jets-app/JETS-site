@@ -82,29 +82,35 @@ export function HebrewNameStep({ applicationId, readOnly, formRef, onSaved }: St
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="fatherHebrewName">Father&apos;s Hebrew Name</Label>
+          <Label htmlFor="fatherHebrewName">Father&apos;s Hebrew Name <span className="text-destructive">*</span></Label>
           <Input
             id="fatherHebrewName"
             placeholder="e.g., Avraham Yitzchak"
             {...register("fatherHebrewName")}
+            aria-invalid={!!errors.fatherHebrewName}
             disabled={readOnly}
           />
-          <p className="text-xs text-muted-foreground">
-            Used for aliyos and Torah reading.
-          </p>
+          {errors.fatherHebrewName ? (
+            <p className="text-xs text-destructive">{errors.fatherHebrewName.message}</p>
+          ) : (
+            <p className="text-xs text-muted-foreground">Used for aliyos and Torah reading.</p>
+          )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="motherHebrewName">Mother&apos;s Hebrew Name</Label>
+          <Label htmlFor="motherHebrewName">Mother&apos;s Hebrew Name <span className="text-destructive">*</span></Label>
           <Input
             id="motherHebrewName"
             placeholder="e.g., Sarah Rivka"
             {...register("motherHebrewName")}
+            aria-invalid={!!errors.motherHebrewName}
             disabled={readOnly}
           />
-          <p className="text-xs text-muted-foreground">
-            Used for mi sheberach and tefillos.
-          </p>
+          {errors.motherHebrewName ? (
+            <p className="text-xs text-destructive">{errors.motherHebrewName.message}</p>
+          ) : (
+            <p className="text-xs text-muted-foreground">Used for mi sheberach and tefillos.</p>
+          )}
         </div>
       </div>
 
