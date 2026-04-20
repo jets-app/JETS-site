@@ -184,8 +184,45 @@ export async function sendDocumentToRecipient(
     },
   });
 
-  // TODO: Send email to recipient with the signing link
-  // Link: ${process.env.NEXT_PUBLIC_APP_URL}/d/${document.token}
+  // Send signing link via email
+  const { sendEmail } = await import("@/server/email");
+  const appUrl = process.env.AUTH_URL || "https://jets-crm.vercel.app";
+  const signingLink = `${appUrl}/d/${document.token}`;
+  const docTitle = document.title;
+
+  {
+    const recipientEmail = recipientType === "STUDENT" && application.student?.email
+      ? application.student.email
+      : application.parent.email;
+    const recipientName = recipientType === "STUDENT" && application.student
+      ? `${application.student.firstName} ${application.student.lastName}`
+      : application.parent.name;
+
+    await sendEmail({
+      to: recipientEmail,
+      subject: `Document for Signing: ${docTitle} — JETS School`,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #A30018;">
+            <h1 style="color: #A30018; font-size: 24px; margin: 0;">JETS School</h1>
+          </div>
+          <div style="padding: 30px 0; line-height: 1.6; color: #333;">
+            <p>Dear ${recipientName},</p>
+            <p>A document requires your signature: <strong>${docTitle}</strong></p>
+            <p style="text-align: center; margin: 30px 0;">
+              <a href="${signingLink}" style="background: #A30018; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
+                Review &amp; Sign Document
+              </a>
+            </p>
+            <p style="color: #666; font-size: 14px;">This link expires on ${expiresAt.toLocaleDateString()}. If you have questions, contact the JETS admissions office at (818) 831-3000.</p>
+          </div>
+          <div style="border-top: 1px solid #eee; padding: 20px 0; text-align: center; color: #999; font-size: 12px;">
+            Jewish Educational Trade School<br>16601 Rinaldi Street, Granada Hills, CA 91344
+          </div>
+        </div>
+      `,
+    });
+  }
 
   revalidatePath(`/admin/applications/${applicationId}`);
   return document;

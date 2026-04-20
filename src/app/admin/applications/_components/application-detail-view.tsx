@@ -38,10 +38,16 @@ import {
   addApplicationNote,
 } from "@/server/actions/admin.actions";
 import {
+  updateStudentInfo,
+  updateParentInfo,
+  updateApplicationDetails,
+} from "@/server/actions/admin-application.actions";
+import {
   beginOfficeReview,
   forwardToPrincipals,
   sendToDocuments,
 } from "@/server/actions/review.actions";
+import { EditableField } from "../[id]/_components/editable-field";
 import { DocumentStatusTracker } from "@/components/documents/document-status-tracker";
 import { SendEnrollmentDocuments } from "@/components/documents/send-enrollment-documents";
 import type { ApplicationStatus } from "@prisma/client";
@@ -264,7 +270,7 @@ export function ApplicationDetailView({
             <CardContent className="pt-4">
               {student ? (
                 <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 sm:col-span-2">
                     {student.photoUrl ? (
                       <img
                         src={student.photoUrl}
@@ -290,44 +296,42 @@ export function ApplicationDetailView({
                       )}
                     </div>
                   </div>
-                  <div className="space-y-1.5 text-sm">
-                    {student.dateOfBirth && (
-                      <InfoRow
-                        icon={Calendar}
-                        label="DOB"
-                        value={new Date(
-                          student.dateOfBirth
-                        ).toLocaleDateString()}
-                      />
-                    )}
-                    {student.gender && (
-                      <InfoRow icon={User} label="Gender" value={student.gender} />
-                    )}
-                    {student.email && (
-                      <InfoRow icon={Mail} label="Email" value={student.email} />
-                    )}
-                    {student.phone && (
-                      <InfoRow icon={Phone} label="Phone" value={student.phone} />
-                    )}
-                  </div>
-                  {(student.addressLine1 || student.city) && (
-                    <div className="sm:col-span-2 text-sm">
-                      <InfoRow
-                        icon={MapPin}
-                        label="Address"
-                        value={[
-                          student.addressLine1,
-                          student.addressLine2,
-                          [student.city, student.state, student.zipCode]
-                            .filter(Boolean)
-                            .join(", "),
-                          student.country,
-                        ]
-                          .filter(Boolean)
-                          .join(", ")}
-                      />
-                    </div>
-                  )}
+                  <EditableField
+                    label="First Name"
+                    value={student.firstName ?? ""}
+                    onSave={async (v) => { await updateStudentInfo(student.id, { firstName: v }); router.refresh(); }}
+                    type="text"
+                  />
+                  <EditableField
+                    label="Last Name"
+                    value={student.lastName ?? ""}
+                    onSave={async (v) => { await updateStudentInfo(student.id, { lastName: v }); router.refresh(); }}
+                    type="text"
+                  />
+                  <EditableField
+                    label="Date of Birth"
+                    value={student.dateOfBirth ? new Date(student.dateOfBirth).toISOString().split("T")[0] : ""}
+                    onSave={async (v) => { await updateStudentInfo(student.id, { dateOfBirth: v }); router.refresh(); }}
+                    type="date"
+                  />
+                  <EditableField
+                    label="Email"
+                    value={student.email ?? ""}
+                    onSave={async (v) => { await updateStudentInfo(student.id, { email: v }); router.refresh(); }}
+                    type="email"
+                  />
+                  <EditableField
+                    label="Phone"
+                    value={student.phone ?? ""}
+                    onSave={async (v) => { await updateStudentInfo(student.id, { phone: v }); router.refresh(); }}
+                    type="tel"
+                  />
+                  <EditableField
+                    label="Address"
+                    value={student.addressLine1 ?? ""}
+                    onSave={async (v) => { await updateStudentInfo(student.id, { addressLine1: v }); router.refresh(); }}
+                    type="text"
+                  />
                 </div>
               ) : (
                 <p className="text-muted-foreground italic">
@@ -346,12 +350,25 @@ export function ApplicationDetailView({
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4">
-              <div className="grid sm:grid-cols-2 gap-4 text-sm">
-                <InfoRow icon={User} label="Name" value={parent.name} />
-                <InfoRow icon={Mail} label="Email" value={parent.email} />
-                {parent.phone && (
-                  <InfoRow icon={Phone} label="Phone" value={parent.phone} />
-                )}
+              <div className="grid sm:grid-cols-2 gap-4">
+                <EditableField
+                  label="Name"
+                  value={parent.name ?? ""}
+                  onSave={async (v) => { await updateParentInfo(parent.id, { name: v }); router.refresh(); }}
+                  type="text"
+                />
+                <EditableField
+                  label="Email"
+                  value={parent.email ?? ""}
+                  onSave={async (v) => { await updateParentInfo(parent.id, { email: v }); router.refresh(); }}
+                  type="email"
+                />
+                <EditableField
+                  label="Phone"
+                  value={parent.phone ?? ""}
+                  onSave={async (v) => { await updateParentInfo(parent.id, { phone: v }); router.refresh(); }}
+                  type="tel"
+                />
               </div>
 
               {/* Father and Mother info from JSON */}
@@ -843,16 +860,37 @@ export function ApplicationDetailView({
                   {application.currentStep}/10
                 </span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Fee Paid</span>
-                <span className="font-medium">
+                <button
+                  className="font-medium cursor-pointer"
+                  onClick={() => {
+                    startTransition(async () => {
+                      await updateApplicationDetails(application.id, {
+                        applicationFeePaid: !application.applicationFeePaid,
+                      });
+                      router.refresh();
+                    });
+                  }}
+                  title="Click to toggle"
+                >
                   {application.applicationFeePaid ? (
                     <CheckCircle2 className="h-4 w-4 text-green-600 inline" />
                   ) : (
                     <XCircle className="h-4 w-4 text-muted-foreground inline" />
                   )}
-                </span>
+                </button>
               </div>
+              <EditableField
+                label="Fee Amount"
+                value={application.applicationFeeAmount ? `${(application.applicationFeeAmount / 100).toFixed(2)}` : "0.00"}
+                onSave={async (v) => {
+                  const cents = Math.round(parseFloat(v) * 100);
+                  await updateApplicationDetails(application.id, { applicationFeeAmount: cents });
+                  router.refresh();
+                }}
+                type="text"
+              />
               {application.discountCode && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Discount</span>
