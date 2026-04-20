@@ -5,20 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { submitRecommendation } from "@/server/actions/recommendation.actions";
 import {
-  ratingScale,
-  capacityOptions,
-  overallRecommendationOptions,
   ratingCategories,
+  overallRecommendationOptions,
   type RecommendationResponse,
 } from "@/lib/validators/recommendation";
 
@@ -30,46 +20,85 @@ interface RecommendationFormClientProps {
   parentName: string;
 }
 
+type RatingWithComments = {
+  rating: string;
+  comments: string;
+};
+
 export function RecommendationFormClient({
   token,
   refereeName,
+  refereeEmail,
   studentName,
   parentName,
 }: RecommendationFormClientProps) {
   const [isPending, startTransition] = useTransition();
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  // Form state
+  // Section 1: Recommender Info
+  const [recommenderName, setRecommenderName] = useState(refereeName || "");
+  const [recommenderEmail, setRecommenderEmail] = useState(refereeEmail || "");
+  const [recommenderPhone, setRecommenderPhone] = useState("");
   const [knownDuration, setKnownDuration] = useState("");
-  const [capacity, setCapacity] = useState("");
-  const [ratings, setRatings] = useState<Record<string, string>>({});
-  const [greatestStrengths, setGreatestStrengths] = useState("");
-  const [areasOfConcern, setAreasOfConcern] = useState("");
-  const [overallRecommendation, setOverallRecommendation] = useState("");
+
+  // Section 2: Ratings
+  const [ratings, setRatings] = useState<Record<string, RatingWithComments>>(
+    () => {
+      const initial: Record<string, RatingWithComments> = {};
+      for (const cat of ratingCategories) {
+        initial[cat.key] = { rating: "", comments: "" };
+      }
+      return initial;
+    }
+  );
+
+  // Section 3: Student Questions
+  const [strengthsAndWeaknesses, setStrengthsAndWeaknesses] = useState("");
+  const [specialNeeds, setSpecialNeeds] = useState("");
+  const [socialSkills, setSocialSkills] = useState("");
+  const [academicSkills, setAcademicSkills] = useState("");
+  const [disciplineIssues, setDisciplineIssues] = useState("");
   const [additionalComments, setAdditionalComments] = useState("");
-  const [signature, setSignature] = useState("");
+
+  // Section 4: Overall Recommendation
+  const [overallRecommendation, setOverallRecommendation] = useState("");
+
+  function setRatingValue(key: string, rating: string) {
+    setRatings((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], rating },
+    }));
+  }
+
+  function setRatingComments(key: string, comments: string) {
+    setRatings((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], comments },
+    }));
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setFieldErrors({});
 
     const responses: RecommendationResponse = {
+      recommenderName,
+      recommenderEmail,
+      recommenderPhone,
       knownDuration,
-      capacity: capacity as RecommendationResponse["capacity"],
-      characterIntegrity: ratings.characterIntegrity as RecommendationResponse["characterIntegrity"],
-      workEthic: ratings.workEthic as RecommendationResponse["workEthic"],
-      socialSkills: ratings.socialSkills as RecommendationResponse["socialSkills"],
-      emotionalMaturity: ratings.emotionalMaturity as RecommendationResponse["emotionalMaturity"],
-      respectForAuthority: ratings.respectForAuthority as RecommendationResponse["respectForAuthority"],
-      religiousCommitment: ratings.religiousCommitment as RecommendationResponse["religiousCommitment"],
-      greatestStrengths,
-      areasOfConcern,
-      overallRecommendation: overallRecommendation as RecommendationResponse["overallRecommendation"],
+      desireForAcademicGrowth: ratings.desireForAcademicGrowth as RecommendationResponse["desireForAcademicGrowth"],
+      considerationForOthers: ratings.considerationForOthers as RecommendationResponse["considerationForOthers"],
+      commitmentToReligiousDecorum: ratings.commitmentToReligiousDecorum as RecommendationResponse["commitmentToReligiousDecorum"],
+      responsivenessToConstructiveCriticism: ratings.responsivenessToConstructiveCriticism as RecommendationResponse["responsivenessToConstructiveCriticism"],
+      levelOfResponsibility: ratings.levelOfResponsibility as RecommendationResponse["levelOfResponsibility"],
+      strengthsAndWeaknesses,
+      specialNeeds,
+      socialSkills,
+      academicSkills,
+      disciplineIssues,
       additionalComments,
-      signature,
+      overallRecommendation: overallRecommendation as RecommendationResponse["overallRecommendation"],
     };
 
     startTransition(async () => {
@@ -89,7 +118,7 @@ export function RecommendationFormClient({
   if (submitted) {
     return (
       <div className="flex flex-col items-center py-16 text-center animate-fade-in">
-        <div className="mb-6 flex size-16 items-center justify-center rounded-full bg-success/10 text-success">
+        <div className="mb-6 flex size-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="32"
@@ -119,231 +148,301 @@ export function RecommendationFormClient({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Intro Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">Confidential Recommendation Form</CardTitle>
-          <CardDescription className="mt-1 text-base leading-relaxed">
-            Dear {refereeName}, you have been listed as a reference for{" "}
-            <strong className="text-foreground">{studentName}</strong>&apos;s
-            application to JETS School. This recommendation was requested by{" "}
-            <strong className="text-foreground">{parentName}</strong>.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Your responses are confidential and will not be shared with the
-            applicant or their family. Please answer all questions honestly and
-            thoroughly. This form should take approximately 5&ndash;10 minutes to
-            complete.
+    <form onSubmit={handleSubmit} className="space-y-8">
+      {/* Intro */}
+      <div className="rounded-xl border bg-white p-6 shadow-sm">
+        <h2 className="text-xl font-semibold text-[#A30018]">
+          Confidential Recommendation Form
+        </h2>
+        <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+          Dear {refereeName}, you have been listed as a reference for{" "}
+          <strong className="text-gray-900">{studentName}</strong>&apos;s
+          application to JETS School. This recommendation was requested by{" "}
+          <strong className="text-gray-900">{parentName}</strong>.
+        </p>
+        <div className="mt-4 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3">
+          <p className="text-xs text-amber-800">
+            Your recommendation is confidential and will only be reviewed by the
+            JETS admissions team.
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Global Error */}
       {error && (
-        <div className="rounded-lg border border-destructive/50 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
-      {/* Section 1: Background */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Your Relationship with the Applicant</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <div className="space-y-2">
-            <Label htmlFor="knownDuration">
-              How long have you known the applicant?
+      {/* ============ Section 1: Recommender Info ============ */}
+      <div className="rounded-xl border bg-white p-6 shadow-sm space-y-5">
+        <h3 className="text-lg font-semibold text-gray-900">
+          Section 1: Your Information
+        </h3>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="recommenderName">
+              Your Name <span className="text-red-500">*</span>
             </Label>
             <Input
-              id="knownDuration"
-              placeholder="e.g., 3 years"
-              value={knownDuration}
-              onChange={(e) => setKnownDuration(e.target.value)}
+              id="recommenderName"
+              value={recommenderName}
+              onChange={(e) => setRecommenderName(e.target.value)}
+              placeholder="Full name"
               required
             />
-            {fieldErrors.knownDuration && (
-              <p className="text-xs text-destructive">{fieldErrors.knownDuration}</p>
-            )}
           </div>
 
-          <div className="space-y-3">
-            <Label>In what capacity do you know the applicant?</Label>
-            <RadioGroup
-              value={capacity}
-              onValueChange={(val) => setCapacity(val as string)}
-            >
-              {capacityOptions.map((option) => (
-                <div key={option} className="flex items-center gap-2.5">
-                  <RadioGroupItem value={option} />
-                  <Label className="font-normal cursor-pointer">{option}</Label>
-                </div>
-              ))}
-            </RadioGroup>
-            {fieldErrors.capacity && (
-              <p className="text-xs text-destructive">{fieldErrors.capacity}</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Section 2: Ratings */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Applicant Assessment</CardTitle>
-          <CardDescription>
-            Please rate the applicant in each of the following areas.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {ratingCategories.map((category) => (
-            <div key={category.key} className="space-y-3">
-              <Label className="text-sm font-medium">{category.label}</Label>
-              <RadioGroup
-                value={ratings[category.key] || ""}
-                onValueChange={(val) =>
-                  setRatings((prev) => ({
-                    ...prev,
-                    [category.key]: val as string,
-                  }))
-                }
-                className="flex flex-wrap gap-x-4 gap-y-2"
-              >
-                {ratingScale.map((rating) => (
-                  <div key={rating} className="flex items-center gap-1.5">
-                    <RadioGroupItem value={rating} />
-                    <Label className="font-normal text-xs sm:text-sm cursor-pointer whitespace-nowrap">
-                      {rating}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-              {fieldErrors[category.key] && (
-                <p className="text-xs text-destructive">
-                  {fieldErrors[category.key]}
-                </p>
-              )}
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Section 3: Written Responses */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Written Responses</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <div className="space-y-2">
-            <Label htmlFor="greatestStrengths">
-              Describe the applicant&apos;s greatest strengths
+          <div className="space-y-1.5">
+            <Label htmlFor="recommenderEmail">
+              Your Email <span className="text-red-500">*</span>
             </Label>
-            <Textarea
-              id="greatestStrengths"
-              placeholder="What qualities, skills, or characteristics stand out about this applicant?"
-              value={greatestStrengths}
-              onChange={(e) => setGreatestStrengths(e.target.value)}
-              rows={4}
+            <Input
+              id="recommenderEmail"
+              type="email"
+              value={recommenderEmail}
+              onChange={(e) => setRecommenderEmail(e.target.value)}
+              placeholder="email@example.com"
               required
             />
-            {fieldErrors.greatestStrengths && (
-              <p className="text-xs text-destructive">
-                {fieldErrors.greatestStrengths}
-              </p>
-            )}
           </div>
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="areasOfConcern">
-              Are there any areas of concern?
-            </Label>
-            <Textarea
-              id="areasOfConcern"
-              placeholder="Optional — share any concerns you may have about the applicant"
-              value={areasOfConcern}
-              onChange={(e) => setAreasOfConcern(e.target.value)}
-              rows={3}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Section 4: Overall Recommendation */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Overall Recommendation</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <div className="space-y-3">
-            <Label>
-              Would you recommend this applicant for JETS School?
-            </Label>
-            <RadioGroup
-              value={overallRecommendation}
-              onValueChange={(val) =>
-                setOverallRecommendation(val as string)
-              }
-            >
-              {overallRecommendationOptions.map((option) => (
-                <div key={option} className="flex items-center gap-2.5">
-                  <RadioGroupItem value={option} />
-                  <Label className="font-normal cursor-pointer">{option}</Label>
-                </div>
-              ))}
-            </RadioGroup>
-            {fieldErrors.overallRecommendation && (
-              <p className="text-xs text-destructive">
-                {fieldErrors.overallRecommendation}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="additionalComments">
-              Additional comments (optional)
-            </Label>
-            <Textarea
-              id="additionalComments"
-              placeholder="Any additional information you would like to share with the admissions team"
-              value={additionalComments}
-              onChange={(e) => setAdditionalComments(e.target.value)}
-              rows={3}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Section 5: Signature */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Signature</CardTitle>
-          <CardDescription>
-            By typing your name below, you certify that the information provided
-            is accurate and reflects your honest assessment of the applicant.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <Label htmlFor="signature">Type your full name as signature</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="recommenderPhone">
+            Your Phone Number <span className="text-red-500">*</span>
+          </Label>
           <Input
-            id="signature"
-            placeholder="Your full name"
-            value={signature}
-            onChange={(e) => setSignature(e.target.value)}
-            className="font-serif italic text-base"
+            id="recommenderPhone"
+            type="tel"
+            value={recommenderPhone}
+            onChange={(e) => setRecommenderPhone(e.target.value)}
+            placeholder="(555) 123-4567"
             required
           />
-          {fieldErrors.signature && (
-            <p className="text-xs text-destructive">{fieldErrors.signature}</p>
-          )}
-        </CardContent>
-      </Card>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="knownDuration">
+            How long and in what capacity have you known the applicant?{" "}
+            <span className="text-red-500">*</span>
+          </Label>
+          <Textarea
+            id="knownDuration"
+            value={knownDuration}
+            onChange={(e) => setKnownDuration(e.target.value)}
+            placeholder="e.g., I have known the applicant for 3 years as his teacher at..."
+            rows={3}
+            required
+          />
+        </div>
+      </div>
+
+      {/* ============ Section 2: Student Assessment Scale ============ */}
+      <div className="rounded-xl border bg-white p-6 shadow-sm space-y-6">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Section 2: Student Assessment
+          </h3>
+          <p className="mt-1 text-sm text-gray-500">
+            Please rate the applicant on a scale of 1&ndash;5 (1 = lowest, 5 = highest)
+          </p>
+        </div>
+
+        {ratingCategories.map((category, idx) => (
+          <div key={category.key} className="space-y-3">
+            <p className="text-sm font-medium text-gray-900">
+              {idx + 1}. {category.label}
+            </p>
+
+            {/* Rating scale row */}
+            <div className="flex items-center gap-2 sm:gap-4">
+              <span className="text-xs text-gray-400 w-12 text-right shrink-0">
+                Low
+              </span>
+              <div className="flex items-center gap-3 sm:gap-4">
+                {["1", "2", "3", "4", "5"].map((val) => {
+                  const isSelected = ratings[category.key]?.rating === val;
+                  return (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => setRatingValue(category.key, val)}
+                      className={`flex size-10 items-center justify-center rounded-full border-2 text-sm font-semibold transition-all ${
+                        isSelected
+                          ? "border-[#A30018] bg-[#A30018] text-white shadow-sm"
+                          : "border-gray-300 bg-white text-gray-600 hover:border-[#A30018]/50 hover:text-[#A30018]"
+                      }`}
+                      aria-label={`Rate ${category.label} ${val} out of 5`}
+                    >
+                      {val}
+                    </button>
+                  );
+                })}
+              </div>
+              <span className="text-xs text-gray-400 w-12 shrink-0">High</span>
+            </div>
+
+            {/* Optional comments */}
+            <Textarea
+              value={ratings[category.key]?.comments || ""}
+              onChange={(e) => setRatingComments(category.key, e.target.value)}
+              placeholder="Comments (optional)"
+              rows={2}
+              className="text-sm"
+            />
+
+            {idx < ratingCategories.length - 1 && (
+              <hr className="border-gray-100" />
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* ============ Section 3: Student Questions ============ */}
+      <div className="rounded-xl border bg-white p-6 shadow-sm space-y-5">
+        <h3 className="text-lg font-semibold text-gray-900">
+          Section 3: About the Student
+        </h3>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="strengthsAndWeaknesses">
+            1. Your observations of the student&apos;s strengths and weaknesses{" "}
+            <span className="text-red-500">*</span>
+          </Label>
+          <Textarea
+            id="strengthsAndWeaknesses"
+            value={strengthsAndWeaknesses}
+            onChange={(e) => setStrengthsAndWeaknesses(e.target.value)}
+            rows={4}
+            required
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="specialNeeds">
+            2. Does this student have any special physical or emotional needs?{" "}
+            <span className="text-red-500">*</span>
+          </Label>
+          <Textarea
+            id="specialNeeds"
+            value={specialNeeds}
+            onChange={(e) => setSpecialNeeds(e.target.value)}
+            rows={3}
+            required
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="socialSkills">
+            3. Your observations of the student&apos;s social skills{" "}
+            <span className="text-red-500">*</span>
+          </Label>
+          <Textarea
+            id="socialSkills"
+            value={socialSkills}
+            onChange={(e) => setSocialSkills(e.target.value)}
+            rows={3}
+            required
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="academicSkills">
+            4. Your observations of the student&apos;s academic skills{" "}
+            <span className="text-red-500">*</span>
+          </Label>
+          <Textarea
+            id="academicSkills"
+            value={academicSkills}
+            onChange={(e) => setAcademicSkills(e.target.value)}
+            rows={3}
+            required
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="disciplineIssues">
+            5. Has the applicant had any discipline issues in the last 3 years,
+            including fighting, misbehavior, being suspended or expelled?{" "}
+            <span className="text-red-500">*</span>
+          </Label>
+          <Textarea
+            id="disciplineIssues"
+            value={disciplineIssues}
+            onChange={(e) => setDisciplineIssues(e.target.value)}
+            rows={3}
+            required
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="additionalComments">
+            6. Additional comments (optional)
+          </Label>
+          <Textarea
+            id="additionalComments"
+            value={additionalComments}
+            onChange={(e) => setAdditionalComments(e.target.value)}
+            placeholder="Any additional information you would like to share with the admissions team"
+            rows={3}
+          />
+        </div>
+      </div>
+
+      {/* ============ Section 4: Overall Recommendation ============ */}
+      <div className="rounded-xl border bg-white p-6 shadow-sm space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900">
+          Section 4: Overall Recommendation
+        </h3>
+        <p className="text-sm text-gray-500">
+          Please select one of the following. <span className="text-red-500">*</span>
+        </p>
+
+        <div className="space-y-3">
+          {overallRecommendationOptions.map((option) => {
+            const isSelected = overallRecommendation === option;
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setOverallRecommendation(option)}
+                className={`w-full text-left rounded-lg border-2 px-4 py-3 text-sm transition-all ${
+                  isSelected
+                    ? "border-[#A30018] bg-[#A30018]/5 text-[#A30018] font-medium"
+                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                <span className="flex items-center gap-3">
+                  <span
+                    className={`flex size-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                      isSelected
+                        ? "border-[#A30018] bg-[#A30018]"
+                        : "border-gray-300 bg-white"
+                    }`}
+                  >
+                    {isSelected && (
+                      <span className="size-2 rounded-full bg-white" />
+                    )}
+                  </span>
+                  {option}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Submit */}
       <div className="flex justify-end pt-2 pb-8">
-        <Button type="submit" size="lg" disabled={isPending}>
+        <Button
+          type="submit"
+          size="lg"
+          disabled={isPending}
+          className="bg-[#A30018] hover:bg-[#8a0014] text-white px-8"
+        >
           {isPending ? "Submitting..." : "Submit Recommendation"}
         </Button>
       </div>

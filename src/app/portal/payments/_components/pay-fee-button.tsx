@@ -20,8 +20,12 @@ export function PayApplicationFeeButton({
       const result = await createApplicationFeeCheckout(applicationId);
       if (result.error) {
         setMessage(result.error);
+      } else if ("waived" in result && result.waived) {
+        setMessage("Fee waived — no payment required!");
+      } else if ("url" in result && result.url) {
+        window.location.href = result.url;
       } else {
-        setMessage(result.message ?? "Payment processed!");
+        setMessage("Payment processed!");
       }
     });
   }

@@ -394,15 +394,31 @@ function AddRefereeCard({
     });
   }
 
+  const isSecondRef = existingCount === 1;
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          Add Reference #{existingCount + 1}
+    <Card
+      className={
+        isSecondRef
+          ? "border-2 border-dashed border-[#A30018]/40 bg-[#A30018]/[0.02]"
+          : ""
+      }
+    >
+      <CardHeader className={isSecondRef ? "text-center pb-2" : ""}>
+        {isSecondRef && (
+          <div className="mx-auto mb-2 flex size-14 items-center justify-center rounded-full border-2 border-dashed border-[#A30018]/30 text-[#A30018]">
+            <UserPlus className="size-7" />
+          </div>
+        )}
+        <CardTitle className={isSecondRef ? "text-lg" : ""}>
+          {isSecondRef
+            ? "Add Your Second Reference"
+            : `Add Reference #${existingCount + 1}`}
         </CardTitle>
-        <CardDescription>
-          We&apos;ll email this person a private, secure link to fill out the
-          recommendation form on your behalf.
+        <CardDescription className={isSecondRef ? "text-sm" : ""}>
+          {isSecondRef
+            ? "Two references are required to submit your application"
+            : "We'll email this person a private, secure link to fill out the recommendation form on your behalf."}
         </CardDescription>
       </CardHeader>
       <CardContent>

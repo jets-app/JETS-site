@@ -78,16 +78,18 @@ export default async function RecommendationPage({
 
 function RecommendationShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="border-b bg-card/80 backdrop-blur-sm">
+      <header className="border-b bg-white shadow-sm">
         <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-4 sm:px-6">
-          <div className="flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-lg">
+          <div className="flex size-10 items-center justify-center rounded-lg bg-[#A30018] text-white font-bold text-lg">
             J
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight">JETS School</h1>
-            <p className="text-xs text-muted-foreground">
+            <h1 className="text-lg font-semibold tracking-tight text-[#A30018]">
+              JETS School
+            </h1>
+            <p className="text-xs text-gray-500">
               Jewish Educational Trade School
             </p>
           </div>
@@ -100,9 +102,9 @@ function RecommendationShell({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* Footer */}
-      <footer className="border-t bg-card/50 py-6 text-center text-xs text-muted-foreground">
+      <footer className="border-t bg-white py-6 text-center text-xs text-gray-500">
         <p>JETS School &mdash; Torah V&apos;avodah</p>
-        <p className="mt-1">Granada Hills, Los Angeles, CA</p>
+        <p className="mt-1">16601 Rinaldi Street, Granada Hills, CA 91344</p>
       </footer>
     </div>
   );
