@@ -35,11 +35,15 @@ export function SchoolHistoryStep({
     register,
     handleSubmit,
     control,
+    watch,
+    setValue,
     formState: { errors },
     reset,
   } = useForm<SchoolHistoryData>({
     resolver: zodResolver(schoolHistorySchema),
     defaultValues: {
+      wasInSchool: existing?.wasInSchool ?? undefined,
+      notInSchoolExplanation: existing?.notInSchoolExplanation ?? "",
       lastSchoolName: existing?.lastSchoolName ?? "",
       principal: existing?.principal ?? { name: "", phone: "", email: "" },
       teacher: existing?.teacher ?? { name: "", phone: "", email: "" },
@@ -54,6 +58,8 @@ export function SchoolHistoryStep({
     control,
     name: "relatableContacts",
   });
+
+  const wasInSchool = watch("wasInSchool");
 
   const onSubmit = async (data: SchoolHistoryData) => {
     store.setIsSaving(true);
@@ -78,74 +84,160 @@ export function SchoolHistoryStep({
         </p>
       </div>
 
-      {/* Last School */}
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="lastSchoolName">Last School Attended</Label>
-          <Input
-            id="lastSchoolName"
-            placeholder="Name of school"
-            {...register("lastSchoolName")}
-            disabled={readOnly}
-          />
+      {/* Were you in school? */}
+      <div className="space-y-3">
+        <Label className="text-base">
+          Were you enrolled in school during the past two years? <span className="text-destructive">*</span>
+        </Label>
+        <div className="flex gap-6">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              value="yes"
+              checked={wasInSchool === "yes"}
+              onChange={() => setValue("wasInSchool", "yes", { shouldDirty: true })}
+              disabled={readOnly}
+              className="accent-primary"
+            />
+            <span className="text-sm">Yes</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              value="no"
+              checked={wasInSchool === "no"}
+              onChange={() => setValue("wasInSchool", "no", { shouldDirty: true })}
+              disabled={readOnly}
+              className="accent-primary"
+            />
+            <span className="text-sm">No</span>
+          </label>
         </div>
+        {errors.wasInSchool && (
+          <p className="text-xs text-destructive">{errors.wasInSchool.message}</p>
+        )}
       </div>
 
-      {/* Principal */}
-      <div className="space-y-4">
-        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-          Principal / Head of School
-        </h3>
-        <div className="grid sm:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label>Name</Label>
-            <Input {...register("principal.name")} disabled={readOnly} />
-          </div>
-          <div className="space-y-2">
-            <Label>Phone</Label>
-            <Input type="tel" {...register("principal.phone")} disabled={readOnly} />
-          </div>
-          <div className="space-y-2">
-            <Label>Email</Label>
-            <Input type="email" {...register("principal.email")} disabled={readOnly} />
-          </div>
-        </div>
-      </div>
-
-      {/* Teacher */}
-      <div className="border-t pt-6 space-y-4">
-        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-          Teacher / Rebbi
-        </h3>
-        <div className="grid sm:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label>Name</Label>
-            <Input {...register("teacher.name")} disabled={readOnly} />
-          </div>
-          <div className="space-y-2">
-            <Label>Phone</Label>
-            <Input type="tel" {...register("teacher.phone")} disabled={readOnly} />
-          </div>
-          <div className="space-y-2">
-            <Label>Email</Label>
-            <Input type="email" {...register("teacher.email")} disabled={readOnly} />
-          </div>
-        </div>
-      </div>
-
-      {/* Previous Schools */}
-      <div className="border-t pt-6 space-y-4">
-        <div className="space-y-2">
-          <Label>Previous Schools (Past 2 Years)</Label>
+      {/* If NO — show explanation */}
+      {wasInSchool === "no" && (
+        <div className="space-y-2 animate-slide-up">
+          <Label>
+            Please explain what you were doing during this time <span className="text-destructive">*</span>
+          </Label>
           <Textarea
-            placeholder="List schools attended in the past 2 years, one per line"
-            {...register("previousSchools")}
+            placeholder="Describe what you were doing instead of attending school..."
+            {...register("notInSchoolExplanation")}
+            aria-invalid={!!errors.notInSchoolExplanation}
             disabled={readOnly}
           />
+          {errors.notInSchoolExplanation && (
+            <p className="text-xs text-destructive">{errors.notInSchoolExplanation.message}</p>
+          )}
         </div>
-      </div>
+      )}
 
-      {/* Relatable Contacts */}
+      {/* If YES — show school details */}
+      {wasInSchool === "yes" && (
+        <div className="space-y-8 animate-slide-up">
+          {/* Last School */}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="lastSchoolName">
+                Last School Attended <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="lastSchoolName"
+                placeholder="Name of school"
+                {...register("lastSchoolName")}
+                aria-invalid={!!errors.lastSchoolName}
+                disabled={readOnly}
+              />
+              {errors.lastSchoolName && (
+                <p className="text-xs text-destructive">{errors.lastSchoolName.message}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Principal */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+              Principal / Head of School
+            </h3>
+            <div className="grid sm:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Name <span className="text-destructive">*</span></Label>
+                <Input
+                  {...register("principal.name")}
+                  aria-invalid={!!(errors as Record<string, unknown>)?.["principal"]?.["name" as keyof typeof errors.principal]}
+                  disabled={readOnly}
+                />
+                {(errors as Record<string, Record<string, { message?: string }>>)?.principal?.name && (
+                  <p className="text-xs text-destructive">
+                    {(errors as Record<string, Record<string, { message?: string }>>).principal.name.message}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Phone</Label>
+                <Input type="tel" {...register("principal.phone")} disabled={readOnly} />
+              </div>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input type="email" {...register("principal.email")} disabled={readOnly} />
+              </div>
+            </div>
+          </div>
+
+          {/* Teacher */}
+          <div className="border-t pt-6 space-y-4">
+            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+              Teacher / Rebbi
+            </h3>
+            <div className="grid sm:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Name <span className="text-destructive">*</span></Label>
+                <Input
+                  {...register("teacher.name")}
+                  disabled={readOnly}
+                />
+                {(errors as Record<string, Record<string, { message?: string }>>)?.teacher?.name && (
+                  <p className="text-xs text-destructive">
+                    {(errors as Record<string, Record<string, { message?: string }>>).teacher.name.message}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Phone</Label>
+                <Input type="tel" {...register("teacher.phone")} disabled={readOnly} />
+              </div>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input type="email" {...register("teacher.email")} disabled={readOnly} />
+              </div>
+            </div>
+          </div>
+
+          {/* Previous Schools */}
+          <div className="border-t pt-6 space-y-4">
+            <div className="space-y-2">
+              <Label>
+                Previous Schools (Past 2 Years) <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                placeholder="List schools attended in the past 2 years, one per line"
+                {...register("previousSchools")}
+                aria-invalid={!!errors.previousSchools}
+                disabled={readOnly}
+              />
+              {errors.previousSchools && (
+                <p className="text-xs text-destructive">{errors.previousSchools.message}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Relatable Contacts — always shown */}
       <div className="border-t pt-6 space-y-4">
         <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
           Relatable Contacts

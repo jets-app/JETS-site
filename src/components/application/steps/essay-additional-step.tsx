@@ -30,6 +30,9 @@ export function EssayAdditionalStep({
   const store = useApplicationFormStore();
   const existing = store.formData.essayAdditional;
 
+  const schoolHistory = store.formData.schoolHistory;
+  const wasInSchool = schoolHistory?.wasInSchool ?? undefined;
+
   const {
     register,
     handleSubmit,
@@ -42,6 +45,7 @@ export function EssayAdditionalStep({
     defaultValues: {
       essay: existing?.essay ?? "",
       gedInterest: existing?.gedInterest ?? false,
+      wasInSchool: existing?.wasInSchool ?? wasInSchool,
       gemarahMaterial: existing?.gemarahMaterial ?? "",
       chassidusMaterial: existing?.chassidusMaterial ?? "",
       halachaMaterial: existing?.halachaMaterial ?? "",
@@ -51,7 +55,16 @@ export function EssayAdditionalStep({
 
   const gedInterest = watch("gedInterest");
 
+  // Sync wasInSchool from school history step into the form
+  React.useEffect(() => {
+    if (wasInSchool) {
+      setValue("wasInSchool", wasInSchool);
+    }
+  }, [wasInSchool, setValue]);
+
   const onSubmit = async (data: EssayAdditionalData) => {
+    // Ensure wasInSchool is current from store
+    data.wasInSchool = wasInSchool;
     store.setIsSaving(true);
     const result = await updateApplicationStep(applicationId, 9, data);
     store.setIsSaving(false);
@@ -124,32 +137,59 @@ export function EssayAdditionalStep({
       <div className="border-t pt-6 space-y-4">
         <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
           Material Studied Last Year
+          {wasInSchool === "yes" && <span className="text-destructive"> *</span>}
         </h3>
+        {wasInSchool === "yes" && (
+          <p className="text-sm text-muted-foreground">
+            Since you were enrolled in school, please fill in the material you studied.
+          </p>
+        )}
 
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Gemarah Material</Label>
+            <Label>
+              Gemarah Material
+              {wasInSchool === "yes" && <span className="text-destructive"> *</span>}
+            </Label>
             <Input
               placeholder="Masechta, perek, etc."
               {...register("gemarahMaterial")}
+              aria-invalid={!!errors.gemarahMaterial}
               disabled={readOnly}
             />
+            {errors.gemarahMaterial && (
+              <p className="text-xs text-destructive">{errors.gemarahMaterial.message}</p>
+            )}
           </div>
           <div className="space-y-2">
-            <Label>Chassidus Material</Label>
+            <Label>
+              Chassidus Material
+              {wasInSchool === "yes" && <span className="text-destructive"> *</span>}
+            </Label>
             <Input
               placeholder="Maamarim, Hemshechim, etc."
               {...register("chassidusMaterial")}
+              aria-invalid={!!errors.chassidusMaterial}
               disabled={readOnly}
             />
+            {errors.chassidusMaterial && (
+              <p className="text-xs text-destructive">{errors.chassidusMaterial.message}</p>
+            )}
           </div>
           <div className="space-y-2">
-            <Label>Halacha Material</Label>
+            <Label>
+              Halacha Material
+              {wasInSchool === "yes" && <span className="text-destructive"> *</span>}
+            </Label>
             <Input
               placeholder="Topics or seforim studied"
               {...register("halachaMaterial")}
+              aria-invalid={!!errors.halachaMaterial}
               disabled={readOnly}
             />
+            {errors.halachaMaterial && (
+              <p className="text-xs text-destructive">{errors.halachaMaterial.message}</p>
+            )}
           </div>
         </div>
       </div>

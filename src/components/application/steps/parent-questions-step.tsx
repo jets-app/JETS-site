@@ -112,42 +112,58 @@ export function ParentQuestionsStep({
 
       {/* Last Two Summers */}
       <div className="space-y-2">
-        <Label>What did the applicant do the last two summers?</Label>
+        <Label>What did the applicant do the last two summers? <span className="text-destructive">*</span></Label>
         <Textarea
           placeholder="Camps, programs, work, travel, etc."
           {...register("lastTwoSummers")}
+          aria-invalid={!!errors.lastTwoSummers}
           disabled={readOnly}
         />
+        {errors.lastTwoSummers && (
+          <p className="text-xs text-destructive">{errors.lastTwoSummers.message}</p>
+        )}
       </div>
 
       {/* Learning Strengths */}
       <div className="space-y-2">
-        <Label>Learning Strengths &amp; Limitations</Label>
+        <Label>Learning Strengths &amp; Limitations <span className="text-destructive">*</span></Label>
         <Textarea
           placeholder="Describe the applicant's academic strengths and any limitations..."
           {...register("learningStrengths")}
+          aria-invalid={!!errors.learningStrengths}
           disabled={readOnly}
         />
+        {errors.learningStrengths && (
+          <p className="text-xs text-destructive">{errors.learningStrengths.message}</p>
+        )}
       </div>
 
       {/* Social Strengths */}
       <div className="space-y-2">
-        <Label>Social Strengths &amp; Limitations</Label>
+        <Label>Social Strengths &amp; Limitations <span className="text-destructive">*</span></Label>
         <Textarea
           placeholder="Describe the applicant's social skills, friendships, and any challenges..."
           {...register("socialStrengths")}
+          aria-invalid={!!errors.socialStrengths}
           disabled={readOnly}
         />
+        {errors.socialStrengths && (
+          <p className="text-xs text-destructive">{errors.socialStrengths.message}</p>
+        )}
       </div>
 
       {/* Midos Tovos */}
       <div className="space-y-2">
-        <Label>Midos Tovos (Good Character Traits)</Label>
+        <Label>Midos Tovos (Good Character Traits) <span className="text-destructive">*</span></Label>
         <Textarea
           placeholder="What positive character traits does the applicant exhibit?"
           {...register("midosTovos")}
+          aria-invalid={!!errors.midosTovos}
           disabled={readOnly}
         />
+        {errors.midosTovos && (
+          <p className="text-xs text-destructive">{errors.midosTovos.message}</p>
+        )}
       </div>
 
       {/* Special Learning Needs */}
@@ -227,12 +243,16 @@ export function ParentQuestionsStep({
 
       {/* Maturity Assessment */}
       <div className="border-t pt-6 space-y-2">
-        <Label>Maturity Assessment (for younger applicants)</Label>
+        <Label>Maturity Assessment (for younger applicants) <span className="text-destructive">*</span></Label>
         <Textarea
           placeholder="How would you assess the applicant's maturity level for their age?"
           {...register("maturityAssessment")}
+          aria-invalid={!!errors.maturityAssessment}
           disabled={readOnly}
         />
+        {errors.maturityAssessment && (
+          <p className="text-xs text-destructive">{errors.maturityAssessment.message}</p>
+        )}
       </div>
 
     </form>

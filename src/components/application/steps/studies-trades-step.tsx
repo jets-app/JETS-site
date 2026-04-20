@@ -97,7 +97,7 @@ export function StudiesTradesStep({
   const store = useApplicationFormStore();
   const existing = store.formData.studiesTrades;
 
-  const { register, handleSubmit, watch, setValue, reset } =
+  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } =
     useForm<StudiesTradesData>({
       resolver: zodResolver(studiesTradesSchema),
       defaultValues: {
@@ -195,8 +195,14 @@ export function StudiesTradesStep({
       {/* Trade Interests */}
       <div className="border-t pt-6 space-y-4">
         <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-          Trade &amp; Career Interests
+          Trade &amp; Career Interests <span className="text-destructive">*</span>
         </h3>
+        <p className="text-sm text-muted-foreground">
+          Please select at least one trade you are interested in.
+        </p>
+        {errors.trades?.root && (
+          <p className="text-xs text-destructive">{errors.trades.root.message}</p>
+        )}
 
         <div className="space-y-3">
           {TRADE_FIELDS.map((field) => (
