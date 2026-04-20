@@ -10,6 +10,8 @@ import { useApplicationFormStore } from "@/stores/application-form.store";
 import { updateApplicationStep } from "@/server/actions/application.actions";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneInput } from "@/components/forms/phone-input";
+import { EmailInput } from "@/components/forms/email-input";
 import { useEffect } from "react";
 import React from "react";
 
@@ -79,6 +81,14 @@ export function StudentInfoStep({ applicationId, readOnly, formRef, onSaved }: S
           Please provide the applicant&apos;s personal details.
         </p>
       </div>
+
+      {Object.keys(errors).length > 0 && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4">
+          <p className="text-sm font-medium text-destructive">
+            Please fix {Object.keys(errors).length} required field{Object.keys(errors).length > 1 ? "s" : ""} below (highlighted in red)
+          </p>
+        </div>
+      )}
 
       {/* Name Fields */}
       <div className="grid sm:grid-cols-3 gap-4">
@@ -156,10 +166,8 @@ export function StudentInfoStep({ applicationId, readOnly, formRef, onSaved }: S
       <div className="grid sm:grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label htmlFor="phone">Cell Phone <span className="text-destructive">*</span></Label>
-          <Input
+          <PhoneInput
             id="phone"
-            type="tel"
-            placeholder="(555) 123-4567"
             {...register("phone")}
             aria-invalid={!!errors.phone}
             disabled={readOnly}
@@ -171,9 +179,8 @@ export function StudentInfoStep({ applicationId, readOnly, formRef, onSaved }: S
 
         <div className="space-y-2">
           <Label htmlFor="email">Email <span className="text-destructive">*</span></Label>
-          <Input
+          <EmailInput
             id="email"
-            type="email"
             placeholder="student@example.com"
             {...register("email")}
             aria-invalid={!!errors.email}
@@ -186,10 +193,8 @@ export function StudentInfoStep({ applicationId, readOnly, formRef, onSaved }: S
 
         <div className="space-y-2">
           <Label htmlFor="familyPhone">Family Phone</Label>
-          <Input
+          <PhoneInput
             id="familyPhone"
-            type="tel"
-            placeholder="(555) 123-4567"
             {...register("familyPhone")}
             disabled={readOnly}
           />
