@@ -53,7 +53,12 @@ export function ParentQuestionsStep({
         existing?.physicalEmotionalNeedsDetails ?? "",
       counselingHistory: existing?.counselingHistory ?? false,
       counselingHistoryDetails: existing?.counselingHistoryDetails ?? "",
-      maturityAssessment: existing?.maturityAssessment ?? "",
+      maturityAssessment: existing?.maturityAssessment ?? {
+        handlesFrustration: "",
+        dailyResponsibilities: "",
+        authorityInteraction: "",
+        independenceReadiness: "",
+      },
     },
   });
 
@@ -84,6 +89,14 @@ export function ParentQuestionsStep({
           Help us understand your child&apos;s background and needs better.
         </p>
       </div>
+
+      {Object.keys(errors).length > 0 && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4">
+          <p className="text-sm font-medium text-destructive">
+            Please fix {Object.keys(errors).length} required field{Object.keys(errors).length > 1 ? "s" : ""} below (highlighted in red)
+          </p>
+        </div>
+      )}
 
       {/* Time Elapsed */}
       <div className="space-y-3">
@@ -242,17 +255,82 @@ export function ParentQuestionsStep({
       </div>
 
       {/* Maturity Assessment */}
-      <div className="border-t pt-6 space-y-2">
-        <Label>Maturity Assessment (for younger applicants) <span className="text-destructive">*</span></Label>
-        <Textarea
-          placeholder="How would you assess the applicant's maturity level for their age?"
-          {...register("maturityAssessment")}
-          aria-invalid={!!errors.maturityAssessment}
-          disabled={readOnly}
-        />
-        {errors.maturityAssessment && (
-          <p className="text-xs text-destructive">{errors.maturityAssessment.message}</p>
-        )}
+      <div className="border-t pt-6 space-y-6">
+        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+          Maturity Assessment
+        </h3>
+
+        <div className="space-y-2">
+          <Label>
+            How does your son handle frustration or setbacks? <span className="text-destructive">*</span>
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            For example, when things don&apos;t go his way, how does he typically respond?
+          </p>
+          <Textarea
+            placeholder="Describe how he handles frustration..."
+            {...register("maturityAssessment.handlesFrustration")}
+            aria-invalid={!!errors.maturityAssessment?.handlesFrustration}
+            disabled={readOnly}
+          />
+          {errors.maturityAssessment?.handlesFrustration && (
+            <p className="text-xs text-destructive">{errors.maturityAssessment.handlesFrustration.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label>
+            How does your son manage his daily responsibilities without being reminded? <span className="text-destructive">*</span>
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            Consider things like waking up on time, keeping his space clean, completing tasks.
+          </p>
+          <Textarea
+            placeholder="Describe how he manages daily responsibilities..."
+            {...register("maturityAssessment.dailyResponsibilities")}
+            aria-invalid={!!errors.maturityAssessment?.dailyResponsibilities}
+            disabled={readOnly}
+          />
+          {errors.maturityAssessment?.dailyResponsibilities && (
+            <p className="text-xs text-destructive">{errors.maturityAssessment.dailyResponsibilities.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label>
+            How does your son interact with authority figures such as teachers or rabbeim? <span className="text-destructive">*</span>
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            Is he respectful, does he push back, does he ask questions appropriately?
+          </p>
+          <Textarea
+            placeholder="Describe how he interacts with authority figures..."
+            {...register("maturityAssessment.authorityInteraction")}
+            aria-invalid={!!errors.maturityAssessment?.authorityInteraction}
+            disabled={readOnly}
+          />
+          {errors.maturityAssessment?.authorityInteraction && (
+            <p className="text-xs text-destructive">{errors.maturityAssessment.authorityInteraction.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label>
+            How would you describe your son&apos;s readiness to live independently in a yeshiva environment? <span className="text-destructive">*</span>
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            Consider factors like being away from home, managing his own schedule, and social dynamics.
+          </p>
+          <Textarea
+            placeholder="Describe his readiness for independent living..."
+            {...register("maturityAssessment.independenceReadiness")}
+            aria-invalid={!!errors.maturityAssessment?.independenceReadiness}
+            disabled={readOnly}
+          />
+          {errors.maturityAssessment?.independenceReadiness && (
+            <p className="text-xs text-destructive">{errors.maturityAssessment.independenceReadiness.message}</p>
+          )}
+        </div>
       </div>
 
     </form>

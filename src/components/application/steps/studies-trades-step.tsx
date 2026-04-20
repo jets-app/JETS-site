@@ -67,7 +67,7 @@ function RatingSelector({
   disabled?: boolean;
 }) {
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
       {options.map((option) => (
         <button
           key={option}
@@ -75,7 +75,7 @@ function RatingSelector({
           disabled={disabled}
           onClick={() => onChange(option)}
           className={cn(
-            "px-2.5 py-1 rounded-md text-xs font-medium border transition-all",
+            "px-1.5 py-1.5 rounded-md text-xs font-medium border transition-all text-center",
             value === option
               ? "bg-primary text-primary-foreground border-primary"
               : "bg-background hover:bg-muted border-border text-foreground"
@@ -162,33 +162,51 @@ export function StudiesTradesStep({
         </p>
       </div>
 
+      {Object.keys(errors).length > 0 && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4">
+          <p className="text-sm font-medium text-destructive">
+            Please fix {Object.keys(errors).length} required field{Object.keys(errors).length > 1 ? "s" : ""} below (highlighted in red)
+          </p>
+        </div>
+      )}
+
       {/* Academic Self-Assessment */}
       <div className="space-y-4">
         <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
           Academic Self-Assessment
         </h3>
 
-        <div className="space-y-3">
-          {ACADEMIC_FIELDS.map((field) => (
-            <div
-              key={field.key}
-              className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 rounded-lg border"
-            >
-              <span className="text-sm font-medium min-w-40">
-                {field.label}
-              </span>
-              <RatingSelector
-                value={watch(`academics.${field.key}`)}
-                options={ratingValues}
-                onChange={(val) =>
-                  setValue(`academics.${field.key}`, val, {
-                    shouldDirty: true,
-                  })
-                }
-                disabled={readOnly}
-              />
+        <div className="rounded-lg border overflow-hidden">
+          <div className="hidden sm:grid sm:grid-cols-[180px_1fr] items-center bg-muted/50 border-b px-4 py-2.5">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Subject</span>
+            <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${ratingValues.length}, minmax(0, 1fr))` }}>
+              {ratingValues.map((r) => (
+                <span key={r} className="text-xs font-semibold text-muted-foreground text-center uppercase tracking-wider">{r}</span>
+              ))}
             </div>
-          ))}
+          </div>
+          <div className="divide-y">
+            {ACADEMIC_FIELDS.map((field) => (
+              <div
+                key={field.key}
+                className="sm:grid sm:grid-cols-[180px_1fr] items-center gap-4 p-4"
+              >
+                <span className="text-sm font-medium mb-2 sm:mb-0 block">
+                  {field.label}
+                </span>
+                <RatingSelector
+                  value={watch(`academics.${field.key}`)}
+                  options={ratingValues}
+                  onChange={(val) =>
+                    setValue(`academics.${field.key}`, val, {
+                      shouldDirty: true,
+                    })
+                  }
+                  disabled={readOnly}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -204,27 +222,37 @@ export function StudiesTradesStep({
           <p className="text-xs text-destructive">{errors.trades.root.message}</p>
         )}
 
-        <div className="space-y-3">
-          {TRADE_FIELDS.map((field) => (
-            <div
-              key={field.key}
-              className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 rounded-lg border"
-            >
-              <span className="text-sm font-medium min-w-40">
-                {field.label}
-              </span>
-              <RatingSelector
-                value={watch(`trades.${field.key}`)}
-                options={tradeInterestValues}
-                onChange={(val) =>
-                  setValue(`trades.${field.key}`, val, {
-                    shouldDirty: true,
-                  })
-                }
-                disabled={readOnly}
-              />
+        <div className="rounded-lg border overflow-hidden">
+          <div className="hidden sm:grid sm:grid-cols-[180px_1fr] items-center bg-muted/50 border-b px-4 py-2.5">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Trade</span>
+            <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${tradeInterestValues.length}, minmax(0, 1fr))` }}>
+              {tradeInterestValues.map((r) => (
+                <span key={r} className="text-xs font-semibold text-muted-foreground text-center uppercase tracking-wider">{r}</span>
+              ))}
             </div>
-          ))}
+          </div>
+          <div className="divide-y">
+            {TRADE_FIELDS.map((field) => (
+              <div
+                key={field.key}
+                className="sm:grid sm:grid-cols-[180px_1fr] items-center gap-4 p-4"
+              >
+                <span className="text-sm font-medium mb-2 sm:mb-0 block">
+                  {field.label}
+                </span>
+                <RatingSelector
+                  value={watch(`trades.${field.key}`)}
+                  options={tradeInterestValues}
+                  onChange={(val) =>
+                    setValue(`trades.${field.key}`, val, {
+                      shouldDirty: true,
+                    })
+                  }
+                  disabled={readOnly}
+                />
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -243,27 +271,37 @@ export function StudiesTradesStep({
           Extracurricular Activities
         </h3>
 
-        <div className="space-y-3">
-          {EXTRACURRICULAR_FIELDS.map((field) => (
-            <div
-              key={field.key}
-              className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 rounded-lg border"
-            >
-              <span className="text-sm font-medium min-w-40">
-                {field.label}
-              </span>
-              <RatingSelector
-                value={watch(`extracurricular.${field.key}`)}
-                options={ratingValues}
-                onChange={(val) =>
-                  setValue(`extracurricular.${field.key}`, val, {
-                    shouldDirty: true,
-                  })
-                }
-                disabled={readOnly}
-              />
+        <div className="rounded-lg border overflow-hidden">
+          <div className="hidden sm:grid sm:grid-cols-[180px_1fr] items-center bg-muted/50 border-b px-4 py-2.5">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Activity</span>
+            <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${tradeInterestValues.length}, minmax(0, 1fr))` }}>
+              {tradeInterestValues.map((r) => (
+                <span key={r} className="text-xs font-semibold text-muted-foreground text-center uppercase tracking-wider">{r}</span>
+              ))}
             </div>
-          ))}
+          </div>
+          <div className="divide-y">
+            {EXTRACURRICULAR_FIELDS.map((field) => (
+              <div
+                key={field.key}
+                className="sm:grid sm:grid-cols-[180px_1fr] items-center gap-4 p-4"
+              >
+                <span className="text-sm font-medium mb-2 sm:mb-0 block">
+                  {field.label}
+                </span>
+                <RatingSelector
+                  value={watch(`extracurricular.${field.key}`)}
+                  options={tradeInterestValues}
+                  onChange={(val) =>
+                    setValue(`extracurricular.${field.key}`, val, {
+                      shouldDirty: true,
+                    })
+                  }
+                  disabled={readOnly}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

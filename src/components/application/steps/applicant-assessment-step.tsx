@@ -86,55 +86,102 @@ export function ApplicantAssessmentStep({
         </p>
       </div>
 
-      <div className="space-y-6">
-        {ASSESSMENT_FIELDS.map((field) => {
-          const currentRating = watch(`${field.key}.rating`);
-          return (
-            <div
-              key={field.key}
-              className="p-4 rounded-lg border bg-card space-y-3"
-            >
-              <Label className="text-base font-medium">
-                {field.label} <span className="text-destructive">*</span>
-              </Label>
+      {Object.keys(errors).length > 0 && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4">
+          <p className="text-sm font-medium text-destructive">
+            Please fix {Object.keys(errors).length} required field{Object.keys(errors).length > 1 ? "s" : ""} below (highlighted in red)
+          </p>
+        </div>
+      )}
 
-              <div className="flex flex-wrap gap-2">
-                {ratingValues.map((rating) => (
-                  <button
-                    key={rating}
-                    type="button"
-                    disabled={readOnly}
-                    onClick={() =>
-                      setValue(`${field.key}.rating`, rating, {
-                        shouldDirty: true,
-                      })
-                    }
-                    className={cn(
-                      "px-3 py-1.5 rounded-lg text-sm font-medium border transition-all",
-                      currentRating === rating
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "bg-background hover:bg-muted border-border text-foreground"
-                    )}
-                  >
-                    {rating}
-                  </button>
-                ))}
-              </div>
-              {errors[field.key]?.rating && (
-                <p className="text-xs text-destructive">
-                  {errors[field.key]!.rating!.message}
-                </p>
-              )}
-
-              <Textarea
-                placeholder="Additional comments (optional)"
-                {...register(`${field.key}.comments`)}
-                disabled={readOnly}
-                className="min-h-12"
-              />
+      {/* Rating scale header */}
+      <div className="rounded-lg border overflow-hidden">
+        <div className="hidden sm:grid sm:grid-cols-[1fr_repeat(5,minmax(0,1fr))] items-center gap-0 bg-muted/50 border-b px-4 py-2.5">
+          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Category</div>
+          {ratingValues.map((rating) => (
+            <div key={rating} className="text-xs font-semibold text-muted-foreground text-center uppercase tracking-wider">
+              {rating}
             </div>
-          );
-        })}
+          ))}
+        </div>
+
+        <div className="divide-y">
+          {ASSESSMENT_FIELDS.map((field) => {
+            const currentRating = watch(`${field.key}.rating`);
+            return (
+              <div key={field.key} className="p-4 space-y-3">
+                <div className="sm:grid sm:grid-cols-[1fr_repeat(5,minmax(0,1fr))] items-center gap-0">
+                  <Label className="text-sm font-medium mb-2 sm:mb-0">
+                    {field.label} <span className="text-destructive">*</span>
+                  </Label>
+
+                  {ratingValues.map((rating) => (
+                    <div key={rating} className="hidden sm:flex justify-center">
+                      <button
+                        type="button"
+                        disabled={readOnly}
+                        onClick={() =>
+                          setValue(`${field.key}.rating`, rating, {
+                            shouldDirty: true,
+                          })
+                        }
+                        className={cn(
+                          "w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center",
+                          currentRating === rating
+                            ? "bg-primary border-primary text-white"
+                            : "bg-background hover:bg-muted border-border"
+                        )}
+                      >
+                        {currentRating === rating && (
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* Mobile: show buttons in a row */}
+                  <div className="flex flex-wrap gap-2 sm:hidden mt-2">
+                    {ratingValues.map((rating) => (
+                      <button
+                        key={rating}
+                        type="button"
+                        disabled={readOnly}
+                        onClick={() =>
+                          setValue(`${field.key}.rating`, rating, {
+                            shouldDirty: true,
+                          })
+                        }
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg text-xs font-medium border transition-all",
+                          currentRating === rating
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background hover:bg-muted border-border text-foreground"
+                        )}
+                      >
+                        {rating}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {errors[field.key]?.rating && (
+                  <p className="text-xs text-destructive">
+                    {errors[field.key]!.rating!.message}
+                  </p>
+                )}
+
+                <Textarea
+                  placeholder="Additional comments (optional)"
+                  {...register(`${field.key}.comments`)}
+                  disabled={readOnly}
+                  className="min-h-12"
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
 
     </form>

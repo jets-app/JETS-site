@@ -167,7 +167,12 @@ export const parentQuestionsSchema = z.object({
   physicalEmotionalNeedsDetails: z.string().optional(),
   counselingHistory: z.boolean(),
   counselingHistoryDetails: z.string().optional(),
-  maturityAssessment: z.string().min(1, "Maturity assessment is required"),
+  maturityAssessment: z.object({
+    handlesFrustration: z.string().min(1, "This field is required"),
+    dailyResponsibilities: z.string().min(1, "This field is required"),
+    authorityInteraction: z.string().min(1, "This field is required"),
+    independenceReadiness: z.string().min(1, "This field is required"),
+  }),
 });
 
 export type ParentQuestionsData = z.infer<typeof parentQuestionsSchema>;

@@ -16,6 +16,7 @@ interface EmailInputProps {
   className?: string;
   placeholder?: string;
   required?: boolean;
+  disabled?: boolean;
   showValidation?: boolean;
   "aria-invalid"?: boolean;
 }
