@@ -120,13 +120,17 @@ export function StudentInfoStep({ applicationId, readOnly, formRef, onSaved }: S
 
       <div className="grid sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="preferredName">Preferred Name</Label>
+          <Label htmlFor="preferredName">Preferred Name / Nickname <span className="text-destructive">*</span></Label>
           <Input
             id="preferredName"
             placeholder="Nickname or preferred name"
             {...register("preferredName")}
+            aria-invalid={!!errors.preferredName}
             disabled={readOnly}
           />
+          {errors.preferredName && (
+            <p className="text-xs text-destructive">{errors.preferredName.message}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -151,18 +155,22 @@ export function StudentInfoStep({ applicationId, readOnly, formRef, onSaved }: S
       {/* Contact */}
       <div className="grid sm:grid-cols-3 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="phone">Cell Phone</Label>
+          <Label htmlFor="phone">Cell Phone <span className="text-destructive">*</span></Label>
           <Input
             id="phone"
             type="tel"
             placeholder="(555) 123-4567"
             {...register("phone")}
+            aria-invalid={!!errors.phone}
             disabled={readOnly}
           />
+          {errors.phone && (
+            <p className="text-xs text-destructive">{errors.phone.message}</p>
+          )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">Email <span className="text-destructive">*</span></Label>
           <Input
             id="email"
             type="email"

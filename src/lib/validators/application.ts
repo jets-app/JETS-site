@@ -5,10 +5,17 @@ export const studentInfoSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   middleName: z.string().optional(),
-  preferredName: z.string().optional(),
-  dateOfBirth: z.string().min(1, "Date of birth is required"),
-  phone: z.string().optional(),
-  email: z.string().email("Please enter a valid email").optional().or(z.literal("")),
+  preferredName: z.string().min(1, "Preferred name / nickname is required"),
+  dateOfBirth: z.string().min(1, "Date of birth is required").refine((val) => {
+    if (!val) return false;
+    const dob = new Date(val);
+    const today = new Date();
+    const age = today.getFullYear() - dob.getFullYear() -
+      (today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate()) ? 1 : 0);
+    return age >= 16;
+  }, "Applicant must be at least 16 years old"),
+  phone: z.string().min(1, "Cell phone is required"),
+  email: z.string().email("Please enter a valid email").min(1, "Email is required"),
   addressLine1: z.string().min(1, "Street address is required"),
   addressLine2: z.string().optional(),
   city: z.string().min(1, "City is required"),
@@ -23,8 +30,8 @@ export type StudentInfoData = z.infer<typeof studentInfoSchema>;
 // ==================== Step 2: Hebrew Name ====================
 export const hebrewNameSchema = z.object({
   applicantHebrewName: z.string().min(1, "Applicant's Hebrew name is required"),
-  fatherHebrewName: z.string().optional(),
-  motherHebrewName: z.string().optional(),
+  fatherHebrewName: z.string().min(1, "Father's Hebrew name is required"),
+  motherHebrewName: z.string().min(1, "Mother's Hebrew name is required"),
 });
 
 export type HebrewNameData = z.infer<typeof hebrewNameSchema>;

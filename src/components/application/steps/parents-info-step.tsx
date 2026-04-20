@@ -283,6 +283,10 @@ export function ParentsInfoStep({
     }
   };
 
+  const errorCount = Object.keys(errors).length > 0
+    ? Object.keys(flatErrors).length
+    : 0;
+
   return (
     <form ref={formRef} onSubmit={handleSubmit(onSubmit)} className="step-form space-y-8">
       <div className="space-y-1">
@@ -291,6 +295,14 @@ export function ParentsInfoStep({
           Please provide information for both parents and an emergency contact.
         </p>
       </div>
+
+      {errorCount > 0 && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4">
+          <p className="text-sm font-medium text-destructive">
+            Please fix {errorCount} required field{errorCount > 1 ? "s" : ""} below (highlighted in red)
+          </p>
+        </div>
+      )}
 
       <ParentSection
         title="Father"
