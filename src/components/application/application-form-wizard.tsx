@@ -234,9 +234,21 @@ export function ApplicationFormWizard({
   // "Next" triggers the current step's form submit, which saves and then advances
   const handleNext = useCallback(() => {
     if (formRef.current) {
-      formRef.current.requestSubmit();
+      // Try requestSubmit first (triggers validation)
+      try {
+        formRef.current.requestSubmit();
+      } catch {
+        // Fallback: dispatch submit event
+        formRef.current.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      }
+    } else {
+      // If no form ref (shouldn't happen), just advance
+      if (store.currentStep < 10) {
+        store.goToNextStep();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     }
-  }, []);
+  }, [store]);
 
   const isSubmitted = application.status !== "DRAFT";
   const currentStep = store.currentStep;
@@ -396,7 +408,7 @@ export function ApplicationFormWizard({
       </div>
 
       {/* Step Content */}
-      <div className="rounded-xl border bg-card p-4 sm:p-6 lg:p-8 animate-slide-up">
+      <div key={currentStep} className="rounded-xl border bg-card p-4 sm:p-6 lg:p-8 animate-slide-up">
         {renderStep()}
       </div>
 
