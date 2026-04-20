@@ -17,7 +17,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import {
   Avatar,
   AvatarImage,
@@ -203,16 +202,10 @@ export function ProfileForm({ user }: { user: ProfileUser }) {
           <Shield className="h-4 w-4 text-muted-foreground" />
           <h2 className="text-base font-semibold">Account Information</h2>
         </div>
-        <div className="grid gap-3 sm:grid-cols-3 text-sm">
+        <div className="grid gap-3 sm:grid-cols-2 text-sm">
           <div>
             <p className="text-xs text-muted-foreground">Email</p>
             <p className="font-medium break-all">{user.email}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Role</p>
-            <Badge variant="secondary" className="mt-0.5">
-              {user.role}
-            </Badge>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Member since</p>
