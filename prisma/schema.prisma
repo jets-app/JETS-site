@@ -904,6 +904,9 @@ model Inquiry {
   interestedIn  String?
   preferredDate DateTime?
 
+  referredBy     String?
+  referralSource String?
+
   notes      String?  @db.Text
   assignedTo String?
   followUpAt DateTime?

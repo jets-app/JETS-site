@@ -9,6 +9,8 @@ const contactFormSchema = z.object({
   phone: z.string().optional(),
   subject: z.string().optional(),
   message: z.string().optional(),
+  referredBy: z.string().optional(),
+  referralSource: z.string().optional(),
 });
 
 const inquiryFormSchema = contactFormSchema.extend({
@@ -25,6 +27,8 @@ export async function submitContactForm(formData: FormData) {
     phone: (formData.get("phone") as string) || undefined,
     subject: (formData.get("subject") as string) || undefined,
     message: (formData.get("message") as string) || undefined,
+    referredBy: (formData.get("referredBy") as string) || undefined,
+    referralSource: (formData.get("referralSource") as string) || undefined,
   };
 
   const parsed = contactFormSchema.safeParse(raw);
@@ -61,6 +65,8 @@ export async function submitInquiryForm(data: z.infer<typeof inquiryFormSchema>)
         ? new Date(parsed.data.preferredDate)
         : undefined,
       source: parsed.data.source,
+      referredBy: parsed.data.referredBy,
+      referralSource: parsed.data.referralSource,
     },
   });
 
@@ -114,6 +120,8 @@ export async function updateInquiry(
     followUpAt?: string;
     notes?: string;
     status?: string;
+    referredBy?: string;
+    referralSource?: string;
   },
 ) {
   return db.inquiry.update({
@@ -122,6 +130,8 @@ export async function updateInquiry(
       ...(data.assignedTo !== undefined ? { assignedTo: data.assignedTo } : {}),
       ...(data.followUpAt ? { followUpAt: new Date(data.followUpAt) } : {}),
       ...(data.notes !== undefined ? { notes: data.notes } : {}),
+      ...(data.referredBy !== undefined ? { referredBy: data.referredBy } : {}),
+      ...(data.referralSource !== undefined ? { referralSource: data.referralSource } : {}),
       ...(data.status
         ? { status: data.status as "NEW" | "CONTACTED" | "TOUR_SCHEDULED" | "TOUR_COMPLETED" | "CONVERTED" | "CLOSED" }
         : {}),

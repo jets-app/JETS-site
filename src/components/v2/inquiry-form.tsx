@@ -21,6 +21,8 @@ export function InquiryForm() {
       studentAge: fd.get("studentAge") ? Number(fd.get("studentAge")) : undefined,
       interestedIn: (fd.get("interestedIn") as string) || undefined,
       preferredDate: (fd.get("preferredDate") as string) || undefined,
+      referralSource: (fd.get("referralSource") as string) || undefined,
+      referredBy: (fd.get("referredBy") as string) || undefined,
       source: "inquiry_form",
     };
 
@@ -96,6 +98,36 @@ export function InquiryForm() {
         </select>
       </div>
       <FormField label="Preferred Visit Date" name="preferredDate" type="date" />
+      <div>
+        <label
+          htmlFor="referralSource"
+          className="block v2-byline mb-2"
+          style={{ color: "var(--v2-ink-muted)" }}
+        >
+          How did you hear about JETS?
+        </label>
+        <select
+          id="referralSource"
+          name="referralSource"
+          className="w-full bg-transparent v2-editorial py-2 focus:outline-none appearance-none cursor-pointer"
+          style={{
+            fontSize: "17px",
+            color: "var(--v2-ink)",
+            borderBottom: "1px solid var(--v2-rule)",
+          }}
+        >
+          <option value="">Select one...</option>
+          <option value="friend_family">Friend or family member</option>
+          <option value="alumni">Alumni / current student</option>
+          <option value="rabbi_teacher">Rabbi or teacher</option>
+          <option value="google">Google search</option>
+          <option value="social_media">Social media</option>
+          <option value="event">Community event</option>
+          <option value="website">JETS website</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <FormField label="Name of the person who referred you (if any)" name="referredBy" />
       <div>
         <label
           htmlFor="message"
