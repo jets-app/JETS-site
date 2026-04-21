@@ -167,52 +167,104 @@ export function FamilyInfoStep({ applicationId, readOnly, formRef, onSaved }: St
       {/* Grandparents */}
       <div className="border-t pt-6 space-y-6">
         <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-          Grandparents
+          Grandparents <span className="text-destructive">*</span>
         </h3>
 
-        <div className="space-y-4">
-          <h4 className="text-sm font-medium">Father&apos;s Side</h4>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Names</Label>
-              <Input
-                placeholder="Grandfather & Grandmother names"
-                {...register("grandparentsFather.names")}
-                disabled={readOnly}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Email</Label>
-              <EmailInput
-                {...register("grandparentsFather.email")}
-                disabled={readOnly}
-              />
-            </div>
-          </div>
-        </div>
+        <GrandparentsSection
+          side="father"
+          label="Father's Side"
+          register={register}
+          watch={watch}
+          setValue={setValue}
+          errors={errors}
+          readOnly={readOnly}
+        />
 
-        <div className="space-y-4">
-          <h4 className="text-sm font-medium">Mother&apos;s Side</h4>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Names</Label>
-              <Input
-                placeholder="Grandfather & Grandmother names"
-                {...register("grandparentsMother.names")}
-                disabled={readOnly}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Email</Label>
-              <EmailInput
-                {...register("grandparentsMother.email")}
-                disabled={readOnly}
-              />
-            </div>
-          </div>
-        </div>
+        <GrandparentsSection
+          side="mother"
+          label="Mother's Side"
+          register={register}
+          watch={watch}
+          setValue={setValue}
+          errors={errors}
+          readOnly={readOnly}
+        />
       </div>
 
     </form>
+  );
+}
+
+function GrandparentsSection({
+  side,
+  label,
+  register,
+  watch,
+  setValue,
+  errors,
+  readOnly,
+}: {
+  side: "father" | "mother";
+  label: string;
+  register: ReturnType<typeof useForm<FamilyInfoData>>["register"];
+  watch: ReturnType<typeof useForm<FamilyInfoData>>["watch"];
+  setValue: ReturnType<typeof useForm<FamilyInfoData>>["setValue"];
+  errors: ReturnType<typeof useForm<FamilyInfoData>>["formState"]["errors"];
+  readOnly?: boolean;
+}) {
+  const key = side === "father" ? "grandparentsFather" : "grandparentsMother";
+  const deceased = watch(`${key}.deceased`) ?? false;
+  const nameError = errors[key]?.names;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h4 className="text-sm font-medium">{label}</h4>
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <Checkbox
+            checked={deceased}
+            onCheckedChange={(checked: boolean) =>
+              setValue(`${key}.deceased`, checked, { shouldDirty: true })
+            }
+            disabled={readOnly}
+          />
+          <span className="text-muted-foreground">Both deceased</span>
+        </label>
+      </div>
+
+      {!deceased && (
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>
+              Names <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              placeholder="Grandfather & Grandmother names"
+              {...register(`${key}.names`)}
+              aria-invalid={!!nameError}
+              disabled={readOnly}
+            />
+            {nameError && (
+              <p className="text-xs text-destructive">
+                {nameError.message as string}
+              </p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label>Email</Label>
+            <EmailInput
+              {...register(`${key}.email`)}
+              disabled={readOnly}
+            />
+          </div>
+        </div>
+      )}
+
+      {deceased && (
+        <p className="text-xs text-muted-foreground italic pl-1">
+          Marked as deceased — no further info needed.
+        </p>
+      )}
+    </div>
   );
 }

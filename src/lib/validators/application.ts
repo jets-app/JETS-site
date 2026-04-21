@@ -105,14 +105,36 @@ const siblingSchema = z.object({
 const grandparentsSchema = z.object({
   names: z.string().optional(),
   email: z.string().optional(),
+  deceased: z.boolean().optional(),
 });
 
-export const familyInfoSchema = z.object({
-  closeToSiblings: z.boolean().optional(),
-  siblings: z.array(siblingSchema).optional(),
-  grandparentsFather: grandparentsSchema.optional(),
-  grandparentsMother: grandparentsSchema.optional(),
-});
+export const familyInfoSchema = z
+  .object({
+    closeToSiblings: z.boolean().optional(),
+    siblings: z.array(siblingSchema).optional(),
+    grandparentsFather: grandparentsSchema,
+    grandparentsMother: grandparentsSchema,
+  })
+  .superRefine((data, ctx) => {
+    if (!data.grandparentsFather.deceased) {
+      if (!data.grandparentsFather.names || data.grandparentsFather.names.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Grandparents' names are required (or mark as deceased)",
+          path: ["grandparentsFather", "names"],
+        });
+      }
+    }
+    if (!data.grandparentsMother.deceased) {
+      if (!data.grandparentsMother.names || data.grandparentsMother.names.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Grandparents' names are required (or mark as deceased)",
+          path: ["grandparentsMother", "names"],
+        });
+      }
+    }
+  });
 
 export type FamilyInfoData = z.infer<typeof familyInfoSchema>;
 
