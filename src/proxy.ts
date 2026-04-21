@@ -48,9 +48,9 @@ export async function proxy(request: NextRequest) {
 
   if (isAuthenticatable) {
     const isAppHost = host.startsWith("app.") || host.includes("jets-crm.vercel.app");
-    const isMarketingHost = host.includes("jetscollege.com") && !host.startsWith("app.");
+    const isMarketingHost = host === "jetscollege.org" || host === "www.jetscollege.org";
 
-    // On jetscollege.com, redirect CRM paths to app.jetscollege.org
+    // On jetscollege.org, redirect CRM paths to app.jetscollege.org
     if (isMarketingHost && matchesPath(path, APP_PATHS)) {
       const url = new URL(request.url);
       url.host = "app.jetscollege.org";
@@ -58,10 +58,10 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // On app.jetscollege.org, redirect public marketing paths to jetscollege.com
+    // On app.jetscollege.org, redirect public marketing paths to jetscollege.org
     if (isAppHost && matchesPath(path, PUBLIC_PATHS)) {
       const url = new URL(request.url);
-      url.host = "jetscollege.com";
+      url.host = "jetscollege.org";
       url.protocol = "https:";
       return NextResponse.redirect(url);
     }
