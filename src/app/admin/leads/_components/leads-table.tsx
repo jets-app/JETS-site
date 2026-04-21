@@ -15,11 +15,24 @@ interface Inquiry {
   studentAge: number | null;
   interestedIn: string | null;
   preferredDate: string | null;
+  referredBy: string | null;
+  referralSource: string | null;
   notes: string | null;
   assignedTo: string | null;
   followUpAt: string | null;
   createdAt: string;
 }
+
+const REFERRAL_SOURCE_LABELS: Record<string, string> = {
+  friend_family: "Friend or family",
+  alumni: "Alumni / student",
+  rabbi_teacher: "Rabbi or teacher",
+  google: "Google search",
+  social_media: "Social media",
+  event: "Community event",
+  website: "JETS website",
+  other: "Other",
+};
 
 const STATUS_OPTIONS = [
   { value: "NEW", label: "New", color: "bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400" },
@@ -101,6 +114,16 @@ export function LeadsTable({
                     <span className="text-xs text-muted-foreground">
                       {inq.source === "inquiry_form" ? "Inquiry" : "Contact"}
                     </span>
+                    {inq.referredBy && (
+                      <span className="text-xs text-primary font-medium">
+                        Ref: {inq.referredBy}
+                      </span>
+                    )}
+                    {!inq.referredBy && inq.referralSource && (
+                      <span className="text-xs text-muted-foreground">
+                        via {REFERRAL_SOURCE_LABELS[inq.referralSource] ?? inq.referralSource}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -147,6 +170,18 @@ export function LeadsTable({
                       <div>
                         <p className="text-muted-foreground text-xs font-medium mb-1">Preferred Visit</p>
                         <p>{new Date(inq.preferredDate).toLocaleDateString()}</p>
+                      </div>
+                    )}
+                    {inq.referralSource && (
+                      <div>
+                        <p className="text-muted-foreground text-xs font-medium mb-1">How They Heard About Us</p>
+                        <p>{REFERRAL_SOURCE_LABELS[inq.referralSource] ?? inq.referralSource}</p>
+                      </div>
+                    )}
+                    {inq.referredBy && (
+                      <div>
+                        <p className="text-muted-foreground text-xs font-medium mb-1">Referred By</p>
+                        <p>{inq.referredBy}</p>
                       </div>
                     )}
                     {inq.message && (
