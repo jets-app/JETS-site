@@ -50,7 +50,7 @@ export const StickyScroll = forwardRef<HTMLElement, StickyScrollProps>(
       <ReactLenis root>
         <main className="bg-[#0f0d0a]" ref={ref}>
           <div className="wrapper">
-            <section className="text-white h-screen w-full bg-[#0f0d0a] grid place-content-center sticky top-0">
+            <section className="text-white py-20 lg:py-28 w-full bg-[#0f0d0a] grid place-content-center relative">
               <div className="absolute bottom-0 left-0 right-0 top-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:54px_54px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
 
               <div className="relative z-10 text-center px-8 max-w-[1100px]">
@@ -104,11 +104,11 @@ export const StickyScroll = forwardRef<HTMLElement, StickyScrollProps>(
             </div>
           </section>
 
-          <footer className="group bg-[#0f0d0a]">
-            <h1 className="text-[16vw] translate-y-20 leading-[100%] uppercase font-semibold text-center bg-gradient-to-r from-[#e8c476] to-[#7a3a14] bg-clip-text text-transparent transition-all ease-linear">
+          <footer className="group bg-[#0f0d0a] pt-16">
+            <h1 className="text-[16vw] leading-[0.9] uppercase font-semibold text-center bg-gradient-to-r from-[#e8c476] to-[#7a3a14] bg-clip-text text-transparent">
               {footerWord}
             </h1>
-            <div className="bg-black h-40 relative z-10 grid place-content-center text-2xl rounded-tr-full rounded-tl-full" />
+            <div className="bg-black h-20 relative z-10 grid place-content-center text-2xl rounded-tr-full rounded-tl-full -mt-4" />
           </footer>
         </main>
       </ReactLenis>

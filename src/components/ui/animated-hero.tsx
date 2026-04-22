@@ -36,9 +36,9 @@ export function AnimatedHero({
   }, [titleNumber, titles]);
 
   return (
-    <div className="w-full bg-[#0f0d0a] text-white">
-      <div className="container mx-auto">
-        <div className="flex gap-8 py-20 lg:py-40 items-center justify-center flex-col">
+    <div className="w-full min-h-screen flex items-center bg-[#0f0d0a] text-white">
+      <div className="w-full max-w-[1600px] mx-auto px-6 lg:px-12">
+        <div className="flex gap-10 items-center justify-center flex-col">
           <div>
             <a
               href={primaryCta.href}
@@ -47,10 +47,10 @@ export function AnimatedHero({
               {eyebrow} <ArrowRight className="w-3.5 h-3.5" />
             </a>
           </div>
-          <div className="flex gap-4 flex-col">
-            <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl max-w-[1100px] tracking-tight text-center font-normal leading-[1.05]">
-              <span className="text-white whitespace-nowrap">{staticPrefix}</span>
-              <span className="relative flex w-full justify-center overflow-hidden text-center md:pb-4 md:pt-1">
+          <div className="flex gap-4 flex-col w-full">
+            <h1 className="font-serif text-5xl sm:text-7xl md:text-8xl lg:text-9xl tracking-tight text-center font-normal leading-[1]">
+              <span className="text-white block whitespace-nowrap">{staticPrefix}</span>
+              <span className="relative flex w-full justify-center overflow-hidden text-center pt-2 md:pt-4 lg:pt-6 pb-2 md:pb-4">
                 &nbsp;
                 {titles.map((title, index) => (
                   <motion.span
