@@ -1,13 +1,17 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { applyReapplicationDiscount } from "@/server/actions/reapplication.actions";
-import { createApplicationFeeCheckout } from "@/server/actions/payment.actions";
+import {
+  createApplicationFeePaymentIntent,
+  confirmApplicationFeePaid,
+} from "@/server/actions/payment.actions";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Loader2, Tag, CreditCard, CheckCircle2 } from "lucide-react";
+import { Loader2, Tag, CheckCircle2 } from "lucide-react";
+import { StripePaymentForm } from "@/components/payments/stripe-payment-form";
 
 interface Props {
   applicationId: string;
@@ -29,15 +33,25 @@ export function ReapplicationPayment({
   const router = useRouter();
   const [code, setCode] = useState(existingDiscountCode ?? "");
   const [discountAmount, setDiscountAmount] = useState(existingDiscountAmount);
-  const [appliedCode, setAppliedCode] = useState<string | null>(
-    existingDiscountCode,
-  );
+  const [appliedCode, setAppliedCode] = useState<string | null>(existingDiscountCode);
   const [error, setError] = useState<string | null>(null);
   const [isApplying, startApplying] = useTransition();
-  const [isPaying, startPaying] = useTransition();
+
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [intentAmount, setIntentAmount] = useState<number | null>(null);
+  const [isStartingPayment, startStartingPayment] = useTransition();
+  const [isCompleting, startCompleting] = useTransition();
 
   const finalCents = Math.max(0, feeAmountCents - discountAmount);
   const waived = finalCents === 0;
+
+  // If the discount makes the fee $0 and the user had started a payment, reset it.
+  useEffect(() => {
+    if (waived && clientSecret) {
+      setClientSecret(null);
+      setIntentAmount(null);
+    }
+  }, [waived, clientSecret]);
 
   function handleApplyCode() {
     setError(null);
@@ -51,16 +65,15 @@ export function ReapplicationPayment({
       setDiscountAmount(result.discountAmount ?? 0);
       setAppliedCode(code.trim());
       if (result.waived) {
-        // Fee was waived, reapplication is complete — refresh the page
         router.refresh();
       }
     });
   }
 
-  function handlePay() {
+  function handleStartPayment() {
     setError(null);
-    startPaying(async () => {
-      const result = await createApplicationFeeCheckout(applicationId);
+    startStartingPayment(async () => {
+      const result = await createApplicationFeePaymentIntent(applicationId);
       if (result.error) {
         setError(result.error);
         return;
@@ -69,10 +82,32 @@ export function ReapplicationPayment({
         router.refresh();
         return;
       }
-      if (result.url) {
-        window.location.href = result.url;
+      if (result.clientSecret) {
+        setClientSecret(result.clientSecret);
+        setIntentAmount(result.amount ?? finalCents);
       }
     });
+  }
+
+  function handleCompleteWaived() {
+    setError(null);
+    startCompleting(async () => {
+      const result = await createApplicationFeePaymentIntent(applicationId);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
+    });
+  }
+
+  async function handlePaymentSuccess(paymentIntentId: string) {
+    const result = await confirmApplicationFeePaid(applicationId, paymentIntentId);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    router.refresh();
   }
 
   return (
@@ -111,8 +146,8 @@ export function ReapplicationPayment({
           </div>
         </div>
 
-        {/* Discount code */}
-        {!waived && (
+        {/* Discount code — hidden once payment form has started */}
+        {!waived && !clientSecret && (
           <div className="space-y-2">
             <Label htmlFor="discountCode" className="text-sm">
               Discount code (optional)
@@ -131,11 +166,7 @@ export function ReapplicationPayment({
                 onClick={handleApplyCode}
                 disabled={isApplying || !code.trim()}
               >
-                {isApplying ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Apply"
-                )}
+                {isApplying ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
               </Button>
             </div>
             {appliedCode && discountAmount > 0 && (
@@ -153,35 +184,55 @@ export function ReapplicationPayment({
           </div>
         )}
 
-        {/* Pay button */}
-        <Button
-          onClick={handlePay}
-          disabled={isPaying}
-          size="lg"
-          className="w-full"
-        >
-          {isPaying ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {waived ? "Completing..." : "Redirecting to payment..."}
-            </>
-          ) : waived ? (
-            <>
-              Complete Reapplication
-              <CheckCircle2 className="ml-2 h-4 w-4" />
-            </>
-          ) : (
-            <>
-              Pay {formatMoney(finalCents)}
-              <CreditCard className="ml-2 h-4 w-4" />
-            </>
-          )}
-        </Button>
+        {/* Waived — single button to complete */}
+        {waived && (
+          <Button
+            onClick={handleCompleteWaived}
+            disabled={isCompleting}
+            size="lg"
+            className="w-full"
+          >
+            {isCompleting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Completing...
+              </>
+            ) : (
+              <>
+                Complete Reapplication
+                <CheckCircle2 className="ml-2 h-4 w-4" />
+              </>
+            )}
+          </Button>
+        )}
 
-        <p className="text-xs text-muted-foreground text-center">
-          Secure payment powered by Stripe. Payment information is not stored on
-          our servers.
-        </p>
+        {/* Paid flow — initially show "Continue to payment" button, then replace with Stripe form */}
+        {!waived && !clientSecret && (
+          <Button
+            onClick={handleStartPayment}
+            disabled={isStartingPayment}
+            size="lg"
+            className="w-full"
+          >
+            {isStartingPayment ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Preparing checkout...
+              </>
+            ) : (
+              `Continue to payment · ${formatMoney(finalCents)}`
+            )}
+          </Button>
+        )}
+
+        {!waived && clientSecret && intentAmount !== null && (
+          <StripePaymentForm
+            clientSecret={clientSecret}
+            amountCents={intentAmount}
+            onSuccess={handlePaymentSuccess}
+            submitLabel={`Pay ${formatMoney(intentAmount)}`}
+          />
+        )}
       </div>
     </div>
   );

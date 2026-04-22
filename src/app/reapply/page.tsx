@@ -35,17 +35,17 @@ export default async function ReapplyLandingPage() {
       </div>
 
       {/* Hero */}
-      <div className="flex-1 flex items-center justify-center py-16 px-6">
+      <div className="flex-1 flex items-center justify-center py-20 px-6">
         <div className="max-w-2xl w-full">
-          <div className="text-center space-y-4 mb-10">
+          <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider">
               <GraduationCap className="h-3.5 w-3.5" />
               Returning Students
             </div>
-            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">
+            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mt-6">
               Reapply for 2026–27
             </h1>
-            <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-xl mx-auto mt-6 leading-relaxed">
               Welcome back. Because we already have your son&apos;s information on
               file, reapplying takes just a few minutes.
             </p>

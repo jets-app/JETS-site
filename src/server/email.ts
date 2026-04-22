@@ -2,7 +2,13 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const FROM_EMAIL = "JETS School <onboarding@resend.dev>";
+// Once the jetsschool.org domain is verified in Resend, set RESEND_FROM_EMAIL
+// in Vercel env to something like "JETS Admissions <admissions@jetsschool.org>".
+// Until then we fall back to Resend's shared sandbox address — those mails
+// only deliver reliably to the account owner's inbox and will be flagged as
+// spam for anyone else, so domain verification is required before going live.
+const FROM_EMAIL =
+  process.env.RESEND_FROM_EMAIL ?? "JETS School <onboarding@resend.dev>";
 
 export async function sendEmail({
   to,

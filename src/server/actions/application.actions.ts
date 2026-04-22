@@ -4,6 +4,7 @@ import { db } from "@/server/db";
 import { auth } from "@/server/auth";
 import { revalidatePath } from "next/cache";
 import type { ApplicationFormData } from "@/lib/validators/application";
+import { triggerStatusNotifications } from "@/server/notifications";
 
 // ==================== Generate Reference Number ====================
 async function generateReferenceNumber(): Promise<string> {
@@ -390,14 +391,19 @@ export async function submitApplication(applicationId: string) {
     await db.application.update({
       where: { id: applicationId },
       data: {
-        status: "SUBMITTED",
+        status: "OFFICE_REVIEW",
         completionPct: 100,
         submittedAt: new Date(),
       },
     });
 
+    // Fire notifications for the "application submitted" event (parent thank-you + staff FYI)
+    triggerStatusNotifications(applicationId, "SUBMITTED").catch(console.error);
+
     revalidatePath("/portal/applications");
     revalidatePath(`/portal/applications/${applicationId}/edit`);
+    revalidatePath("/admin/applications");
+    revalidatePath("/admin/applications/pipeline");
     return { success: true };
   } catch (error) {
     console.error("Error submitting application:", error);
