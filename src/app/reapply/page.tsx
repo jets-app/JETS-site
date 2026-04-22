@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/server/auth";
 import { redirect } from "next/navigation";
-import { GraduationCap, LogIn, UserPlus, ArrowRight, CheckCircle2 } from "lucide-react";
+import { GraduationCap, LogIn, UserPlus, ArrowRight } from "lucide-react";
 
 export const metadata = {
   title: "Reapplication — JETS School",
@@ -88,31 +88,6 @@ export default async function ReapplyLandingPage() {
                 Create a parent account
               </Link>
             </div>
-          </div>
-
-          {/* What's needed */}
-          <div className="mt-10 bg-muted/40 rounded-xl p-6">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-4">
-              What you&apos;ll need
-            </p>
-            <ul className="grid sm:grid-cols-2 gap-3 text-sm">
-              {[
-                "Student's name",
-                "Student's date of birth",
-                "Student's email",
-                "Student's phone number",
-                "Home address",
-                "$500 registration fee",
-              ].map((item) => (
-                <li key={item} className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="text-xs text-muted-foreground mt-4">
-              Have an early bird code? Apply it at checkout to waive the fee.
-            </p>
           </div>
 
           <p className="text-center text-sm text-muted-foreground mt-8">
