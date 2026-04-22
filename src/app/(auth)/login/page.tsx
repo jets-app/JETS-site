@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,7 +13,33 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
-  useRouter(); // keep hook for any future use
+  return (
+    <Suspense fallback={<LoginFallback />}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginFallback() {
+  return (
+    <div className="space-y-8">
+      <div className="flex flex-col items-center text-center space-y-3">
+        <div className="h-10 w-10 rounded-lg bg-primary" />
+        <div>
+          <div className="text-lg font-semibold tracking-tight">JETS School</div>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Sign in to your account
+          </p>
+        </div>
+      </div>
+      <div className="flex justify-center">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    </div>
+  );
+}
+
+function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || undefined;
   const [error, setError] = useState<string | null>(null);
