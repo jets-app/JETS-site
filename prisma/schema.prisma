@@ -109,6 +109,11 @@ enum InterviewStatus {
   CANCELLED
 }
 
+enum ApplicationType {
+  NEW
+  REAPPLICATION
+}
+
 enum DonationFrequency {
   ONE_TIME
   MONTHLY
@@ -201,6 +206,7 @@ model Application {
   id              String            @id @default(cuid())
   referenceNumber String            @unique
   status          ApplicationStatus @default(DRAFT)
+  type            ApplicationType   @default(NEW)
   academicYear    String
 
   parentId String
