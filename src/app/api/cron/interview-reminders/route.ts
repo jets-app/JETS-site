@@ -35,10 +35,8 @@ export async function GET(request: Request) {
   };
 
   // ---------- 24-hour reminders ----------
-  // Vercel Hobby only allows daily crons, so widen the window: any interview
-  // happening in the next 36 hours that hasn't been reminded yet.
-  const in24hStart = now;
-  const in24hEnd = new Date(now.getTime() + 36 * 60 * 60 * 1000);
+  const in24hStart = new Date(now.getTime() + 23 * 60 * 60 * 1000);
+  const in24hEnd = new Date(now.getTime() + 25 * 60 * 60 * 1000);
 
   const upcoming24h = await db.application.findMany({
     where: {
@@ -66,11 +64,6 @@ export async function GET(request: Request) {
   }
 
   // ---------- 1-hour reminders ----------
-  // NOTE: The 1-hour reminder needs a cron that runs every ~15 minutes, which
-  // Vercel Hobby doesn't support (daily crons only). This block is a no-op on
-  // Hobby — upgrade to Pro (then bump vercel.json's schedule back to
-  // "*/15 * * * *") or point an external cron service (e.g. cron-job.org) at
-  // this endpoint to enable it.
   const in1hStart = new Date(now.getTime() + 45 * 60 * 1000);
   const in1hEnd = new Date(now.getTime() + 75 * 60 * 1000);
 
