@@ -22,6 +22,12 @@ interface StepProps {
   onSaved?: () => void;
 }
 
+const MAX_DOB = (() => {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 16);
+  return d.toISOString().split("T")[0];
+})();
+
 export function StudentInfoStep({ applicationId, readOnly, formRef, onSaved }: StepProps) {
   const store = useApplicationFormStore();
   const existing = store.formData.studentInfo;
@@ -150,6 +156,7 @@ export function StudentInfoStep({ applicationId, readOnly, formRef, onSaved }: S
           <Input
             id="dateOfBirth"
             type="date"
+            max={MAX_DOB}
             {...register("dateOfBirth")}
             aria-invalid={!!errors.dateOfBirth}
             disabled={readOnly}
