@@ -208,7 +208,34 @@ const ScrollExpandMedia = ({
                 }}
               >
                 {mediaType === "video" ? (
-                  mediaSrc.includes("youtube.com") ? (
+                  mediaSrc.includes("vimeo.com") ? (
+                    <div className="relative w-full h-full pointer-events-none">
+                      <iframe
+                        width="100%"
+                        height="100%"
+                        src={(() => {
+                          const idMatch = mediaSrc.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+                          const id = idMatch ? idMatch[1] : "";
+                          return `https://player.vimeo.com/video/${id}?background=1&autoplay=1&loop=1&muted=1&byline=0&title=0&dnt=1`;
+                        })()}
+                        className="w-full h-full rounded-xl"
+                        frameBorder="0"
+                        allow="autoplay; fullscreen; picture-in-picture"
+                        allowFullScreen
+                      />
+                      <div
+                        className="absolute inset-0 z-10"
+                        style={{ pointerEvents: "none" }}
+                      ></div>
+
+                      <motion.div
+                        className="absolute inset-0 bg-black/30 rounded-xl"
+                        initial={{ opacity: 0.7 }}
+                        animate={{ opacity: 0.5 - scrollProgress * 0.3 }}
+                        transition={{ duration: 0.2 }}
+                      />
+                    </div>
+                  ) : mediaSrc.includes("youtube.com") ? (
                     <div className="relative w-full h-full pointer-events-none">
                       <iframe
                         width="100%"
