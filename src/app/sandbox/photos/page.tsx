@@ -20,6 +20,7 @@ export default function SandboxPhotosPage() {
       <ScrollExpandMedia
         mediaType="video"
         mediaSrc="https://vimeo.com/752152935"
+        posterSrc="https://www.jetsschool.org/wp-content/uploads/2020/10/jets_new_campus1.jpg"
         bgImageSrc="https://www.jetsschool.org/wp-content/uploads/2020/10/jets_new_campus3.jpg"
         title="See JETS"
         date="Granada Hills, California"
@@ -27,21 +28,16 @@ export default function SandboxPhotosPage() {
         textBlend
       >
         <div className="max-w-4xl mx-auto text-center">
-          <p className="text-xs uppercase tracking-[0.25em] text-white/50 mb-6">
-            About
-          </p>
-          <h2 className="font-serif text-4xl lg:text-6xl text-white mb-10 tracking-tight leading-[1.05]">
+          <h2 className="font-serif text-4xl lg:text-5xl text-white tracking-tight leading-[1.1]">
             Sixteen years of{" "}
             <em className="italic font-[family-name:var(--font-editorial-display)] text-[#e8c476]">
               Torah and trade.
             </em>
           </h2>
-          <p className="text-lg lg:text-xl text-white/70 leading-relaxed mb-6">
-            Established in 2008 on a stubborn premise: that a young man can be
-            formed at once in the study of Torah and in a useful trade.
-          </p>
-          <p className="text-sm uppercase tracking-[0.25em] text-white/40 mt-12">
-            Keep scrolling ↓
+          <p className="mt-6 text-base lg:text-lg text-white/60 max-w-2xl mx-auto leading-relaxed">
+            A school for young men formed at once in the study of Torah and in
+            a useful trade — neither aspiration diminished to accommodate the
+            other.
           </p>
         </div>
       </ScrollExpandMedia>

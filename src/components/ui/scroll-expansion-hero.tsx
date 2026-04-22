@@ -209,27 +209,32 @@ const ScrollExpandMedia = ({
               >
                 {mediaType === "video" ? (
                   mediaSrc.includes("vimeo.com") ? (
-                    <div className="relative w-full h-full pointer-events-none">
+                    <div className="relative w-full h-full pointer-events-none overflow-hidden rounded-xl">
+                      {posterSrc && (
+                        <Image
+                          src={posterSrc}
+                          alt={title || "Poster"}
+                          width={1280}
+                          height={720}
+                          className="absolute inset-0 w-full h-full object-cover rounded-xl z-0"
+                          priority
+                        />
+                      )}
                       <iframe
                         width="100%"
                         height="100%"
                         src={(() => {
                           const idMatch = mediaSrc.match(/vimeo\.com\/(?:video\/)?(\d+)/);
                           const id = idMatch ? idMatch[1] : "";
-                          return `https://player.vimeo.com/video/${id}?background=1&autoplay=1&loop=1&muted=1&byline=0&title=0&dnt=1`;
+                          return `https://player.vimeo.com/video/${id}?autoplay=1&loop=1&muted=1&byline=0&title=0&controls=0&dnt=1&background=1&autopause=0`;
                         })()}
-                        className="w-full h-full rounded-xl"
-                        frameBorder="0"
+                        className="absolute inset-0 w-full h-full rounded-xl z-10"
+                        style={{ border: 0 }}
                         allow="autoplay; fullscreen; picture-in-picture"
                         allowFullScreen
                       />
-                      <div
-                        className="absolute inset-0 z-10"
-                        style={{ pointerEvents: "none" }}
-                      ></div>
-
                       <motion.div
-                        className="absolute inset-0 bg-black/30 rounded-xl"
+                        className="absolute inset-0 bg-black/30 rounded-xl z-20 pointer-events-none"
                         initial={{ opacity: 0.7 }}
                         animate={{ opacity: 0.5 - scrollProgress * 0.3 }}
                         transition={{ duration: 0.2 }}
@@ -354,7 +359,7 @@ const ScrollExpandMedia = ({
             </div>
 
             <motion.section
-              className="flex flex-col w-full px-8 py-10 md:px-16 lg:py-20"
+              className="flex flex-col w-full px-8 py-8 md:px-16 lg:py-12"
               initial={{ opacity: 0 }}
               animate={{ opacity: showContent ? 1 : 0 }}
               transition={{ duration: 0.7 }}
