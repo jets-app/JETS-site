@@ -44,27 +44,27 @@ const ScrollExpandMedia = ({
     offset: ["start start", "end end"],
   });
 
-  // Animation runs over the first 70% of scroll, then stays expanded
-  // while the bottom content scrolls into view
+  // Animation runs over the first 60% of scroll
+  // Container is 250vh, sticky pin = 150vh of available scroll, animation fills 90vh of it
   const mediaWidth = useTransform(
     scrollYProgress,
-    [0, 0.7],
-    ["min(280px, 80vw)", "100vw"],
+    [0, 0.6],
+    ["min(320px, 75vw)", "100vw"],
   );
   const mediaHeight = useTransform(
     scrollYProgress,
-    [0, 0.7],
-    ["min(380px, 55vh)", "100vh"],
+    [0, 0.6],
+    ["min(440px, 60vh)", "100vh"],
   );
-  const radius = useTransform(scrollYProgress, [0, 0.7], [20, 0]);
-  const overlayOpacity = useTransform(scrollYProgress, [0, 0.7], [0.45, 0]);
-  const bgOpacity = useTransform(scrollYProgress, [0, 0.4], [0.4, 0]);
-  const titleY = useTransform(scrollYProgress, [0, 0.7], [0, -150]);
-  const titleOpacity = useTransform(scrollYProgress, [0.4, 0.7], [1, 0]);
-  const promptOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
+  const radius = useTransform(scrollYProgress, [0, 0.6], [16, 0]);
+  const overlayOpacity = useTransform(scrollYProgress, [0, 0.6], [0.4, 0]);
+  const bgOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const titleY = useTransform(scrollYProgress, [0, 0.6], [0, -200]);
+  const titleOpacity = useTransform(scrollYProgress, [0.45, 0.6], [1, 0]);
+  const promptOpacity = useTransform(scrollYProgress, [0, 0.1], [1, 0]);
 
   useMotionValueEvent(scrollYProgress, "change", (v) => {
-    setShowContent(v > 0.85);
+    setShowContent(v > 0.8);
   });
 
   const isVimeo = mediaSrc.includes("vimeo.com");
@@ -86,8 +86,8 @@ const ScrollExpandMedia = ({
   }
 
   return (
-    // 150vh container — gives breathing room for the scroll animation
-    <div ref={containerRef} className="relative w-full" style={{ height: "150vh" }}>
+    // 250vh container — gives ample scroll room (150vh of actual scroll-driven animation)
+    <div ref={containerRef} className="relative w-full" style={{ height: "250vh" }}>
       {/* Sticky stage */}
       <div className="sticky top-0 h-screen w-full overflow-hidden bg-[#0f0d0a]">
         {/* Background image — DARK by default, fades out as media expands */}
