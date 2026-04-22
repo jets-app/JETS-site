@@ -1,4 +1,5 @@
 import { VideoCardReveal } from "@/components/ui/video-card-reveal";
+import { HorizontalScroll } from "@/components/ui/horizontal-scroll";
 import { StickyScroll } from "@/components/ui/sticky-scroll";
 import { AnimatedHero } from "@/components/ui/animated-hero";
 
@@ -16,7 +17,10 @@ export default function SandboxPhotosPage() {
         description="Mornings in the beis medrash. Afternoons in the workshop. A clear path to a career, a community, and a meaningful life."
       />
 
-      {/* 2. Video card reveal — scrolls into view smoothly */}
+      {/* 2. Horizontal scroll — A Day at JETS (cool effect, always works) */}
+      <HorizontalScroll />
+
+      {/* 3. Video card reveal */}
       <VideoCardReveal
         mediaSrc="https://vimeo.com/752152935"
         posterSrc="https://www.jetsschool.org/wp-content/uploads/2020/10/jets_new_campus1.jpg"
@@ -26,7 +30,7 @@ export default function SandboxPhotosPage() {
         aspectRatio="16:9"
       />
 
-      {/* 3. Sticky scroll photo gallery */}
+      {/* 4. Sticky scroll photo gallery */}
       <StickyScroll />
     </div>
   );
