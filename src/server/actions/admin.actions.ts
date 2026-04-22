@@ -3,7 +3,7 @@
 import { db } from "@/server/db";
 import { auth } from "@/server/auth";
 import { revalidatePath } from "next/cache";
-import type { ApplicationStatus } from "@prisma/client";
+import type { ApplicationStatus, ApplicationType } from "@prisma/client";
 import { triggerStatusNotifications } from "@/server/notifications";
 
 // ---------- Helpers ----------
@@ -16,8 +16,8 @@ async function requireAdmin() {
   return session.user;
 }
 
-// Valid status transitions map
-const STATUS_TRANSITIONS: Record<ApplicationStatus, ApplicationStatus[]> = {
+// Valid status transitions for NEW applications (full pipeline)
+const STATUS_TRANSITIONS_NEW: Record<ApplicationStatus, ApplicationStatus[]> = {
   DRAFT: ["SUBMITTED", "WITHDRAWN"],
   SUBMITTED: ["OFFICE_REVIEW", "WITHDRAWN"],
   OFFICE_REVIEW: [
@@ -58,6 +58,34 @@ const STATUS_TRANSITIONS: Record<ApplicationStatus, ApplicationStatus[]> = {
   WAITLISTED: ["ACCEPTED", "REJECTED", "WITHDRAWN"],
   WITHDRAWN: ["SUBMITTED"],
 };
+
+// Simplified transitions for REAPPLICATION: Submitted → Principal Review → Enrollment Docs → Enrolled
+const STATUS_TRANSITIONS_REAPPLY: Record<ApplicationStatus, ApplicationStatus[]> = {
+  DRAFT: ["SUBMITTED", "WITHDRAWN"],
+  SUBMITTED: ["PRINCIPAL_REVIEW", "WITHDRAWN"],
+  OFFICE_REVIEW: ["PRINCIPAL_REVIEW", "REJECTED", "WITHDRAWN"],
+  PRINCIPAL_REVIEW: ["DOCUMENTS_PENDING", "REJECTED", "WITHDRAWN"],
+  INTERVIEW_SCHEDULED: ["DOCUMENTS_PENDING", "REJECTED", "WITHDRAWN"],
+  INTERVIEW_COMPLETED: ["DOCUMENTS_PENDING", "REJECTED", "WITHDRAWN"],
+  ACCEPTED: ["DOCUMENTS_PENDING", "ENROLLED", "WITHDRAWN"],
+  DOCUMENTS_PENDING: ["ENROLLED", "WITHDRAWN"],
+  SCHOLARSHIP_REVIEW: ["ACCEPTED", "WITHDRAWN"],
+  ENROLLED: ["WITHDRAWN"],
+  REJECTED: ["PRINCIPAL_REVIEW"],
+  WAITLISTED: ["ACCEPTED", "REJECTED", "WITHDRAWN"],
+  WITHDRAWN: ["SUBMITTED"],
+};
+
+function getTransitionsFor(
+  type: ApplicationType,
+  status: ApplicationStatus,
+): ApplicationStatus[] {
+  const map = type === "REAPPLICATION" ? STATUS_TRANSITIONS_REAPPLY : STATUS_TRANSITIONS_NEW;
+  return map[status] ?? [];
+}
+
+// Kept for any legacy callers: defaults to NEW-app transitions
+const STATUS_TRANSITIONS = STATUS_TRANSITIONS_NEW;
 
 // ---------- Actions ----------
 
@@ -264,15 +292,15 @@ export async function updateApplicationStatus(
 
   const application = await db.application.findUnique({
     where: { id: applicationId },
-    select: { id: true, status: true, referenceNumber: true },
+    select: { id: true, status: true, referenceNumber: true, type: true },
   });
 
   if (!application) {
     throw new Error("Application not found");
   }
 
-  const allowedTransitions = STATUS_TRANSITIONS[application.status];
-  if (!allowedTransitions?.includes(newStatus)) {
+  const allowedTransitions = getTransitionsFor(application.type, application.status);
+  if (!allowedTransitions.includes(newStatus)) {
     throw new Error(
       `Invalid status transition from ${application.status} to ${newStatus}`
     );
@@ -386,9 +414,10 @@ export async function getAcademicYears() {
 }
 
 export async function getValidTransitions(
-  currentStatus: ApplicationStatus
+  currentStatus: ApplicationStatus,
+  type: ApplicationType = "NEW",
 ): Promise<ApplicationStatus[]> {
-  return STATUS_TRANSITIONS[currentStatus] ?? [];
+  return getTransitionsFor(type, currentStatus);
 }
 
 export async function archiveApplication(applicationId: string) {
@@ -466,15 +495,15 @@ export async function moveApplicationStatus(
 
   const application = await db.application.findUnique({
     where: { id: applicationId },
-    select: { id: true, status: true },
+    select: { id: true, status: true, type: true },
   });
 
   if (!application) {
     throw new Error("Application not found");
   }
 
-  const allowedTransitions = STATUS_TRANSITIONS[application.status];
-  if (!allowedTransitions?.includes(newStatus)) {
+  const allowedTransitions = getTransitionsFor(application.type, application.status);
+  if (!allowedTransitions.includes(newStatus)) {
     return {
       success: false,
       error: `Cannot move from ${application.status} to ${newStatus}`,
