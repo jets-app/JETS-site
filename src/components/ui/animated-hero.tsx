@@ -48,8 +48,8 @@ export function AnimatedHero({
             </a>
           </div>
           <div className="flex gap-4 flex-col">
-            <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl max-w-4xl tracking-tight text-center font-normal leading-[1.05]">
-              <span className="text-white">{staticPrefix}</span>
+            <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl max-w-[1100px] tracking-tight text-center font-normal leading-[1.05]">
+              <span className="text-white whitespace-nowrap">{staticPrefix}</span>
               <span className="relative flex w-full justify-center overflow-hidden text-center md:pb-4 md:pt-1">
                 &nbsp;
                 {titles.map((title, index) => (
