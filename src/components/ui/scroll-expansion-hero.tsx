@@ -30,7 +30,6 @@ const ScrollExpandMedia = ({
   title,
   date,
   scrollToExpand,
-  textBlend,
   children,
 }: ScrollExpandMediaProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -38,36 +37,35 @@ const ScrollExpandMedia = ({
   const [muted, setMuted] = useState(true);
   const [showContent, setShowContent] = useState(false);
 
-  // Scroll progress through the section (0 -> 1 as user scrolls through it)
+  // Section is 150vh — gives 0.5 screen of scroll space for the animation,
+  // then natural scroll into the bottom content
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ["start start", "end start"],
+    offset: ["start start", "end end"],
   });
 
-  // Animate over first 60% of scroll, then media is fully expanded
-  // and bottom content fades in
+  // Animation runs over the first 70% of scroll, then stays expanded
+  // while the bottom content scrolls into view
   const mediaWidth = useTransform(
     scrollYProgress,
-    [0, 0.6],
-    ["min(420px, 90vw)", "100vw"],
+    [0, 0.7],
+    ["min(280px, 80vw)", "100vw"],
   );
   const mediaHeight = useTransform(
     scrollYProgress,
-    [0, 0.6],
-    ["min(560px, 70vh)", "100vh"],
+    [0, 0.7],
+    ["min(380px, 55vh)", "100vh"],
   );
-  const radius = useTransform(scrollYProgress, [0, 0.6], [16, 0]);
-  const overlay = useTransform(scrollYProgress, [0, 0.6], [0.55, 0.15]);
-  const titleOffsetX = useTransform(scrollYProgress, [0, 0.5], [0, 50]);
+  const radius = useTransform(scrollYProgress, [0, 0.7], [20, 0]);
+  const overlayOpacity = useTransform(scrollYProgress, [0, 0.7], [0.45, 0]);
+  const bgOpacity = useTransform(scrollYProgress, [0, 0.4], [0.4, 0]);
+  const titleY = useTransform(scrollYProgress, [0, 0.7], [0, -150]);
+  const titleOpacity = useTransform(scrollYProgress, [0.4, 0.7], [1, 0]);
   const promptOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
-  const bgOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
   useMotionValueEvent(scrollYProgress, "change", (v) => {
-    setShowContent(v > 0.7);
+    setShowContent(v > 0.85);
   });
-
-  const firstWord = title ? title.split(" ")[0] : "";
-  const restOfTitle = title ? title.split(" ").slice(1).join(" ") : "";
 
   const isVimeo = mediaSrc.includes("vimeo.com");
   const vimeoId = isVimeo
@@ -88,12 +86,11 @@ const ScrollExpandMedia = ({
   }
 
   return (
-    // Outer container is 200vh tall — gives the animation room to play out
-    // as the user scrolls naturally through it
-    <div ref={containerRef} className="relative w-full" style={{ height: "200vh" }}>
-      {/* Sticky stage — pinned for the duration of the scroll */}
+    // 150vh container — gives breathing room for the scroll animation
+    <div ref={containerRef} className="relative w-full" style={{ height: "150vh" }}>
+      {/* Sticky stage */}
       <div className="sticky top-0 h-screen w-full overflow-hidden bg-[#0f0d0a]">
-        {/* Background image fades out as user scrolls */}
+        {/* Background image — DARK by default, fades out as media expands */}
         <motion.div className="absolute inset-0 z-0" style={{ opacity: bgOpacity }}>
           <Image
             src={bgImageSrc}
@@ -103,44 +100,39 @@ const ScrollExpandMedia = ({
             className="object-cover"
             sizes="100vw"
           />
-          <div className="absolute inset-0 bg-black/30" />
+          <div className="absolute inset-0 bg-black/60" />
         </motion.div>
 
-        {/* Title — split words slide apart */}
-        <div
-          className={`absolute inset-0 z-30 flex flex-col items-center justify-center text-center pointer-events-none ${
-            textBlend ? "mix-blend-difference" : ""
-          }`}
-        >
-          <motion.h2
-            className="font-serif text-5xl md:text-7xl lg:text-8xl font-semibold tracking-tight text-white"
-            style={{ x: useTransform(titleOffsetX, (v) => `-${v}vw`) }}
-          >
-            {firstWord}
-          </motion.h2>
-          {restOfTitle && (
-            <motion.h2
-              className="font-serif text-5xl md:text-7xl lg:text-8xl font-semibold tracking-tight text-white italic mt-2"
-              style={{ x: useTransform(titleOffsetX, (v) => `${v}vw`) }}
-            >
-              {restOfTitle}
-            </motion.h2>
-          )}
-        </div>
-
-        {/* Expanding media frame */}
+        {/* Title — sits ABOVE the media frame, not on top of it */}
         <motion.div
-          className="absolute top-1/2 left-1/2 z-20 overflow-hidden"
+          className="absolute top-[14%] left-0 right-0 z-30 flex flex-col items-center text-center pointer-events-none px-6"
+          style={{ y: titleY, opacity: titleOpacity }}
+        >
+          {date && (
+            <p className="text-xs uppercase tracking-[0.3em] text-white/60 mb-3">
+              {date}
+            </p>
+          )}
+          {title && (
+            <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-semibold tracking-tight text-white">
+              {title}
+            </h2>
+          )}
+        </motion.div>
+
+        {/* Expanding media frame — clearly visible from the start */}
+        <motion.div
+          className="absolute top-1/2 left-1/2 z-20 overflow-hidden bg-black"
           style={{
             width: mediaWidth,
             height: mediaHeight,
             x: "-50%",
             y: "-50%",
             borderRadius: useTransform(radius, (r) => `${r}px`),
-            boxShadow: "0px 30px 80px rgba(0,0,0,0.5)",
+            boxShadow: "0px 30px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.08)",
           }}
         >
-          {/* Poster image — visible while video loads */}
+          {/* Poster image — instant placeholder while iframe loads */}
           {posterSrc && (
             <Image
               src={posterSrc}
@@ -197,31 +189,26 @@ const ScrollExpandMedia = ({
             />
           )}
 
-          {/* Dark overlay fades out as media expands */}
+          {/* Subtle dark overlay that fades out as media expands */}
           <motion.div
             className="absolute inset-0 bg-black pointer-events-none"
-            style={{ opacity: overlay }}
+            style={{ opacity: overlayOpacity }}
           />
         </motion.div>
 
-        {/* Bottom prompt — caption + scroll cue */}
+        {/* Scroll prompt at bottom */}
         <motion.div
           className="absolute bottom-10 left-0 right-0 z-30 flex flex-col items-center gap-2 text-center pointer-events-none"
           style={{ opacity: promptOpacity }}
         >
-          {date && (
-            <p className="text-sm uppercase tracking-[0.25em] text-white/80">
-              {date}
-            </p>
-          )}
           {scrollToExpand && (
-            <p className="text-xs uppercase tracking-[0.3em] text-white/50">
+            <p className="text-xs uppercase tracking-[0.3em] text-white/60">
               {scrollToExpand} ↓
             </p>
           )}
         </motion.div>
 
-        {/* Sound toggle — only show when video is mostly expanded */}
+        {/* Sound toggle — visible when video is mostly expanded */}
         {mediaType === "video" && isVimeo && showContent && (
           <button
             onClick={toggleMute}
@@ -242,10 +229,10 @@ const ScrollExpandMedia = ({
         )}
       </div>
 
-      {/* Bottom content — sits below the sticky, becomes visible as user scrolls past */}
+      {/* Bottom content — appears after the sticky stage scrolls out */}
       {children && (
         <motion.section
-          className="relative z-10 px-8 py-16 md:px-16 lg:py-24 bg-[#0f0d0a] -mt-px"
+          className="relative z-10 px-8 py-16 md:px-16 lg:py-20 bg-[#0f0d0a]"
           animate={{ opacity: showContent ? 1 : 0 }}
           transition={{ duration: 0.4 }}
         >
