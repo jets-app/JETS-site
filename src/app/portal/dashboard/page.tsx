@@ -293,15 +293,36 @@ export default async function PortalDashboard() {
       });
     }
   } else if (isInterviewStage) {
-    tasks.push({
-      title: "Schedule Your Interview",
-      description: "Book your interview using the Calendly link sent to your email.",
-      icon: CalendarCheck,
-      href: `/portal/applications/${application!.id}/edit`,
-      action: "View Details",
-      color: "text-indigo-600 bg-indigo-500/10",
-      priority: 1,
-    });
+    const already = application!.interviewDate;
+    if (already) {
+      const whenStr = new Intl.DateTimeFormat("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        timeZone: "America/Los_Angeles",
+      }).format(already);
+      tasks.push({
+        title: "Interview Confirmed",
+        description: `Your interview is set for ${whenStr} (LA time). View Zoom details below.`,
+        icon: CalendarCheck,
+        href: `/portal/interview/${application!.id}`,
+        action: "View Details",
+        color: "text-emerald-600 bg-emerald-500/10",
+        priority: 1,
+      });
+    } else {
+      tasks.push({
+        title: "Schedule Your Interview",
+        description: "Pick a 30-minute time that works for you — Zoom link emailed automatically.",
+        icon: CalendarCheck,
+        href: `/portal/interview/${application!.id}`,
+        action: "Choose a Time",
+        color: "text-indigo-600 bg-indigo-500/10",
+        priority: 1,
+      });
+    }
   } else if (isAccepted && pendingDocuments > 0) {
     tasks.push({
       title: "Sign Enrollment Documents",
