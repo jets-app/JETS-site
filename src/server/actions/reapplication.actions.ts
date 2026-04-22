@@ -57,6 +57,11 @@ export async function createReapplication(input: ReapplicationInput) {
     const feeAmount = settings?.applicationFeeAmount ?? 50000;
     const referenceNumber = await generateReferenceNumber();
 
+    // Early-bird promo: reapplications are free until 2026-04-27 22:00 LA time
+    // (PDT, UTC-7) → 2026-04-28T05:00:00Z. After that, the normal $500 fee applies.
+    const FREE_UNTIL = new Date("2026-04-28T05:00:00Z");
+    const isPromoActive = new Date() < FREE_UNTIL;
+
     // Create application + student in one transaction
     const app = await db.application.create({
       data: {
@@ -65,7 +70,13 @@ export async function createReapplication(input: ReapplicationInput) {
         academicYear: data.academicYear,
         parentId: session.user.id,
         applicationFeeAmount: feeAmount,
-        status: "SUBMITTED",
+        // During the early-bird window: auto-waive the fee, mark paid, and
+        // jump straight to principal review so parents don't even see a
+        // payment screen.
+        discountCode: isPromoActive ? "EARLYBIRD" : undefined,
+        discountAmount: isPromoActive ? feeAmount : 0,
+        applicationFeePaid: isPromoActive,
+        status: isPromoActive ? "PRINCIPAL_REVIEW" : "SUBMITTED",
         submittedAt: new Date(),
         completionPct: 100,
         student: {
@@ -85,6 +96,12 @@ export async function createReapplication(input: ReapplicationInput) {
         },
       },
     });
+
+    if (isPromoActive) {
+      // Same notifications the manual fee-waived path fires
+      triggerStatusNotifications(app.id, "SUBMITTED").catch(console.error);
+      triggerStatusNotifications(app.id, "PRINCIPAL_REVIEW").catch(console.error);
+    }
 
     revalidatePath("/portal/dashboard");
     return { success: true, applicationId: app.id };
