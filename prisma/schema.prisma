@@ -144,13 +144,15 @@ model User {
   accounts Account[]
   sessions Session[]
 
-  applications     Application[]
-  sentMessages     Message[]           @relation("SentMessages")
-  receivedMessages Message[]           @relation("ReceivedMessages")
-  reviews          ApplicationReview[]
-  notes            ApplicationNote[]
-  paymentMethods   PaymentMethod[]
-  autoPaySettings  AutoPaySettings?
+  applications            Application[]
+  sentMessages            Message[]              @relation("SentMessages")
+  receivedMessages        Message[]              @relation("ReceivedMessages")
+  reviews                 ApplicationReview[]
+  notes                   ApplicationNote[]
+  paymentMethods          PaymentMethod[]
+  autoPaySettings         AutoPaySettings?
+  assignedInterviews      Application[]          @relation("InterviewPrincipal")
+  interviewAvailability   InterviewAvailability[]
 
   @@index([role])
 }
@@ -245,9 +247,20 @@ model Application {
 
   archivedAt DateTime?
 
-  interviewStatus InterviewStatus @default(PENDING)
-  interviewDate   DateTime?
-  interviewNotes  String?         @db.Text
+  interviewStatus        InterviewStatus @default(PENDING)
+  interviewDate          DateTime?
+  interviewEndsAt        DateTime?
+  interviewNotes         String?         @db.Text
+  interviewPrincipalId   String?
+  interviewPrincipal     User?           @relation("InterviewPrincipal", fields: [interviewPrincipalId], references: [id])
+  interviewZoomMeetingId String?
+  interviewZoomJoinUrl   String?
+  interviewZoomStartUrl  String?
+  interviewZoomPasscode  String?
+
+  interviewReminder24hSentAt   DateTime?
+  interviewReminder1hSentAt    DateTime?
+  interviewScheduleNudgeSentAt DateTime?
 
   documents       Document[]
   recommendations Recommendation[]
@@ -973,4 +986,21 @@ model QuickBooksSync {
 
   @@index([entityType, entityId])
   @@index([status])
+}
+
+// ==================== INTERVIEW AVAILABILITY ====================
+// Weekly recurring availability for principals (one row per day-of-week window).
+// Minutes are from midnight in the configured timezone (default America/Los_Angeles).
+model InterviewAvailability {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dayOfWeek    Int
+  startMinutes Int
+  endMinutes   Int
+  timezone     String   @default("America/Los_Angeles")
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([dayOfWeek])
 }

@@ -80,8 +80,8 @@ const STATUS_NOTIFICATIONS: Partial<
       body: (d) =>
         `Dear ${d.parentName},\n\n` +
         `We'd like to invite ${d.studentName} for an admissions interview.\n\n` +
-        `Please pick a convenient time from your parent portal:\n${PORTAL_LINK(d)}\n\n` +
-        `Once booked, you'll receive a calendar invite with the Zoom link.\n\n` +
+        `Please pick a convenient time here:\n${d.appHost}/portal/interview/${d.applicationId}\n\n` +
+        `Once you book, you'll receive a confirmation with the Zoom link.\n\n` +
         `Reference: ${d.referenceNumber}\n\n` +
         `Warm regards,\nThe JETS Admissions Team`,
     },
