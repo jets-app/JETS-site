@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,7 +15,28 @@ import { PhoneInput } from "@/components/forms/phone-input";
 import { EmailInput } from "@/components/forms/email-input";
 
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={<RegisterFallback />}>
+      <RegisterForm />
+    </Suspense>
+  );
+}
+
+function RegisterFallback() {
+  return (
+    <div className="flex justify-center py-12">
+      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
+
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const loginHref = callbackUrl !== "/dashboard"
+    ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`
+    : "/login";
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -42,7 +63,7 @@ export default function RegisterPage() {
     if (result.success) {
       setSuccess(result.success);
       setTimeout(() => {
-        router.push("/dashboard");
+        router.push(callbackUrl);
         router.refresh();
       }, 1200);
     }
@@ -226,7 +247,7 @@ export default function RegisterPage() {
       <p className="text-center text-xs text-muted-foreground">
         Already have an account?{" "}
         <Link
-          href="/login"
+          href={loginHref}
           className="font-medium text-foreground hover:text-primary transition-colors"
         >
           Sign in

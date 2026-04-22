@@ -21,6 +21,12 @@ interface Props {
   defaultYear: string;
 }
 
+const MAX_DOB = (() => {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 16);
+  return d.toISOString().split("T")[0];
+})();
+
 export function ReapplicationForm({ openYears, defaultYear }: Props) {
   const router = useRouter();
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -110,6 +116,7 @@ export function ReapplicationForm({ openYears, defaultYear }: Props) {
         <Input
           id="dateOfBirth"
           type="date"
+          max={MAX_DOB}
           {...register("dateOfBirth")}
           aria-invalid={!!errors.dateOfBirth}
         />

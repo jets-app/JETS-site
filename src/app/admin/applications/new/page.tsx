@@ -22,6 +22,12 @@ const APPLICATION_STATUSES: { value: ApplicationStatus; label: string }[] = [
   { value: "WAITLISTED", label: "Waitlisted" },
 ];
 
+const MAX_DOB = (() => {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 16);
+  return d.toISOString().split("T")[0];
+})();
+
 export default function NewApplicationPage() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -131,6 +137,7 @@ export default function NewApplicationPage() {
               </label>
               <input
                 type="date"
+                max={MAX_DOB}
                 className="admin-input"
                 value={form.studentDob}
                 onChange={(e) => updateField("studentDob", e.target.value)}
