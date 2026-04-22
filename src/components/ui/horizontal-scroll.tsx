@@ -82,11 +82,11 @@ export function HorizontalScroll({
   );
 
   return (
-    // Container height = (panels * 100vh) — gives each panel one screen of vertical scroll
+    // Container height = (panels * 50vh) — half a screen of scroll per panel (tighter, snappier)
     <section
       ref={targetRef}
       className="relative bg-[#0f0d0a]"
-      style={{ height: `${panels.length * 100}vh` }}
+      style={{ height: `${panels.length * 50}vh` }}
     >
       {/* Sticky stage — pinned while scrolling */}
       <div className="sticky top-0 h-screen overflow-hidden flex items-center">

@@ -18,6 +18,7 @@ const APP_PATHS = [
   "/portal",
   "/admin",
   "/review",
+  "/reapply",
 ];
 const PUBLIC_PATHS = [
   "/about",

@@ -69,12 +69,13 @@ export async function registerUser(formData: {
 export async function loginUser(formData: {
   email: string;
   password: string;
+  callbackUrl?: string;
 }) {
   try {
     await signIn("credentials", {
       email: formData.email.toLowerCase(),
       password: formData.password,
-      redirectTo: "/dashboard",
+      redirectTo: formData.callbackUrl || "/dashboard",
     });
   } catch (error) {
     // NextAuth v5 throws a NEXT_REDIRECT on successful sign-in via server actions.
