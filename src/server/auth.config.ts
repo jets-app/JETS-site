@@ -44,6 +44,7 @@ export const authConfig: NextAuthConfig = {
         path.startsWith("/api/auth") ||
         path.startsWith("/api/health") ||
         path.startsWith("/api/webhooks") ||
+        path.startsWith("/sandbox") ||
         path.startsWith("/v1") ||
         path.startsWith("/v2");
 
