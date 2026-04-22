@@ -9,14 +9,21 @@ export const metadata = {
 export default function SandboxPhotosPage() {
   return (
     <div className="bg-[#0f0d0a] text-white">
-      {/* 1. Scroll-to-expand hero — hijacks scroll until image fills the screen */}
+      {/* 1. Landing — animated hero with rotating words */}
+      <AnimatedHero
+        rotatingWords={["ready", "driven", "thoughtful", "ambitious", "called"]}
+        staticPrefix="A school for young men who are"
+        description="Mornings in the beis medrash. Afternoons in the workshop. A clear path to a career, a community, and a meaningful life."
+      />
+
+      {/* 2. Scroll-to-expand — JETS Vimeo presentation video */}
       <ScrollExpandMedia
-        mediaType="image"
-        mediaSrc="https://www.jetsschool.org/wp-content/uploads/2020/10/jets_new_campus1.jpg"
+        mediaType="video"
+        mediaSrc="https://vimeo.com/752152935"
         bgImageSrc="https://www.jetsschool.org/wp-content/uploads/2020/10/jets_new_campus3.jpg"
-        title="Welcome to JETS"
+        title="See JETS"
         date="Granada Hills, California"
-        scrollToExpand="Scroll to discover"
+        scrollToExpand="Scroll to play"
         textBlend
       >
         <div className="max-w-4xl mx-auto text-center">
@@ -24,9 +31,9 @@ export default function SandboxPhotosPage() {
             About
           </p>
           <h2 className="font-serif text-4xl lg:text-6xl text-white mb-10 tracking-tight leading-[1.05]">
-            A school for young men who are{" "}
+            Sixteen years of{" "}
             <em className="italic font-[family-name:var(--font-editorial-display)] text-[#e8c476]">
-              ready to build something.
+              Torah and trade.
             </em>
           </h2>
           <p className="text-lg lg:text-xl text-white/70 leading-relaxed mb-6">
@@ -38,9 +45,6 @@ export default function SandboxPhotosPage() {
           </p>
         </div>
       </ScrollExpandMedia>
-
-      {/* 2. Animated hero with rotating words */}
-      <AnimatedHero />
 
       {/* 3. Sticky scroll photo gallery */}
       <StickyScroll />
