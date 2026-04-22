@@ -5,6 +5,7 @@ import { auth } from "@/server/auth";
 import { revalidatePath } from "next/cache";
 import { triggerPaymentAutoSync } from "@/server/actions/quickbooks.actions";
 import { stripe } from "@/lib/stripe";
+import { triggerStatusNotifications } from "@/server/notifications";
 
 // ==================== Helper: Format cents to dollars ====================
 export async function formatCents(cents: number): Promise<string> {
@@ -85,6 +86,137 @@ export async function createApplicationFeeCheckout(applicationId: string) {
   } catch (error) {
     console.error("Error creating checkout:", error);
     return { error: "Failed to process payment." };
+  }
+}
+
+// ==================== Create Application Fee Payment Intent (inline checkout) ====================
+export async function createApplicationFeePaymentIntent(applicationId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "You must be logged in." };
+  }
+
+  try {
+    const application = await db.application.findUnique({
+      where: { id: applicationId },
+      select: {
+        id: true,
+        parentId: true,
+        referenceNumber: true,
+        applicationFeePaid: true,
+        applicationFeeAmount: true,
+        discountAmount: true,
+        type: true,
+      },
+    });
+
+    if (!application) return { error: "Application not found." };
+    if (application.parentId !== session.user.id) return { error: "You do not own this application." };
+    if (application.applicationFeePaid) return { error: "Application fee has already been paid." };
+
+    const feeAmount = application.applicationFeeAmount - application.discountAmount;
+
+    if (feeAmount <= 0) {
+      await db.application.update({
+        where: { id: applicationId },
+        data: {
+          applicationFeePaid: true,
+          // Reapplications go straight to principal review once the fee is settled
+          status: application.type === "REAPPLICATION" ? "PRINCIPAL_REVIEW" : undefined,
+        },
+      });
+      if (application.type === "REAPPLICATION") {
+        triggerStatusNotifications(applicationId, "SUBMITTED").catch(console.error);
+        triggerStatusNotifications(applicationId, "PRINCIPAL_REVIEW").catch(console.error);
+      }
+      revalidatePath("/portal/payments");
+      revalidatePath(`/portal/applications/${applicationId}`);
+      return { success: true, waived: true };
+    }
+
+    const intent = await stripe.paymentIntents.create({
+      amount: feeAmount,
+      currency: "usd",
+      automatic_payment_methods: { enabled: true },
+      description: `JETS Application Fee — ${application.referenceNumber}`,
+      metadata: {
+        applicationId,
+        type: "application_fee",
+      },
+    });
+
+    return {
+      success: true,
+      clientSecret: intent.client_secret,
+      amount: feeAmount,
+    };
+  } catch (error) {
+    console.error("Error creating payment intent:", error);
+    return { error: "Failed to start payment." };
+  }
+}
+
+// ==================== Confirm Application Fee Paid (after inline payment) ====================
+export async function confirmApplicationFeePaid(
+  applicationId: string,
+  paymentIntentId: string,
+) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "You must be logged in." };
+
+  try {
+    const application = await db.application.findUnique({
+      where: { id: applicationId },
+      select: { id: true, parentId: true, applicationFeePaid: true, type: true },
+    });
+    if (!application) return { error: "Application not found." };
+    if (application.parentId !== session.user.id) return { error: "Access denied." };
+    if (application.applicationFeePaid) return { success: true, alreadyPaid: true };
+
+    // Verify with Stripe that the payment really succeeded — don't trust the client
+    const intent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    if (intent.status !== "succeeded") {
+      return { error: `Payment not yet succeeded (status: ${intent.status}).` };
+    }
+    if (intent.metadata?.applicationId !== applicationId) {
+      return { error: "Payment does not match this application." };
+    }
+
+    await db.$transaction([
+      db.payment.create({
+        data: {
+          applicationId,
+          type: "APPLICATION_FEE",
+          status: "SUCCEEDED",
+          amount: intent.amount,
+          description: "Application fee (inline Stripe Elements)",
+          stripePaymentIntentId: paymentIntentId,
+          paidAt: new Date(),
+        },
+      }),
+      db.application.update({
+        where: { id: applicationId },
+        data: {
+          applicationFeePaid: true,
+          // Reapplications auto-advance to principal review once fee is paid
+          status: application.type === "REAPPLICATION" ? "PRINCIPAL_REVIEW" : undefined,
+        },
+      }),
+    ]);
+
+    if (application.type === "REAPPLICATION") {
+      triggerStatusNotifications(applicationId, "SUBMITTED").catch(console.error);
+      triggerStatusNotifications(applicationId, "PRINCIPAL_REVIEW").catch(console.error);
+    }
+
+    revalidatePath("/portal/payments");
+    revalidatePath(`/portal/applications/${applicationId}`);
+    revalidatePath(`/portal/reapply/${applicationId}/payment`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error confirming payment:", error);
+    return { error: "Failed to confirm payment." };
   }
 }
 

@@ -4,6 +4,7 @@ import { db } from "@/server/db";
 import { auth } from "@/server/auth";
 import { revalidatePath } from "next/cache";
 import { reapplicationSchema, type ReapplicationInput } from "@/lib/validators/reapplication";
+import { triggerStatusNotifications } from "@/server/notifications";
 
 async function generateReferenceNumber(): Promise<string> {
   const year = new Date().getFullYear();
@@ -134,13 +135,16 @@ export async function applyReapplicationDiscount(
 
   const finalAmount = Math.max(0, app.applicationFeeAmount - discountAmount);
 
+  const isWaived = finalAmount === 0;
+
   await db.application.update({
     where: { id: applicationId },
     data: {
       discountCode: discount.code,
       discountAmount,
-      // If fee is now $0, auto-mark as paid
-      applicationFeePaid: finalAmount === 0 ? true : undefined,
+      // If fee is now $0, auto-mark as paid + advance to principal review
+      applicationFeePaid: isWaived ? true : undefined,
+      status: isWaived ? "PRINCIPAL_REVIEW" : undefined,
     },
   });
 
@@ -149,12 +153,20 @@ export async function applyReapplicationDiscount(
     data: { usedCount: { increment: 1 } },
   });
 
+  if (isWaived) {
+    // Fee fully covered by discount — fire both the "application submitted" emails
+    // (since reapps effectively "submit" when the fee is settled) and the
+    // "principal review" action email so principals know to look at it.
+    triggerStatusNotifications(applicationId, "SUBMITTED").catch(console.error);
+    triggerStatusNotifications(applicationId, "PRINCIPAL_REVIEW").catch(console.error);
+  }
+
   revalidatePath(`/portal/reapply/${applicationId}`);
 
   return {
     success: true,
     discountAmount,
     finalAmount,
-    waived: finalAmount === 0,
+    waived: isWaived,
   };
 }
