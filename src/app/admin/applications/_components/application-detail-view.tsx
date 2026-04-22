@@ -61,14 +61,14 @@ interface ApplicationDetailViewProps {
 // Map statuses to friendly action button labels
 const STATUS_ACTION_LABELS: Partial<Record<ApplicationStatus, string>> = {
   OFFICE_REVIEW: "Move to Office Review",
-  PRINCIPAL_REVIEW: "Forward to Principals",
+  PRINCIPAL_REVIEW: "Move to Principal Review",
   INTERVIEW_SCHEDULED: "Schedule Interview",
   INTERVIEW_COMPLETED: "Mark Interview Complete",
   ACCEPTED: "Accept Student",
-  DOCUMENTS_PENDING: "Request Documents",
+  DOCUMENTS_PENDING: "Send Enrollment Documents",
   SCHOLARSHIP_REVIEW: "Send to Scholarship Review",
-  ENROLLED: "Enroll Student",
-  REJECTED: "Reject Application",
+  ENROLLED: "Mark Enrolled",
+  REJECTED: "Reject",
   WAITLISTED: "Add to Waitlist",
   WITHDRAWN: "Mark Withdrawn",
   SUBMITTED: "Send Back to Submitted",
