@@ -5,6 +5,7 @@ import { auth } from "@/server/auth";
 import { revalidatePath } from "next/cache";
 import type { ApplicationStatus, ApplicationType } from "@prisma/client";
 import { triggerStatusNotifications } from "@/server/notifications";
+import { recordAudit } from "@/server/security/audit-log";
 
 // ---------- Helpers ----------
 
@@ -321,6 +322,15 @@ export async function updateApplicationStatus(
     }),
   ]);
 
+  recordAudit({
+    actorId: user.id!,
+    action: "application.status.changed",
+    entityType: "Application",
+    entityId: applicationId,
+    before: { status: application.status },
+    after: { status: newStatus },
+  }).catch(console.error);
+
   revalidatePath(`/admin/applications/${applicationId}`);
   revalidatePath("/admin/applications");
   revalidatePath("/admin/dashboard");
@@ -421,29 +431,53 @@ export async function getValidTransitions(
 }
 
 export async function archiveApplication(applicationId: string) {
-  await requireAdmin();
+  const user = await requireAdmin();
   await db.application.update({
     where: { id: applicationId },
     data: { archivedAt: new Date() },
   });
+  recordAudit({
+    actorId: user.id!,
+    action: "application.archived",
+    entityType: "Application",
+    entityId: applicationId,
+  }).catch(console.error);
   revalidatePath("/admin/applications");
   revalidatePath("/admin/applications/pipeline");
   return { success: true };
 }
 
 export async function unarchiveApplication(applicationId: string) {
-  await requireAdmin();
+  const user = await requireAdmin();
   await db.application.update({
     where: { id: applicationId },
     data: { archivedAt: null },
   });
+  recordAudit({
+    actorId: user.id!,
+    action: "application.unarchived",
+    entityType: "Application",
+    entityId: applicationId,
+  }).catch(console.error);
   revalidatePath("/admin/applications");
   return { success: true };
 }
 
 export async function deleteApplication(applicationId: string) {
-  await requireAdmin();
+  const user = await requireAdmin();
+  // Capture a snapshot before destruction so the audit row is meaningful
+  const snapshot = await db.application.findUnique({
+    where: { id: applicationId },
+    select: { id: true, referenceNumber: true, status: true, parentId: true },
+  });
   await db.application.delete({ where: { id: applicationId } });
+  recordAudit({
+    actorId: user.id!,
+    action: "application.deleted",
+    entityType: "Application",
+    entityId: applicationId,
+    before: snapshot,
+  }).catch(console.error);
   revalidatePath("/admin/applications");
   revalidatePath("/admin/applications/pipeline");
   return { success: true };

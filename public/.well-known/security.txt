@@ -1,0 +1,6 @@
+Contact: mailto:security@haustack.com
+Contact: mailto:mendel@haussolutions.com
+Expires: 2027-04-22T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://app.jetscollege.org/.well-known/security.txt
+Policy: https://app.jetscollege.org/security

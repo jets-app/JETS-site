@@ -138,6 +138,9 @@ model User {
   status        UserStatus @default(PENDING_VERIFICATION)
   phone         String?
   avatarUrl     String?
+  // Bumped via "Sign out all sessions" — JWTs with a stale version get
+  // rejected by the auth.ts jwt callback on next request.
+  sessionVersion Int       @default(0)
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 
@@ -153,6 +156,8 @@ model User {
   autoPaySettings         AutoPaySettings?
   assignedInterviews      Application[]          @relation("InterviewPrincipal")
   interviewAvailability   InterviewAvailability[]
+  loginEvents             LoginEvent[]
+  auditLogs               AuditLog[]
 
   @@index([role])
 }
@@ -986,6 +991,43 @@ model QuickBooksSync {
 
   @@index([entityType, entityId])
   @@index([status])
+}
+
+// ==================== LOGIN EVENTS ====================
+// Every successful sign-in is logged here. We email the user the first time we
+// see a new (userAgentHash, ipPrefix) pair so account compromise gets noticed.
+model LoginEvent {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userAgentHash String   // sha256 of the User-Agent string
+  ipPrefix      String?  // first 3 octets only — we don't store full IPs
+  userAgentRaw  String?  // last 200 chars for the email body
+  notified      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, userAgentHash])
+}
+
+// ==================== AUDIT LOG ====================
+// Append-only record of every meaningful admin/staff action. Never deleted.
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  actor      User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  action     String   // e.g. "application.status.changed", "discount.code.deleted"
+  entityType String
+  entityId   String
+  before     Json?
+  after      Json?
+  ipPrefix   String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId, createdAt])
+  @@index([entityType, entityId, createdAt])
+  @@index([action, createdAt])
 }
 
 // ==================== INTERVIEW AVAILABILITY ====================

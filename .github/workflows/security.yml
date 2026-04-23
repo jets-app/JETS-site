@@ -1,0 +1,42 @@
+name: Security checks
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  # Weekly run catches CVEs disclosed after a PR was merged
+  schedule:
+    - cron: "0 8 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  gitleaks:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          # No license needed for public repos. For private repos this scans
+          # the latest commit unless GITLEAKS_LICENSE is set.
+          GITLEAKS_NOTIFY_USER_LIST: "@${{ github.actor }}"
+
+  npm-audit:
+    name: npm audit (production deps)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci --ignore-scripts
+      # Fail the build only on high/critical CVEs in production deps. Dev-only
+      # CVEs aren't shipped to users so we don't want to gate PRs on them.
+      - run: npm audit --omit=dev --audit-level=high

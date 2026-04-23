@@ -3,7 +3,7 @@
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { db } from "@/server/db";
-import { auth } from "@/server/auth";
+import { auth, signOut } from "@/server/auth";
 import {
   updateProfileSchema,
   updateEmailSchema,
@@ -131,6 +131,28 @@ export async function updateEmail(newEmail: string, currentPassword: string) {
     console.error("updateEmail error:", err);
     return {
       error: err instanceof Error ? err.message : "Failed to update email",
+    };
+  }
+}
+
+// ---------- Sign out everywhere (revoke every active session) ----------
+
+export async function signOutAllSessions() {
+  try {
+    const userId = await requireUserId();
+    // Bumping sessionVersion invalidates every existing JWT for this user
+    // because the auth.ts jwt callback compares against this column.
+    await db.user.update({
+      where: { id: userId },
+      data: { sessionVersion: { increment: 1 } },
+    });
+    // Clear the cookie on the current device too, then send to /login
+    await signOut({ redirectTo: "/login" });
+    return { success: true };
+  } catch (err) {
+    console.error("signOutAllSessions error:", err);
+    return {
+      error: err instanceof Error ? err.message : "Failed to sign out everywhere",
     };
   }
 }
