@@ -10,13 +10,11 @@
     <xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml>
   <![endif]-->
   <style type="text/css">
-    /* Reset */
     body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
     table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
     img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
     body { margin: 0 !important; padding: 0 !important; width: 100% !important; }
 
-    /* Mobile */
     @media screen and (max-width: 600px) {
       .container { width: 100% !important; }
       .px { padding-left: 24px !important; padding-right: 24px !important; }
@@ -29,35 +27,32 @@
 </head>
 
 <body style="margin:0; padding:0; background-color:#0f0d0a;">
-  <!-- Preheader (hidden preview text in inbox list) -->
-  <div style="display:none; font-size:1px; color:#0f0d0a; line-height:1px; max-height:0px; max-width:0px; opacity:0; overflow:hidden;">
-    *|IFNOT:ARCHIVE_PAGE|* What's happening this week at JETS — a note for our community. *|END:IF|*
+  <!-- Preheader (editable inbox preview text) -->
+  <div mc:edit="preheader" style="display:none; font-size:1px; color:#0f0d0a; line-height:1px; max-height:0px; max-width:0px; opacity:0; overflow:hidden;">
+    What's happening this week at JETS — a note for our community.
   </div>
 
-  <!-- Outer wrap -->
   <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#0f0d0a" style="background-color:#0f0d0a;">
     <tr>
       <td align="center" style="padding:0;">
-        <!-- Container 600px -->
         <table role="presentation" width="600" border="0" cellspacing="0" cellpadding="0" class="container" style="width:600px; max-width:600px;">
 
-          <!-- ============ MASTHEAD ============ -->
+          <!-- ============ MASTHEAD (editable issue number + date) ============ -->
           <tr>
             <td class="px" style="padding:48px 48px 40px 48px;">
               <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
                   <td align="left" style="font-family:Arial, Helvetica, sans-serif; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:#8a8479;">
-                    JETS&nbsp;&nbsp;/&nbsp;&nbsp;The Weekly
+                    <span mc:edit="masthead_left">JETS&nbsp;&nbsp;/&nbsp;&nbsp;The Weekly</span>
                   </td>
                   <td align="right" style="font-family:Arial, Helvetica, sans-serif; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:#8a8479;">
-                    Issue *|ISSUE_NUM|*&nbsp;&nbsp;·&nbsp;&nbsp;*|DATE:MMMM d, yyyy|*
+                    <span mc:edit="masthead_right">Issue 01&nbsp;&nbsp;·&nbsp;&nbsp;April 23, 2026</span>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
 
-          <!-- Thin gold rule -->
           <tr>
             <td class="px" style="padding:0 48px;">
               <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
@@ -66,67 +61,66 @@
             </td>
           </tr>
 
-          <!-- ============ HERO HEADLINE ============ -->
+          <!-- ============ HERO (editable) ============ -->
           <tr>
             <td class="px" style="padding:72px 48px 24px 48px;">
-              <p style="margin:0 0 20px 0; font-family:Arial, Helvetica, sans-serif; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:#e8c476;">
+              <p mc:edit="hero_kicker" style="margin:0 0 20px 0; font-family:Arial, Helvetica, sans-serif; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:#e8c476;">
                 This week at JETS
               </p>
-              <h1 class="h1" style="margin:0; font-family:'Playfair Display', Georgia, 'Times New Roman', serif; font-size:56px; line-height:1.05; letter-spacing:-0.02em; color:#ffffff; font-weight:normal;">
-                *|HERO_HEADLINE|*
-                <span style="color:#e8c476; font-style:italic;">*|HERO_HEADLINE_ITALIC|*</span>
+              <h1 class="h1" mc:edit="hero_headline" style="margin:0; font-family:'Playfair Display', Georgia, 'Times New Roman', serif; font-size:56px; line-height:1.05; letter-spacing:-0.02em; color:#ffffff; font-weight:normal;">
+                A note from our
+                <span style="color:#e8c476; font-style:italic;">community.</span>
               </h1>
             </td>
           </tr>
 
-          <!-- Hero dek -->
           <tr>
             <td class="px" style="padding:0 48px 64px 48px;">
-              <p style="margin:0; font-family:Georgia, 'Times New Roman', serif; font-size:19px; line-height:1.55; color:rgba(255,255,255,0.75);">
-                *|HERO_DEK|*
+              <p mc:edit="hero_dek" style="margin:0; font-family:Georgia, 'Times New Roman', serif; font-size:19px; line-height:1.55; color:rgba(255,255,255,0.75);">
+                A short intro paragraph that sets the tone for this week&rsquo;s edition. Swap this out each week with whatever feels right — a reflection, a thank-you, a heads-up about what&rsquo;s coming.
               </p>
             </td>
           </tr>
 
-          <!-- Optional hero image -->
-          <tr>
+          <!-- Hero image (editable — click to swap in Mailchimp) -->
+          <tr mc:hideable>
             <td class="px" style="padding:0 48px 64px 48px;">
-              <img src="*|HERO_IMAGE_URL|*" alt="*|HERO_IMAGE_ALT|*" width="504" style="display:block; width:100%; max-width:504px; height:auto; border:0;" />
+              <img mc:edit="hero_image" src="https://www.jetsschool.org/wp-content/uploads/2019/01/cl__0040_c7-1024x576.jpg" alt="JETS" width="504" style="display:block; width:100%; max-width:504px; height:auto; border:0;" />
             </td>
           </tr>
 
-          <!-- Section rule -->
           <tr>
             <td class="px" style="padding:0 48px 48px 48px;">
               <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
-                <tr><td height="1" bgcolor="rgba(255,255,255,0.12)" style="height:1px; line-height:1px; font-size:1px; background-color:#2a2621;">&nbsp;</td></tr>
+                <tr><td height="1" style="height:1px; line-height:1px; font-size:1px; background-color:#2a2621;">&nbsp;</td></tr>
               </table>
             </td>
           </tr>
 
-          <!-- ============ MAIN STORY ============ -->
+          <!-- ============ MAIN STORY (editable) ============ -->
           <tr>
             <td class="px" style="padding:0 48px 16px 48px;">
-              <p style="margin:0 0 16px 0; font-family:Arial, Helvetica, sans-serif; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,0.5);">
-                *|STORY_KICKER|*
+              <p mc:edit="story_kicker" style="margin:0 0 16px 0; font-family:Arial, Helvetica, sans-serif; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,0.5);">
+                Feature story
               </p>
-              <h2 class="h2" style="margin:0 0 20px 0; font-family:'Playfair Display', Georgia, serif; font-size:36px; line-height:1.15; letter-spacing:-0.01em; color:#ffffff; font-weight:normal;">
-                *|STORY_HEADLINE|*
+              <h2 class="h2" mc:edit="story_headline" style="margin:0 0 20px 0; font-family:'Playfair Display', Georgia, serif; font-size:36px; line-height:1.15; letter-spacing:-0.01em; color:#ffffff; font-weight:normal;">
+                The headline goes here — keep it tight and editorial.
               </h2>
-              <p style="margin:0 0 28px 0; font-family:Georgia, 'Times New Roman', serif; font-size:17px; line-height:1.65; color:rgba(255,255,255,0.78);">
-                *|STORY_BODY|*
-              </p>
+              <div mc:edit="story_body" style="font-family:Georgia, 'Times New Roman', serif; font-size:17px; line-height:1.65; color:rgba(255,255,255,0.78);">
+                <p style="margin:0 0 20px 0;">This is the main story body. Write 2–4 short paragraphs here. Highlight a student, a class, a moment from the week, or a milestone.</p>
+                <p style="margin:0 0 28px 0;">The reader should feel like they&rsquo;re being let in on something. Specific beats general — a name, a sentence a boy said this week, a small scene.</p>
+              </div>
             </td>
           </tr>
 
-          <!-- CTA -->
+          <!-- CTA (editable link + label) -->
           <tr>
             <td class="px" style="padding:0 48px 64px 48px;">
               <table role="presentation" border="0" cellspacing="0" cellpadding="0">
                 <tr>
                   <td bgcolor="#ffffff" style="border-radius:999px; background-color:#ffffff;">
-                    <a href="*|STORY_CTA_URL|*" target="_blank" style="display:inline-block; padding:14px 32px; font-family:Arial, Helvetica, sans-serif; font-size:14px; font-weight:600; color:#0f0d0a; text-decoration:none; border-radius:999px; letter-spacing:0.01em;">
-                      *|STORY_CTA_LABEL|* &rarr;
+                    <a mc:edit="story_cta" href="https://jetscollege.org" target="_blank" style="display:inline-block; padding:14px 32px; font-family:Arial, Helvetica, sans-serif; font-size:14px; font-weight:600; color:#0f0d0a; text-decoration:none; border-radius:999px; letter-spacing:0.01em;">
+                      Read the full story &rarr;
                     </a>
                   </td>
                 </tr>
@@ -134,7 +128,6 @@
             </td>
           </tr>
 
-          <!-- Section rule -->
           <tr>
             <td class="px" style="padding:0 48px 48px 48px;">
               <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
@@ -143,40 +136,37 @@
             </td>
           </tr>
 
-          <!-- ============ TWO-UP BLURBS ============ -->
+          <!-- ============ TWO BLURBS (each editable, hideable if you only have one item that week) ============ -->
           <tr>
             <td class="px" style="padding:0 48px 64px 48px;">
               <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
-                  <!-- Column 1 -->
-                  <td class="stack" valign="top" width="50%" style="width:50%; padding-right:16px;">
+                  <td mc:edit="blurb_left" mc:hideable class="stack" valign="top" width="50%" style="width:50%; padding-right:16px;">
                     <p style="margin:0 0 12px 0; font-family:Arial, Helvetica, sans-serif; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:#e8c476;">
-                      *|BLURB1_KICKER|*
+                      Alumni
                     </p>
                     <h3 style="margin:0 0 12px 0; font-family:'Playfair Display', Georgia, serif; font-size:22px; line-height:1.25; color:#ffffff; font-weight:normal;">
-                      *|BLURB1_HEADLINE|*
+                      Short headline for the left blurb
                     </h3>
                     <p style="margin:0 0 16px 0; font-family:Georgia, 'Times New Roman', serif; font-size:15px; line-height:1.6; color:rgba(255,255,255,0.72);">
-                      *|BLURB1_BODY|*
+                      A sentence or two of context. Useful for alumni spotlights, upcoming events, or a quick thank-you.
                     </p>
-                    <a href="*|BLURB1_URL|*" style="font-family:Arial, Helvetica, sans-serif; font-size:13px; color:#e8c476; text-decoration:none; border-bottom:1px solid #e8c476; padding-bottom:2px;">
+                    <a href="https://jetscollege.org" style="font-family:Arial, Helvetica, sans-serif; font-size:13px; color:#e8c476; text-decoration:none; border-bottom:1px solid #e8c476; padding-bottom:2px;">
                       Read more
                     </a>
                   </td>
-                  <!-- Spacer (stacks on mobile) -->
                   <td class="stack-gap" width="32" style="width:32px; font-size:1px; line-height:1px;">&nbsp;</td>
-                  <!-- Column 2 -->
-                  <td class="stack" valign="top" width="50%" style="width:50%; padding-left:16px;">
+                  <td mc:edit="blurb_right" mc:hideable class="stack" valign="top" width="50%" style="width:50%; padding-left:16px;">
                     <p style="margin:0 0 12px 0; font-family:Arial, Helvetica, sans-serif; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:#e8c476;">
-                      *|BLURB2_KICKER|*
+                      Giving
                     </p>
                     <h3 style="margin:0 0 12px 0; font-family:'Playfair Display', Georgia, serif; font-size:22px; line-height:1.25; color:#ffffff; font-weight:normal;">
-                      *|BLURB2_HEADLINE|*
+                      Short headline for the right blurb
                     </h3>
                     <p style="margin:0 0 16px 0; font-family:Georgia, 'Times New Roman', serif; font-size:15px; line-height:1.6; color:rgba(255,255,255,0.72);">
-                      *|BLURB2_BODY|*
+                      A sentence or two of context for donors, parents, or the broader community.
                     </p>
-                    <a href="*|BLURB2_URL|*" style="font-family:Arial, Helvetica, sans-serif; font-size:13px; color:#e8c476; text-decoration:none; border-bottom:1px solid #e8c476; padding-bottom:2px;">
+                    <a href="https://jetscollege.org" style="font-family:Arial, Helvetica, sans-serif; font-size:13px; color:#e8c476; text-decoration:none; border-bottom:1px solid #e8c476; padding-bottom:2px;">
                       Read more
                     </a>
                   </td>
@@ -185,8 +175,7 @@
             </td>
           </tr>
 
-          <!-- Section rule -->
-          <tr>
+          <tr mc:hideable>
             <td class="px" style="padding:0 48px 48px 48px;">
               <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr><td height="1" style="height:1px; line-height:1px; font-size:1px; background-color:#2a2621;">&nbsp;</td></tr>
@@ -194,14 +183,14 @@
             </td>
           </tr>
 
-          <!-- ============ PULL QUOTE ============ -->
-          <tr>
-            <td class="px" style="padding:24px 48px 72px 48px;" align="center">
+          <!-- ============ QUOTE (editable, hideable) ============ -->
+          <tr mc:hideable>
+            <td mc:edit="quote_block" class="px" style="padding:24px 48px 72px 48px;" align="center">
               <p style="margin:0 0 24px 0; font-family:'Playfair Display', Georgia, serif; font-size:26px; line-height:1.35; color:#ffffff; font-style:italic; font-weight:normal;">
-                &ldquo;*|QUOTE|*&rdquo;
+                &ldquo;A short quote from a student, alum, parent, or rabbi. Keeps the email personal.&rdquo;
               </p>
               <p style="margin:0; font-family:Arial, Helvetica, sans-serif; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,0.5);">
-                — *|QUOTE_ATTRIBUTION|*
+                — Who said it
               </p>
             </td>
           </tr>
@@ -225,13 +214,12 @@
               </p>
 
               <p style="margin:0 0 16px 0; font-family:Arial, Helvetica, sans-serif; font-size:13px; line-height:1.6; color:rgba(255,255,255,0.55);">
-                16601 Rinaldi Street, Granada Hills, CA 91344<br />
-                <a href="tel:+18188313000" style="color:rgba(255,255,255,0.55); text-decoration:none;">(818) 831-3000</a> ·
+                *|LIST:ADDRESS|*<br />
                 <a href="mailto:info@jetsschool.org" style="color:rgba(255,255,255,0.55); text-decoration:underline;">info@jetsschool.org</a>
               </p>
 
               <p style="margin:0 0 24px 0; font-family:Arial, Helvetica, sans-serif; font-size:12px; line-height:1.7; color:rgba(255,255,255,0.4);">
-                You&rsquo;re receiving this because you&rsquo;re part of the JETS community — alumni, donor, family, or friend.<br />
+                You&rsquo;re receiving this because you&rsquo;re part of the JETS community.<br />
                 <a href="*|UPDATE_PROFILE|*" style="color:rgba(255,255,255,0.55); text-decoration:underline;">Update preferences</a> ·
                 <a href="*|UNSUB|*" style="color:rgba(255,255,255,0.55); text-decoration:underline;">Unsubscribe</a> ·
                 <a href="*|ARCHIVE|*" style="color:rgba(255,255,255,0.55); text-decoration:underline;">View in browser</a>
