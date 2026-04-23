@@ -35,6 +35,7 @@ export async function GET(request: Request) {
   };
 
   // ---------- 24-hour reminders ----------
+  // Cron fires every 15 min, so a tight 23-25h window catches each interview once.
   const in24hStart = new Date(now.getTime() + 23 * 60 * 60 * 1000);
   const in24hEnd = new Date(now.getTime() + 25 * 60 * 60 * 1000);
 
