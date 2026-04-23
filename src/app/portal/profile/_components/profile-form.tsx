@@ -26,6 +26,7 @@ import {
   updateProfile,
   updateEmail,
   changePassword,
+  signOutAllSessions,
 } from "@/server/actions/profile.actions";
 
 interface ProfileUser {
@@ -446,6 +447,52 @@ export function ProfileForm({ user }: { user: ProfileUser }) {
           </Button>
         </div>
       </section>
+
+      {/* ---------- Sign out everywhere ---------- */}
+      <section className="border-t pt-6">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h2 className="font-semibold flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Sign out everywhere
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1 max-w-md">
+              Sign yourself out on every browser and device. Use this if you
+              think someone else might have access to your account.
+            </p>
+          </div>
+          <SignOutAllButton />
+        </div>
+      </section>
     </div>
+  );
+}
+
+function SignOutAllButton() {
+  const [isPending, startTransition] = useTransition();
+  return (
+    <Button
+      variant="outline"
+      onClick={() => {
+        if (
+          !confirm(
+            "Sign out on every device? You'll need to sign in again on each one.",
+          )
+        ) {
+          return;
+        }
+        startTransition(async () => {
+          await signOutAllSessions();
+        });
+      }}
+      disabled={isPending}
+    >
+      {isPending ? (
+        <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+      ) : (
+        <Shield className="h-4 w-4 mr-1.5" />
+      )}
+      Sign out everywhere
+    </Button>
   );
 }

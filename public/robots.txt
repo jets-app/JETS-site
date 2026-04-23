@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /admin
+Disallow: /portal
+Disallow: /api
+Disallow: /review
+Disallow: /reapply
+Disallow: /d/
+Disallow: /r/
+
+# Public marketing pages live on jetscollege.org (a different deployment) —
+# this app at app.jetscollege.org is the CRM/portal and should not be indexed.
