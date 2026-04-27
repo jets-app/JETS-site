@@ -203,11 +203,6 @@ export default async function ApplicationPaymentPage({ params }: PageProps) {
             hasDiscount={discountAmount > 0}
             existingCode={application.discountCode}
           />
-
-          <p className="text-xs text-muted-foreground text-center">
-            This is a mock payment flow. In production, payment will be
-            processed securely via Stripe.
-          </p>
         </CardContent>
       </Card>
     </div>
