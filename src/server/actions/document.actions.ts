@@ -245,10 +245,11 @@ export async function sendEnrollmentPackage(applicationId: string) {
 
   if (
     application.status !== "ACCEPTED" &&
-    application.status !== "DOCUMENTS_PENDING"
+    application.status !== "DOCUMENTS_PENDING" &&
+    application.status !== "ENROLLED"
   ) {
     throw new Error(
-      "Application must be in ACCEPTED or DOCUMENTS_PENDING status to send enrollment documents"
+      "Application must be at least at ACCEPTED status to send enrollment documents"
     );
   }
 
