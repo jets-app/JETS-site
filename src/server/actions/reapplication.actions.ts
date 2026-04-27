@@ -5,6 +5,7 @@ import { auth } from "@/server/auth";
 import { revalidatePath } from "next/cache";
 import { reapplicationSchema, type ReapplicationInput } from "@/lib/validators/reapplication";
 import { triggerStatusNotifications } from "@/server/notifications";
+import { clearReapplyIntent } from "@/lib/reapply-intent";
 
 async function generateReferenceNumber(): Promise<string> {
   const year = new Date().getFullYear();
@@ -102,6 +103,8 @@ export async function createReapplication(input: ReapplicationInput) {
       triggerStatusNotifications(app.id, "SUBMITTED").catch(console.error);
       triggerStatusNotifications(app.id, "PRINCIPAL_REVIEW").catch(console.error);
     }
+
+    await clearReapplyIntent();
 
     revalidatePath("/portal/dashboard");
     return { success: true, applicationId: app.id };
