@@ -135,7 +135,13 @@ function InnerForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <PaymentElement />
+      {/* Card form + Apple Pay button on supporting devices. Google Pay and
+          other wallets are hidden — keeps the UI focused on credit card. */}
+      <PaymentElement
+        options={{
+          wallets: { applePay: "auto", googlePay: "never" },
+        }}
+      />
       {error && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
           <p className="text-sm text-destructive">{error}</p>
