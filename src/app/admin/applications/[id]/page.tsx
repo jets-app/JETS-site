@@ -9,7 +9,8 @@ interface PageProps {
 
 export default async function ApplicationDetailPage({ params }: PageProps) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
+  const role = session?.user?.role;
+  if (!session?.user || (role !== "ADMIN" && role !== "PRINCIPAL")) {
     redirect("/dashboard");
   }
 
@@ -29,6 +30,7 @@ export default async function ApplicationDetailPage({ params }: PageProps) {
       application={JSON.parse(JSON.stringify(application))}
       validTransitions={validTransitions}
       currentUserId={session.user.id!}
+      currentUserRole={role}
     />
   );
 }

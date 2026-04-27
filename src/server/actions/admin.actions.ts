@@ -300,12 +300,17 @@ export async function updateApplicationStatus(
     throw new Error("Application not found");
   }
 
+  // ADMINs can override the normal pipeline (skip steps, jump backwards) for
+  // edge cases. Non-admins (e.g. PRINCIPAL) are still bound by the transition
+  // map so they can't accidentally enroll someone who hasn't been accepted.
   const allowedTransitions = getTransitionsFor(application.type, application.status);
-  if (!allowedTransitions.includes(newStatus)) {
+  const isAdmin = user.role === "ADMIN";
+  if (!isAdmin && !allowedTransitions.includes(newStatus)) {
     throw new Error(
       `Invalid status transition from ${application.status} to ${newStatus}`
     );
   }
+  const isOverride = isAdmin && !allowedTransitions.includes(newStatus);
 
   const [updatedApplication] = await db.$transaction([
     db.application.update({
@@ -316,7 +321,9 @@ export async function updateApplicationStatus(
       data: {
         applicationId,
         authorId: user.id!,
-        content: `Status changed from ${application.status} to ${newStatus}`,
+        content: isOverride
+          ? `Status changed from ${application.status} to ${newStatus} (admin override — skipped normal flow)`
+          : `Status changed from ${application.status} to ${newStatus}`,
         isInternal: true,
       },
     }),
