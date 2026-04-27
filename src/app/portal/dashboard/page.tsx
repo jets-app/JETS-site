@@ -1,6 +1,7 @@
 import { auth } from "@/server/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/server/db";
+import { hasReapplyIntent } from "@/lib/reapply-intent";
 import { LinkButton } from "@/components/shared/link-button";
 import {
   FileText,
@@ -121,6 +122,12 @@ export default async function PortalDashboard() {
     },
     orderBy: { createdAt: "desc" },
   });
+
+  // Parent landed here via /reapply but hasn't started one yet — keep them on
+  // the reapplication path instead of nudging them toward a brand-new app.
+  if (!application && (await hasReapplyIntent())) {
+    redirect("/portal/reapply");
+  }
 
   // Upcoming tuition invoice (for enrolled students)
   let upcomingInvoice: {

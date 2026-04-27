@@ -2,12 +2,17 @@ import Link from "next/link";
 import { auth } from "@/server/auth";
 import { redirect } from "next/navigation";
 import { GraduationCap, LogIn, UserPlus, ArrowRight } from "lucide-react";
+import { setReapplyIntent } from "@/lib/reapply-intent";
 
 export const metadata = {
   title: "Reapplication — JETS School",
 };
 
 export default async function ReapplyLandingPage() {
+  // Mark that this parent wants the reapply path. Survives the register/login
+  // detour so they always land on the returning-student form, not a fresh app.
+  await setReapplyIntent();
+
   const session = await auth();
   // If already signed in, skip straight to the form
   if (session?.user) {
