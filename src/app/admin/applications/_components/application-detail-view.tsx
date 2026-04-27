@@ -56,7 +56,24 @@ interface ApplicationDetailViewProps {
   application: Record<string, any>;
   validTransitions: ApplicationStatus[];
   currentUserId: string;
+  currentUserRole?: string;
 }
+
+const ALL_STATUSES: ApplicationStatus[] = [
+  "DRAFT",
+  "SUBMITTED",
+  "OFFICE_REVIEW",
+  "PRINCIPAL_REVIEW",
+  "INTERVIEW_SCHEDULED",
+  "INTERVIEW_COMPLETED",
+  "ACCEPTED",
+  "DOCUMENTS_PENDING",
+  "SCHOLARSHIP_REVIEW",
+  "ENROLLED",
+  "WAITLISTED",
+  "REJECTED",
+  "WITHDRAWN",
+];
 
 // Map statuses to friendly action button labels
 const STATUS_ACTION_LABELS: Partial<Record<ApplicationStatus, string>> = {
@@ -87,11 +104,13 @@ export function ApplicationDetailView({
   application,
   validTransitions,
   currentUserId,
+  currentUserRole,
 }: ApplicationDetailViewProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [noteContent, setNoteContent] = useState("");
   const [isAddingNote, setIsAddingNote] = useState(false);
+  const isAdmin = currentUserRole === "ADMIN";
 
   const handleStatusChange = (newStatus: ApplicationStatus) => {
     if (
@@ -253,6 +272,26 @@ export function ApplicationDetailView({
               {STATUS_ACTION_LABELS[status] ?? getStatusLabel(status)}
             </Button>
           ))}
+          {isAdmin && (
+            <select
+              disabled={isPending}
+              value=""
+              onChange={(e) => {
+                const v = e.target.value as ApplicationStatus;
+                if (v) handleStatusChange(v);
+                e.target.value = "";
+              }}
+              className="h-9 rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent transition-colors"
+              title="Admin override — set to any status"
+            >
+              <option value="">Override → any status…</option>
+              {ALL_STATUSES.filter((s) => s !== application.status).map((s) => (
+                <option key={s} value={s}>
+                  {getStatusLabel(s)}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
       </div>
 
