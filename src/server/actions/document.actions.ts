@@ -198,7 +198,10 @@ export async function sendDocumentToRecipient(
       ? `${application.student.firstName} ${application.student.lastName}`
       : application.parent.name;
 
-    await sendEmail({
+    // Email is best-effort — Resend without a verified domain rejects mail to
+    // anyone other than the account owner, and we don't want that to crash
+    // document creation. Doc + signing link still get created in the DB.
+    sendEmail({
       to: recipientEmail,
       subject: `Document for Signing: ${docTitle} — JETS School`,
       html: `
@@ -221,7 +224,7 @@ export async function sendDocumentToRecipient(
           </div>
         </div>
       `,
-    });
+    }).catch((e) => console.error("[sendDocument] email failed:", e));
   }
 
   revalidatePath(`/admin/applications/${applicationId}`);
