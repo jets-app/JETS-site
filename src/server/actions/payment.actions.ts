@@ -61,6 +61,7 @@ export async function createApplicationFeeCheckout(applicationId: string) {
 
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "payment",
+      payment_method_types: ["card"],
       line_items: [
         {
           price_data: {
@@ -137,7 +138,8 @@ export async function createApplicationFeePaymentIntent(applicationId: string) {
     const intent = await stripe.paymentIntents.create({
       amount: feeAmount,
       currency: "usd",
-      automatic_payment_methods: { enabled: true },
+      // Card only — no Apple Pay / Google Pay / Klarna / Cash App / Link.
+      payment_method_types: ["card"],
       description: `JETS Application Fee — ${application.referenceNumber}`,
       metadata: {
         applicationId,
