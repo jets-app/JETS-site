@@ -1,4 +1,5 @@
 import { auth } from "@/server/auth";
+import { isStaff } from "@/lib/roles";
 import { redirect, notFound } from "next/navigation";
 import { getStudentDetail } from "@/server/actions/school-year.actions";
 import { db } from "@/server/db";
@@ -41,7 +42,7 @@ export default async function StudentDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!session?.user || !isStaff(session.user.role)) {
     redirect("/dashboard");
   }
 

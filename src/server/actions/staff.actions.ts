@@ -7,7 +7,7 @@ import { db } from "@/server/db";
 import { auth } from "@/server/auth";
 import { sendEmail } from "@/server/email";
 
-const STAFF_ROLES = ["ADMIN", "PRINCIPAL", "REVIEWER"] as const;
+const STAFF_ROLES = ["ADMIN", "PRINCIPAL", "SECRETARY", "REVIEWER"] as const;
 type StaffRole = (typeof STAFF_ROLES)[number];
 
 async function requireAdmin() {
@@ -21,7 +21,7 @@ async function requireAdmin() {
 export async function listStaff() {
   await requireAdmin();
   return db.user.findMany({
-    where: { role: { in: ["ADMIN", "PRINCIPAL", "REVIEWER"] } },
+    where: { role: { in: ["ADMIN", "PRINCIPAL", "SECRETARY", "REVIEWER"] } },
     select: {
       id: true,
       email: true,

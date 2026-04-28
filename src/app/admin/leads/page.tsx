@@ -1,4 +1,5 @@
 import { auth } from "@/server/auth";
+import { isStaff } from "@/lib/roles";
 import { redirect } from "next/navigation";
 import { getInquiries } from "@/server/actions/inquiry.actions";
 import { LeadsTable } from "./_components/leads-table";
@@ -6,7 +7,7 @@ import { ApplicationsTabs } from "../applications/_components/applications-tabs"
 
 export default async function LeadsPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!session?.user || !isStaff(session.user.role)) {
     redirect("/dashboard");
   }
 

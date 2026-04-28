@@ -1,4 +1,5 @@
 import { auth } from "@/server/auth";
+import { isStaff } from "@/lib/roles";
 import { redirect } from "next/navigation";
 import {
   getDashboardStats,
@@ -22,7 +23,7 @@ import {
 
 export default async function AdmissionsDashboard() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!session?.user || !isStaff(session.user.role)) {
     redirect("/dashboard");
   }
 

@@ -1,4 +1,5 @@
 import { auth } from "@/server/auth";
+import { isStaff } from "@/lib/roles";
 import { redirect } from "next/navigation";
 import {
   getInbox,
@@ -12,7 +13,7 @@ import { CommsTabs } from "./_components/comms-tabs";
 
 export default async function AdminMessagesPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!session?.user || !isStaff(session.user.role)) {
     redirect("/admin/dashboard");
   }
 

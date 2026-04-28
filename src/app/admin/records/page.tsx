@@ -1,4 +1,5 @@
 import { auth } from "@/server/auth";
+import { isStaff } from "@/lib/roles";
 import { redirect } from "next/navigation";
 import { getStudentRecords } from "@/server/actions/school-year.actions";
 import { ModeHeader } from "@/components/shared/mode-header";
@@ -30,7 +31,7 @@ export default async function RecordsPage({
   searchParams: Promise<SearchParamsShape>;
 }) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!session?.user || !isStaff(session.user.role)) {
     redirect("/dashboard");
   }
 

@@ -1,4 +1,5 @@
 import { auth } from "@/server/auth";
+import { isStaff } from "@/lib/roles";
 import { redirect } from "next/navigation";
 import { db } from "@/server/db";
 import { ModeHeader } from "@/components/shared/mode-header";
@@ -26,7 +27,7 @@ const statusStyles: Record<string, string> = {
 
 export default async function RecommendationsPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!session?.user || !isStaff(session.user.role)) {
     redirect("/dashboard");
   }
 

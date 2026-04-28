@@ -1,4 +1,5 @@
 import { auth } from "@/server/auth";
+import { isStaff } from "@/lib/roles";
 import { redirect } from "next/navigation";
 import { getFamilies } from "@/server/actions/school-year.actions";
 import { ModeHeader } from "@/components/shared/mode-header";
@@ -19,7 +20,7 @@ function formatMoney(cents: number) {
 
 export default async function FamiliesPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!session?.user || !isStaff(session.user.role)) {
     redirect("/dashboard");
   }
 
