@@ -337,9 +337,11 @@ export async function getPaymentsForApplication(applicationId: string) {
       return { error: "Application not found." };
     }
 
-    // Allow parent owner or admin
-    const isAdmin = session.user.role === "ADMIN" || session.user.role === "PRINCIPAL";
-    if (application.parentId !== session.user.id && !isAdmin) {
+    // Allow parent owner or any staff role with payment visibility
+    const role = session.user.role;
+    const isStaff =
+      role === "ADMIN" || role === "PRINCIPAL" || role === "SECRETARY";
+    if (application.parentId !== session.user.id && !isStaff) {
       return { error: "Access denied." };
     }
 
@@ -362,7 +364,11 @@ export async function recordManualPayment(
   description: string
 ) {
   const session = await auth();
-  if (!session?.user?.id || (session.user.role !== "ADMIN" && session.user.role !== "PRINCIPAL")) {
+  const role = session?.user?.role;
+  if (
+    !session?.user?.id ||
+    (role !== "ADMIN" && role !== "PRINCIPAL" && role !== "SECRETARY")
+  ) {
     return { error: "Admin access required." };
   }
 
@@ -394,7 +400,11 @@ export async function recordManualPayment(
 // ==================== Mark Application Fee Paid (Admin) ====================
 export async function markApplicationFeePaid(applicationId: string) {
   const session = await auth();
-  if (!session?.user?.id || (session.user.role !== "ADMIN" && session.user.role !== "PRINCIPAL")) {
+  const role = session?.user?.role;
+  if (
+    !session?.user?.id ||
+    (role !== "ADMIN" && role !== "PRINCIPAL" && role !== "SECRETARY")
+  ) {
     return { error: "Admin access required." };
   }
 
@@ -451,8 +461,10 @@ export async function getPaymentHistory(parentId?: string) {
     return { error: "You must be logged in." };
   }
 
-  const isAdmin = session.user.role === "ADMIN" || session.user.role === "PRINCIPAL";
-  const targetParentId = isAdmin && parentId ? parentId : session.user.id;
+  const role = session.user.role;
+  const isStaff =
+    role === "ADMIN" || role === "PRINCIPAL" || role === "SECRETARY";
+  const targetParentId = isStaff && parentId ? parentId : session.user.id;
 
   try {
     const applications = await db.application.findMany({
@@ -489,7 +501,11 @@ export async function getAllPayments(filters?: {
   search?: string;
 }) {
   const session = await auth();
-  if (!session?.user?.id || (session.user.role !== "ADMIN" && session.user.role !== "PRINCIPAL")) {
+  const role = session?.user?.role;
+  if (
+    !session?.user?.id ||
+    (role !== "ADMIN" && role !== "PRINCIPAL" && role !== "SECRETARY")
+  ) {
     return { error: "Admin access required." };
   }
 

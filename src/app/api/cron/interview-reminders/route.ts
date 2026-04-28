@@ -17,12 +17,18 @@ export const maxDuration = 60;
  * go twice even if the cron fires multiple times.
  */
 export async function GET(request: Request) {
-  // Vercel Cron adds this header — accept either that or a manual admin call
-  // from our own app. Reject anything else.
-  const authHeader = request.headers.get("authorization");
+  // Vercel Cron adds this header. CRON_SECRET MUST be set in production —
+  // failing closed (rather than open) so a missing env var doesn't expose
+  // this route to anyone on the internet.
   const cronSecret = process.env.CRON_SECRET;
-  const isVercelCron = authHeader === `Bearer ${cronSecret}`;
-  if (!isVercelCron && cronSecret) {
+  if (!cronSecret) {
+    return NextResponse.json(
+      { error: "CRON_SECRET not configured" },
+      { status: 500 },
+    );
+  }
+  const authHeader = request.headers.get("authorization");
+  if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
