@@ -56,23 +56,31 @@ export const authConfig: NextAuthConfig = {
       }
 
       const role = auth?.user?.role;
+      const isStaff =
+        role === "ADMIN" ||
+        role === "PRINCIPAL" ||
+        role === "SECRETARY" ||
+        role === "REVIEWER";
 
-      // Admin routes — only ADMIN role
-      if (path.startsWith("/admin") || path.startsWith("/admin/")) {
-        if (role !== "ADMIN") {
+      // Admin routes — any staff role. Per-page checks gate sensitive ops
+      // (settings, billing, staff mgmt) to ADMIN only.
+      if (path.startsWith("/admin")) {
+        if (!isStaff) {
           return Response.redirect(new URL("/portal/dashboard", nextUrl));
         }
       }
 
-      // Review routes — PRINCIPAL, REVIEWER, or ADMIN
+      // Review routes — PRINCIPAL, REVIEWER, SECRETARY, or ADMIN
       if (path.startsWith("/review")) {
-        if (role !== "PRINCIPAL" && role !== "REVIEWER" && role !== "ADMIN") {
+        if (!isStaff) {
           return Response.redirect(new URL("/portal/dashboard", nextUrl));
         }
       }
 
-      // Portal routes — PARENT role (or any logged-in user)
-      // No restriction needed — all logged-in users can access portal
+      // Portal routes — kick staff over to the admin view. Parents stay.
+      if (path.startsWith("/portal") && isStaff) {
+        return Response.redirect(new URL("/admin/dashboard", nextUrl));
+      }
 
       return true;
     },
