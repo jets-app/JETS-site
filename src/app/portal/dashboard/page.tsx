@@ -111,6 +111,12 @@ export default async function PortalDashboard() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
+  // Staff (admin/principal/secretary/reviewer) shouldn't ever land on the
+  // parent portal — kick them over to the admin view.
+  if (session.user.role && session.user.role !== "PARENT") {
+    redirect("/admin/dashboard");
+  }
+
   const firstName = session.user.name?.split(" ")[0] || "there";
 
   // Get user's application (one per account)

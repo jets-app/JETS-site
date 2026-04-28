@@ -95,7 +95,7 @@ export async function createStaff(input: {
   name: string;
   role: StaffRole;
 }) {
-  await requireAdmin();
+  const me = await requireAdmin();
 
   const email = input.email.toLowerCase().trim();
   const name = input.name.trim();
@@ -104,6 +104,15 @@ export async function createStaff(input: {
   }
   if (!STAFF_ROLES.includes(input.role)) {
     return { error: "Invalid role." };
+  }
+
+  // Block accidentally downgrading yourself by re-adding your own email with
+  // a non-ADMIN role. (Edits to other people are fine.)
+  if (email === me.email && input.role !== "ADMIN") {
+    return {
+      error:
+        "That's your own account. Changing your role here would lock you out — pick a different email.",
+    };
   }
 
   // Random placeholder password — they'll set their real one via the reset link
