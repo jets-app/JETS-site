@@ -29,3 +29,23 @@ export function canAccessAdmin(role: string | null | undefined): boolean {
 export function isFullAdmin(role: string | null | undefined): boolean {
   return role === "ADMIN";
 }
+
+/**
+ * Founder fallback: these emails are *always* treated as ADMIN at the JWT
+ * layer, even if their DB role gets accidentally downgraded. Prevents a
+ * lock-yourself-out scenario when managing staff.
+ *
+ * Configure via FOUNDER_EMAILS env var (comma-separated). Defaults to the
+ * Mendel's email so JETS can't get bricked.
+ */
+export const FOUNDER_EMAILS: ReadonlySet<string> = new Set(
+  (process.env.FOUNDER_EMAILS ?? "memem@jetsschool.org")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean),
+);
+
+export function isFounder(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return FOUNDER_EMAILS.has(email.toLowerCase());
+}

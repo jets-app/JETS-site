@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { db } from "@/server/db";
 import { authConfig } from "./auth.config";
 import { recordSignIn } from "@/server/security/login-events";
+import { isFounder } from "@/lib/roles";
 
 // Full auth config with providers (Node.js only — NOT used in middleware)
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -82,6 +83,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.id = user.id;
         token.role = (user as { role: string }).role;
+        // Founder fallback: if this email is in FOUNDER_EMAILS, force ADMIN
+        // so the founder can never get locked out by an accidental role
+        // downgrade in the staff manager.
+        if (isFounder(user.email ?? null)) {
+          token.role = "ADMIN";
+        }
         const dbUser = await db.user.findUnique({
           where: { id: user.id as string },
           select: { sessionVersion: true },
