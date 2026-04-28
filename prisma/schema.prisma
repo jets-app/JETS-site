@@ -13,6 +13,7 @@ enum Role {
   PARENT
   ADMIN
   PRINCIPAL
+  SECRETARY
   REVIEWER
 }
 

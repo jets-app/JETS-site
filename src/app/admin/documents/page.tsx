@@ -1,11 +1,12 @@
 import { auth } from "@/server/auth";
+import { isStaff } from "@/lib/roles";
 import { redirect } from "next/navigation";
 import { getDocumentTemplates, getDocumentStats, seedDefaultTemplates } from "@/server/actions/document.actions";
 import { DocumentTemplateList } from "./_components/document-template-list";
 
 export default async function DocumentsPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!session?.user || !isStaff(session.user.role)) {
     redirect("/dashboard");
   }
 

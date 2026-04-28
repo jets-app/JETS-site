@@ -22,8 +22,9 @@ type Staff = {
 
 const ROLES = [
   { value: "PRINCIPAL", label: "Principal" },
-  { value: "REVIEWER", label: "Reviewer" },
-  { value: "ADMIN", label: "Admin" },
+  { value: "SECRETARY", label: "Secretary (office staff)" },
+  { value: "REVIEWER", label: "Reviewer (read + comment)" },
+  { value: "ADMIN", label: "Admin (full control)" },
 ];
 
 export function StaffManager({

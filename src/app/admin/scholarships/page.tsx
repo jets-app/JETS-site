@@ -1,4 +1,5 @@
 import { auth } from "@/server/auth";
+import { isStaff } from "@/lib/roles";
 import { redirect } from "next/navigation";
 import { db } from "@/server/db";
 import {
@@ -52,7 +53,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 
 export default async function AdminScholarshipsPage() {
   const session = await auth();
-  if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "PRINCIPAL")) {
+  if (!session?.user || (!isStaff(session.user.role) && session.user.role !== "PRINCIPAL")) {
     redirect("/dashboard");
   }
 

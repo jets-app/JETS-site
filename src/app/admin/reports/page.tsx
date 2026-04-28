@@ -1,4 +1,5 @@
 import { auth } from "@/server/auth";
+import { isStaff } from "@/lib/roles";
 import { redirect } from "next/navigation";
 import {
   getEnrollmentFunnelReport,
@@ -11,7 +12,7 @@ import { ReportsDashboard } from "./_components/reports-dashboard";
 
 export default async function ReportsPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!session?.user || !isStaff(session.user.role)) {
     redirect("/dashboard");
   }
 

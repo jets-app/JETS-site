@@ -61,12 +61,12 @@ const INTEGRATION_CARDS: SettingCard[] = [
     status: "coming-soon",
   },
   {
-    title: "User Management",
+    title: "Staff Accounts",
     description:
-      "Manage admins, principals, reviewers, and parent accounts.",
-    href: null,
+      "Add admins, principals, secretaries, or reviewers. They get an email link to set their own password.",
+    href: "/admin/settings/staff",
     icon: Users,
-    status: "coming-soon",
+    status: "ready",
   },
 ];
 

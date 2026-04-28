@@ -1,4 +1,5 @@
 import { auth } from "@/server/auth";
+import { isStaff } from "@/lib/roles";
 import { redirect, notFound } from "next/navigation";
 import { getApplicationDetail, getValidTransitions } from "@/server/actions/admin.actions";
 import { ApplicationDetailView } from "../_components/application-detail-view";
@@ -10,7 +11,7 @@ interface PageProps {
 export default async function ApplicationDetailPage({ params }: PageProps) {
   const session = await auth();
   const role = session?.user?.role;
-  if (!session?.user || (role !== "ADMIN" && role !== "PRINCIPAL")) {
+  if (!session?.user || !isStaff(role)) {
     redirect("/dashboard");
   }
 
