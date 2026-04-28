@@ -33,10 +33,53 @@ export default async function SchoolYearDashboard() {
     redirect("/dashboard");
   }
 
+  // Financial stats + actions are admin/secretary only — principals + reviewers
+  // see a streamlined, money-free view.
+  const role = session.user.role;
+  const canSeeFinancials = role === "ADMIN" || role === "SECRETARY";
+
   const [stats, students] = await Promise.all([
     getSchoolYearStats(),
     getEnrolledStudents(),
   ]);
+
+  const allStats = [
+    {
+      label: "Enrolled Students",
+      value: stats.enrolledCount.toString(),
+      change: stats.academicYear,
+      icon: GraduationCap,
+      color: "text-emerald-600 bg-emerald-500/10 dark:text-emerald-400",
+      financial: false,
+    },
+    {
+      label: "Tuition Collected",
+      value: formatMoney(stats.tuitionCollected),
+      change: "This school year",
+      icon: DollarSign,
+      color: "text-emerald-600 bg-emerald-500/10",
+      financial: true,
+    },
+    {
+      label: "Outstanding Balance",
+      value: formatMoney(stats.outstanding),
+      change: "Across all families",
+      icon: Wallet,
+      color: "text-amber-600 bg-amber-500/10",
+      financial: true,
+    },
+    {
+      label: "Overdue Payments",
+      value: stats.overdueCount.toString(),
+      change: stats.overdueCount > 0 ? "Needs follow-up" : "All current",
+      icon: AlertTriangle,
+      color: "text-red-600 bg-red-500/10",
+      financial: true,
+    },
+  ];
+  const visibleStats = allStats.filter(
+    (s) => canSeeFinancials || !s.financial,
+  );
 
   return (
     <div className="max-w-7xl mx-auto space-y-8">
@@ -44,42 +87,12 @@ export default async function SchoolYearDashboard() {
         mode="school_year"
         section="Dashboard"
         title="School Year Dashboard"
-        description={`Enrolled students, tuition, and family activity for ${stats.academicYear}.`}
+        description={`Enrolled students${canSeeFinancials ? ", tuition, and family activity" : " and family activity"} for ${stats.academicYear}.`}
       />
 
       {/* Stats Grid */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          {
-            label: "Enrolled Students",
-            value: stats.enrolledCount.toString(),
-            change: stats.academicYear,
-            icon: GraduationCap,
-            color:
-              "text-emerald-600 bg-emerald-500/10 dark:text-emerald-400",
-          },
-          {
-            label: "Tuition Collected",
-            value: formatMoney(stats.tuitionCollected),
-            change: "This school year",
-            icon: DollarSign,
-            color: "text-emerald-600 bg-emerald-500/10",
-          },
-          {
-            label: "Outstanding Balance",
-            value: formatMoney(stats.outstanding),
-            change: "Across all families",
-            icon: Wallet,
-            color: "text-amber-600 bg-amber-500/10",
-          },
-          {
-            label: "Overdue Payments",
-            value: stats.overdueCount.toString(),
-            change: stats.overdueCount > 0 ? "Needs follow-up" : "All current",
-            icon: AlertTriangle,
-            color: "text-red-600 bg-red-500/10",
-          },
-        ].map((stat) => (
+        {visibleStats.map((stat) => (
           <div
             key={stat.label}
             className="rounded-xl border bg-card p-5 hover:shadow-md transition-shadow"
@@ -110,26 +123,32 @@ export default async function SchoolYearDashboard() {
               desc: "Log tuition received",
               icon: CreditCard,
               href: "/admin/billing",
+              financial: true,
             },
             {
               label: "Send Invoice",
               desc: "Create new invoice",
               icon: FileText,
               href: "/admin/billing",
+              financial: true,
             },
             {
               label: "Message Parents",
               desc: "Communicate with families",
               icon: MessageSquare,
               href: "/admin/messages",
+              financial: false,
             },
             {
               label: "View Records",
               desc: "Medical & documents",
               icon: Users,
               href: "/admin/records",
+              financial: false,
             },
-          ].map((action) => (
+          ]
+            .filter((a) => canSeeFinancials || !a.financial)
+            .map((action) => (
             <a
               key={action.label}
               href={action.href}
@@ -149,8 +168,8 @@ export default async function SchoolYearDashboard() {
         </div>
       </div>
 
-      {/* Two column */}
-      <div className="grid lg:grid-cols-2 gap-6">
+      {/* Two column — financial widgets only for admin/secretary */}
+      {canSeeFinancials && <div className="grid lg:grid-cols-2 gap-6">
         {/* Upcoming tuition due */}
         <div className="rounded-xl border bg-card">
           <div className="px-6 py-4 border-b flex items-center justify-between">
@@ -225,7 +244,7 @@ export default async function SchoolYearDashboard() {
             </div>
           )}
         </div>
-      </div>
+      </div>}
 
       {/* Enrolled Students list */}
       <div className="rounded-xl border bg-card">

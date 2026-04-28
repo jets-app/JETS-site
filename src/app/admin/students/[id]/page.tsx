@@ -46,6 +46,12 @@ export default async function StudentDetailPage({
     redirect("/dashboard");
   }
 
+  const role = session.user.role;
+  // Principals/reviewers see only signed Student Handbook + Medical Form;
+  // admins/secretaries see everything (and the financial widgets below).
+  const restrictedDocs = role === "PRINCIPAL" || role === "REVIEWER";
+  const canSeeFinancials = role === "ADMIN" || role === "SECRETARY";
+
   const { id } = await params;
 
   let data;
@@ -323,8 +329,8 @@ export default async function StudentDetailPage({
           </div>
         </div>
 
-        {/* Tuition summary */}
-        <div className="rounded-xl border bg-card lg:col-span-2">
+        {/* Tuition summary — admin/secretary only */}
+        {canSeeFinancials && <div className="rounded-xl border bg-card lg:col-span-2">
           <div className="px-6 py-4 border-b flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
             <h2 className="font-semibold">Tuition Summary</h2>
@@ -369,11 +375,11 @@ export default async function StudentDetailPage({
               </p>
             </div>
           </div>
-        </div>
+        </div>}
       </div>
 
-      {/* Auto-Pay & Payment Method */}
-      <div className="rounded-xl border bg-card">
+      {/* Auto-Pay & Payment Method — admin/secretary only */}
+      {canSeeFinancials && <div className="rounded-xl border bg-card">
         <div className="px-6 py-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Zap className="h-4 w-4" />
@@ -430,10 +436,10 @@ export default async function StudentDetailPage({
             <p className="font-medium">{paymentMethods.length}</p>
           </div>
         </div>
-      </div>
+      </div>}
 
-      {/* Comprehensive Payment History */}
-      <div className="rounded-xl border bg-card">
+      {/* Comprehensive Payment History — admin/secretary only */}
+      {canSeeFinancials && <div className="rounded-xl border bg-card">
         <div className="px-6 py-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CalendarDays className="h-4 w-4" />
@@ -500,9 +506,9 @@ export default async function StudentDetailPage({
             </TableBody>
           </Table>
         )}
-      </div>
+      </div>}
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      {canSeeFinancials && <div className="grid lg:grid-cols-2 gap-6">
         {/* Invoices */}
         <div className="rounded-xl border bg-card">
           <div className="px-6 py-4 border-b flex items-center justify-between">
@@ -582,17 +588,28 @@ export default async function StudentDetailPage({
             </div>
           )}
         </div>
-      </div>
+      </div>}
 
       {/* Signed Documents */}
+      {(() => {
+        const visibleDocs = restrictedDocs
+          ? application.documents.filter((doc: { template?: { type?: string } | null; status: string }) => {
+              const t = doc.template?.type;
+              return (
+                doc.status === "COMPLETED" &&
+                (t === "STUDENT_HANDBOOK" || t === "MEDICAL_FORM")
+              );
+            })
+          : application.documents;
+        return (
       <div className="rounded-xl border bg-card">
         <div className="px-6 py-4 border-b flex items-center gap-2">
           <FileSignature className="h-4 w-4" />
           <h2 className="font-semibold">Signed Documents</h2>
         </div>
-        {application.documents.length > 0 ? (
+        {visibleDocs.length > 0 ? (
           <div className="divide-y">
-            {application.documents.map((doc) => (
+            {visibleDocs.map((doc: { id: string; title: string; signedAt: Date | null; status: string }) => (
               <div
                 key={doc.id}
                 className="flex items-center justify-between px-6 py-3"
@@ -619,6 +636,8 @@ export default async function StudentDetailPage({
           </div>
         )}
       </div>
+        );
+      })()}
     </div>
   );
 }

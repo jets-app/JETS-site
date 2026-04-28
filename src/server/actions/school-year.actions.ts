@@ -198,7 +198,10 @@ export async function getStudentDetail(applicationId: string) {
       },
       scholarship: true,
       payments: { orderBy: { createdAt: "desc" } },
-      documents: { orderBy: { createdAt: "desc" } },
+      documents: {
+        orderBy: { createdAt: "desc" },
+        include: { template: { select: { type: true, name: true } } },
+      },
     },
   });
 
