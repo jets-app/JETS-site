@@ -52,14 +52,22 @@ function detectMode(pathname: string): Mode {
   return "admissions";
 }
 
+type NavItem = {
+  label: string;
+  href: string;
+  icon: typeof LayoutDashboard;
+  /** Optional role gate. Omit to show to all staff. */
+  roles?: ReadonlyArray<"ADMIN" | "PRINCIPAL" | "SECRETARY" | "REVIEWER">;
+};
+
 const admissionsNav = {
   label: "Admissions",
   items: [
     { label: "Dashboard", href: "/admin/admissions", icon: LayoutDashboard },
     { label: "Leads & Applications", href: "/admin/applications", icon: FileText },
-    { label: "Scholarships", href: "/admin/scholarships", icon: Sparkles },
-    { label: "Documents", href: "/admin/documents", icon: FileSignature },
-  ],
+    { label: "Scholarships", href: "/admin/scholarships", icon: Sparkles, roles: ["ADMIN", "SECRETARY"] },
+    { label: "Documents", href: "/admin/documents", icon: FileSignature, roles: ["ADMIN", "SECRETARY"] },
+  ] satisfies NavItem[],
 };
 
 const schoolYearNav = {
@@ -67,27 +75,39 @@ const schoolYearNav = {
   items: [
     { label: "Dashboard", href: "/admin/students", icon: LayoutDashboard },
     { label: "Students & Families", href: "/admin/students/list", icon: GraduationCap },
-    { label: "Billing", href: "/admin/billing", icon: CreditCard },
-  ],
+    { label: "Billing", href: "/admin/billing", icon: CreditCard, roles: ["ADMIN", "SECRETARY"] },
+  ] satisfies NavItem[],
 };
 
 const sharedNav = {
   label: "General",
   items: [
-    { label: "Reports", href: "/admin/reports", icon: BarChart3 },
-    { label: "Communications", href: "/admin/messages", icon: MessageSquare },
-    { label: "Alumni", href: "/admin/alumni", icon: Users },
-    { label: "Donors", href: "/admin/donors", icon: Heart },
-    { label: "Settings", href: "/admin/settings", icon: Settings },
-  ],
+    { label: "Reports", href: "/admin/reports", icon: BarChart3, roles: ["ADMIN", "SECRETARY"] },
+    { label: "Communications", href: "/admin/messages", icon: MessageSquare, roles: ["ADMIN", "SECRETARY"] },
+    { label: "Alumni", href: "/admin/alumni", icon: Users, roles: ["ADMIN"] },
+    { label: "Donors", href: "/admin/donors", icon: Heart, roles: ["ADMIN"] },
+    { label: "Settings", href: "/admin/settings", icon: Settings, roles: ["ADMIN"] },
+  ] satisfies NavItem[],
 };
 
-export function AdminSidebar() {
+function filterByRole(items: NavItem[], role: string | undefined): NavItem[] {
+  return items.filter((item) => !item.roles || (role && item.roles.includes(role as never)));
+}
+
+export function AdminSidebar({ role }: { role?: string }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const mode = detectMode(pathname);
 
-  const activeNav = mode === "admissions" ? admissionsNav : schoolYearNav;
+  const activeNavSrc = mode === "admissions" ? admissionsNav : schoolYearNav;
+  const activeNav = {
+    label: activeNavSrc.label,
+    items: filterByRole(activeNavSrc.items, role),
+  };
+  const filteredSharedNav = {
+    label: sharedNav.label,
+    items: filterByRole(sharedNav.items, role),
+  };
 
   // For "Leads & Applications" nav item, also highlight when on /admin/leads or /admin/applications/pipeline
   function isNavItemActive(href: string) {
@@ -231,12 +251,12 @@ export function AdminSidebar() {
           </div>
 
           {/* Shared section */}
-          <div>
+          {filteredSharedNav.items.length > 0 && <div>
             <p className="admin-section-label px-3 mb-1.5">
-              {sharedNav.label}
+              {filteredSharedNav.label}
             </p>
             <div className="space-y-0.5">
-              {sharedNav.items.map((item) => {
+              {filteredSharedNav.items.map((item) => {
                 const isActive = isNavItemActive(item.href);
                 return (
                   <Link
@@ -254,7 +274,7 @@ export function AdminSidebar() {
                 );
               })}
             </div>
-          </div>
+          </div>}
         </nav>
 
         {/* Sign out */}
