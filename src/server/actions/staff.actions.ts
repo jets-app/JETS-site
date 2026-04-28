@@ -6,16 +6,19 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/server/db";
 import { auth } from "@/server/auth";
 import { sendEmail } from "@/server/email";
+import { isFounder } from "@/lib/roles";
 
 const STAFF_ROLES = ["ADMIN", "PRINCIPAL", "SECRETARY", "REVIEWER"] as const;
 type StaffRole = (typeof STAFF_ROLES)[number];
 
 async function requireAdmin() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
-    throw new Error("Admin access required");
+  if (!session?.user) throw new Error("Admin access required");
+  // Founder fallback: recognize by email even if the JWT role is stale.
+  if (session.user.role === "ADMIN" || isFounder(session.user.email ?? null)) {
+    return session.user;
   }
-  return session.user;
+  throw new Error("Admin access required");
 }
 
 export async function listStaff() {

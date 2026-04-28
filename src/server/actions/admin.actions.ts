@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import type { ApplicationStatus, ApplicationType } from "@prisma/client";
 import { triggerStatusNotifications } from "@/server/notifications";
 import { recordAudit } from "@/server/security/audit-log";
-import { isStaff } from "@/lib/roles";
+import { isStaff, isFounder } from "@/lib/roles";
 
 // ---------- Helpers ----------
 
@@ -14,13 +14,19 @@ import { isStaff } from "@/lib/roles";
  * For sensitive ops only: archive, unarchive, delete, billing, system settings.
  * Most reads + normal status changes use requireStaff() instead so principals
  * and secretaries can do their day-to-day work.
+ *
+ * Recognizes founders by email even if the JWT role is stale — prevents
+ * lock-out when the cookie was minted before a role/founder change.
  */
 async function requireAdmin() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!session?.user) {
     throw new Error("Unauthorized: Admin access required");
   }
-  return session.user;
+  if (session.user.role === "ADMIN" || isFounder(session.user.email ?? null)) {
+    return session.user;
+  }
+  throw new Error("Unauthorized: Admin access required");
 }
 
 /** Any staff role (admin/principal/secretary/reviewer). */
