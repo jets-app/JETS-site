@@ -4,13 +4,16 @@ import { db } from "@/server/db";
 import { auth } from "@/server/auth";
 import { revalidatePath } from "next/cache";
 import type { ApplicationStatus } from "@prisma/client";
+import { isStaff } from "@/lib/roles";
 
 // ---------- Helpers ----------
 
+// Misnamed historically — actually allows any staff role (admin/principal/
+// secretary/reviewer). Kept the name to avoid touching every call site.
 async function requireAdmin() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
-    throw new Error("Unauthorized: Admin access required");
+  if (!session?.user || !isStaff(session.user.role)) {
+    throw new Error("Unauthorized: Staff access required");
   }
   return session.user;
 }

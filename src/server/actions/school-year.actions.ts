@@ -2,11 +2,12 @@
 
 import { db } from "@/server/db";
 import { auth } from "@/server/auth";
+import { isStaff } from "@/lib/roles";
 
 async function requireAdmin() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
-    throw new Error("Unauthorized: Admin access required");
+  if (!session?.user || !isStaff(session.user.role)) {
+    throw new Error("Unauthorized: Staff access required");
   }
   return session.user;
 }
