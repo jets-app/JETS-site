@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import {
   createStaff,
   resendPasswordSetup,
+  updateStaff,
+  deleteStaff,
 } from "@/server/actions/staff.actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, UserPlus, Mail, CheckCircle2 } from "lucide-react";
+import { Loader2, UserPlus, Mail, CheckCircle2, Pencil, Trash2, X, Save } from "lucide-react";
 
 type Staff = {
   id: string;
@@ -37,6 +39,11 @@ export function StaffManager({
   const router = useRouter();
   const [isCreating, startCreating] = useTransition();
   const [resendingId, setResendingId] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editRole, setEditRole] = useState("PRINCIPAL");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("PRINCIPAL");
@@ -44,6 +51,63 @@ export function StaffManager({
     type: "success" | "error";
     text: string;
   } | null>(null);
+
+  function startEdit(s: Staff) {
+    setEditingId(s.id);
+    setEditName(s.name);
+    setEditEmail(s.email);
+    setEditRole(s.role);
+    setMessage(null);
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+  }
+
+  async function handleSaveEdit(userId: string) {
+    setBusyId(userId);
+    setMessage(null);
+    const result = await updateStaff({
+      userId,
+      name: editName,
+      email: editEmail,
+      role: editRole as "ADMIN" | "PRINCIPAL" | "SECRETARY" | "REVIEWER",
+    });
+    setBusyId(null);
+    if (result.error) {
+      setMessage({ type: "error", text: result.error });
+      return;
+    }
+    setEditingId(null);
+    setMessage({ type: "success", text: "Account updated." });
+    router.refresh();
+  }
+
+  async function handleDelete(s: Staff) {
+    if (
+      !confirm(
+        `Remove ${s.name} (${s.email}) from staff? They'll lose access immediately.`,
+      )
+    ) {
+      return;
+    }
+    setBusyId(s.id);
+    setMessage(null);
+    const result = await deleteStaff(s.id);
+    setBusyId(null);
+    if (result.error) {
+      setMessage({ type: "error", text: result.error });
+      return;
+    }
+    setMessage({
+      type: "success",
+      text:
+        result.mode === "deleted"
+          ? `${s.email} deleted.`
+          : `${s.email} deactivated (kept for audit history).`,
+    });
+    router.refresh();
+  }
 
   function handleCreate() {
     if (!name.trim() || !email.trim()) {
@@ -180,41 +244,140 @@ export function StaffManager({
               </tr>
             </thead>
             <tbody>
-              {initialStaff.map((s) => (
-                <tr key={s.id} className="border-b last:border-0">
-                  <td className="px-6 py-3 font-medium">
-                    {s.name}
-                    {s.id === currentUserId && (
-                      <span className="ml-2 text-xs text-muted-foreground">(you)</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-3 text-muted-foreground">{s.email}</td>
-                  <td className="px-6 py-3">
-                    <span className="inline-block px-2 py-0.5 rounded-md bg-muted text-xs font-medium">
-                      {s.role}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3 text-muted-foreground text-xs">
-                    {new Date(s.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-3 text-right">
-                    {s.id !== currentUserId && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={resendingId === s.id}
-                        onClick={() => handleResend(s.id, s.email)}
-                      >
-                        {resendingId === s.id ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          "Resend setup email"
-                        )}
-                      </Button>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {initialStaff.map((s) => {
+                const isEditing = editingId === s.id;
+                const isMe = s.id === currentUserId;
+                const isBusy = busyId === s.id;
+                return (
+                  <tr key={s.id} className="border-b last:border-0 align-top">
+                    <td className="px-6 py-3 font-medium">
+                      {isEditing ? (
+                        <Input
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          disabled={isBusy}
+                          className="h-8 text-sm"
+                        />
+                      ) : (
+                        <>
+                          {s.name}
+                          {isMe && (
+                            <span className="ml-2 text-xs text-muted-foreground">
+                              (you)
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </td>
+                    <td className="px-6 py-3 text-muted-foreground">
+                      {isEditing ? (
+                        <Input
+                          type="email"
+                          value={editEmail}
+                          onChange={(e) => setEditEmail(e.target.value)}
+                          disabled={isBusy}
+                          className="h-8 text-sm"
+                        />
+                      ) : (
+                        s.email
+                      )}
+                    </td>
+                    <td className="px-6 py-3">
+                      {isEditing ? (
+                        <select
+                          value={editRole}
+                          onChange={(e) => setEditRole(e.target.value)}
+                          disabled={isBusy || isMe}
+                          className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                        >
+                          {ROLES.map((r) => (
+                            <option key={r.value} value={r.value}>
+                              {r.label}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className="inline-block px-2 py-0.5 rounded-md bg-muted text-xs font-medium">
+                          {s.role}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-3 text-muted-foreground text-xs">
+                      {new Date(s.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-3 text-right">
+                      {isEditing ? (
+                        <div className="inline-flex gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={isBusy}
+                            onClick={cancelEdit}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            disabled={isBusy}
+                            onClick={() => handleSaveEdit(s.id)}
+                          >
+                            {isBusy ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <>
+                                <Save className="h-3.5 w-3.5 mr-1" /> Save
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="inline-flex gap-1">
+                          {!isMe && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={resendingId === s.id || isBusy}
+                              onClick={() => handleResend(s.id, s.email)}
+                              title="Resend password setup email"
+                            >
+                              {resendingId === s.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Mail className="h-3.5 w-3.5" />
+                              )}
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={isBusy}
+                            onClick={() => startEdit(s)}
+                            title="Edit"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          {!isMe && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={isBusy}
+                              onClick={() => handleDelete(s)}
+                              className="text-destructive hover:bg-destructive/10"
+                              title="Remove from staff"
+                            >
+                              {isBusy ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-3.5 w-3.5" />
+                              )}
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
