@@ -261,17 +261,25 @@ export function ApplicationDetailView({
             <Printer className="h-3.5 w-3.5 mr-1.5" />
             Print
           </Button>
-          {validTransitions.map((status) => (
-            <Button
-              key={status}
-              variant={STATUS_BUTTON_VARIANT[status] ?? "outline"}
-              size="sm"
-              disabled={isPending}
-              onClick={() => handleStatusChange(status)}
-            >
-              {STATUS_ACTION_LABELS[status] ?? getStatusLabel(status)}
-            </Button>
-          ))}
+          {validTransitions
+            // Admins use the override dropdown for "rewind"/withdrawal —
+            // the dedicated buttons are kept for principals/secretaries who
+            // don't have the dropdown.
+            .filter(
+              (status) =>
+                !isAdmin || (status !== "SUBMITTED" && status !== "WITHDRAWN"),
+            )
+            .map((status) => (
+              <Button
+                key={status}
+                variant={STATUS_BUTTON_VARIANT[status] ?? "outline"}
+                size="sm"
+                disabled={isPending}
+                onClick={() => handleStatusChange(status)}
+              >
+                {STATUS_ACTION_LABELS[status] ?? getStatusLabel(status)}
+              </Button>
+            ))}
           {isAdmin && (
             <select
               disabled={isPending}
