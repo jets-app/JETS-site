@@ -66,7 +66,7 @@ export default async function AdminApplicationsPage({ searchParams }: PageProps)
       {/* Status summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
-          { label: "Draft", key: "DRAFT", badgeClass: "admin-badge admin-badge-gray" },
+          { label: "Started", key: "DRAFT", badgeClass: "admin-badge admin-badge-gray" },
           { label: "Submitted", key: "SUBMITTED", badgeClass: "admin-badge admin-badge-blue" },
           { label: "In Review", key: "OFFICE_REVIEW", badgeClass: "admin-badge admin-badge-yellow" },
           { label: "Accepted", key: "ACCEPTED", badgeClass: "admin-badge admin-badge-green" },

@@ -31,6 +31,7 @@ const PIPELINE_COLUMNS: {
   color: string;
   bgColor: string;
 }[] = [
+  { status: "DRAFT", label: "Started", color: "bg-slate-400", bgColor: "bg-slate-50 dark:bg-slate-900/30" },
   { status: "SUBMITTED", label: "Submitted", color: "bg-blue-500", bgColor: "bg-blue-50 dark:bg-blue-950/30" },
   { status: "OFFICE_REVIEW", label: "Office Review", color: "bg-amber-500", bgColor: "bg-amber-50 dark:bg-amber-950/30" },
   { status: "PRINCIPAL_REVIEW", label: "Principal Review", color: "bg-purple-500", bgColor: "bg-purple-50 dark:bg-purple-950/30" },
@@ -46,7 +47,6 @@ const TERMINAL_COLUMNS: {
   label: string;
   color: string;
 }[] = [
-  { status: "DRAFT", label: "Draft", color: "bg-gray-400" },
   { status: "WAITLISTED", label: "Waitlisted", color: "bg-yellow-500" },
   { status: "REJECTED", label: "Rejected", color: "bg-red-500" },
   { status: "WITHDRAWN", label: "Withdrawn", color: "bg-gray-500" },
