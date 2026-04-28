@@ -2,6 +2,12 @@
   "name": "jets-app",
   "version": "0.1.0",
   "private": true,
+  "overrides": {
+    "underscore": "^1.13.7",
+    "uuid": "^14.0.0",
+    "fast-xml-parser": "^5.7.0",
+    "postcss": "^8.5.10"
+  },
   "scripts": {
     "dev": "next dev -p 3300",
     "build": "prisma generate && { [ \"$VERCEL_ENV\" != \"production\" ] || prisma db push --skip-generate; } && next build",

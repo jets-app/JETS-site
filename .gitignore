@@ -13,8 +13,8 @@
 # testing
 /coverage
 
-# next.js
-/.next/
+# next.js — match nested .next dirs too (the Turbopack tracer puts one under src/app)
+.next/
 /out/
 
 # production
