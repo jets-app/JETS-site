@@ -1,5 +1,5 @@
 import { auth } from "@/server/auth";
-import { isStaff } from "@/lib/roles";
+import { isStaff, isFounder } from "@/lib/roles";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Plus } from "lucide-react";
@@ -95,6 +95,10 @@ export default async function AdminApplicationsPage({ searchParams }: PageProps)
           status: params.status ?? "",
           year: defaultYear,
         }}
+        canManage={
+          session.user.role === "ADMIN" ||
+          isFounder(session.user.email ?? null)
+        }
       />
     </div>
   );
