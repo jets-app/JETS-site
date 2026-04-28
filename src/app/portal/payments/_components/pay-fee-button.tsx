@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Button } from "@/components/ui/button";
-import { CreditCard, Loader2 } from "lucide-react";
-import { createApplicationFeeCheckout } from "@/server/actions/payment.actions";
+import Link from "next/link";
+import { CreditCard } from "lucide-react";
 
+/**
+ * Sends the parent to the dedicated inline-Stripe payment page instead of
+ * trying to render a standalone checkout button. Keeps a single payment flow
+ * for the entire app (the legacy Stripe Checkout redirect was removed).
+ */
 export function PayApplicationFeeButton({
   applicationId,
   amount,
@@ -12,37 +15,13 @@ export function PayApplicationFeeButton({
   applicationId: string;
   amount: number;
 }) {
-  const [isPending, startTransition] = useTransition();
-  const [message, setMessage] = useState<string | null>(null);
-
-  function handlePay() {
-    startTransition(async () => {
-      const result = await createApplicationFeeCheckout(applicationId);
-      if (result.error) {
-        setMessage(result.error);
-      } else if ("waived" in result && result.waived) {
-        setMessage("Fee waived — no payment required!");
-      } else if ("url" in result && result.url) {
-        window.location.href = result.url;
-      } else {
-        setMessage("Payment processed!");
-      }
-    });
-  }
-
   return (
-    <div className="flex items-center gap-2">
-      <Button onClick={handlePay} disabled={isPending} size="sm">
-        {isPending ? (
-          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-        ) : (
-          <CreditCard className="mr-1.5 h-3.5 w-3.5" />
-        )}
-        Pay ${(amount / 100).toFixed(2)}
-      </Button>
-      {message && (
-        <span className="text-sm text-muted-foreground">{message}</span>
-      )}
-    </div>
+    <Link
+      href={`/portal/applications/${applicationId}/payment`}
+      className="inline-flex items-center justify-center gap-1.5 h-9 px-4 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+    >
+      <CreditCard className="h-3.5 w-3.5" />
+      Pay ${(amount / 100).toFixed(2)}
+    </Link>
   );
 }
