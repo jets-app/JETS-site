@@ -73,6 +73,8 @@ interface ApplicationsTableProps {
     status: string;
     year: string;
   };
+  /** Only ADMIN sees archive + delete row actions. */
+  canManage?: boolean;
 }
 
 const ALL_STATUSES: { value: ApplicationStatus; label: string }[] = [
@@ -96,6 +98,7 @@ export function ApplicationsTable({
   pagination,
   academicYears,
   currentFilters,
+  canManage = false,
 }: ApplicationsTableProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -230,7 +233,7 @@ export function ApplicationsTable({
       id: "actions",
       header: "",
       cell: ({ row }) => (
-        <RowActions row={row.original} />
+        <RowActions row={row.original} canManage={canManage} />
       ),
     },
   ];
@@ -394,7 +397,13 @@ export function ApplicationsTable({
   );
 }
 
-function RowActions({ row }: { row: ApplicationRow }) {
+function RowActions({
+  row,
+  canManage,
+}: {
+  row: ApplicationRow;
+  canManage: boolean;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -458,30 +467,34 @@ function RowActions({ row }: { row: ApplicationRow }) {
               <Eye className="h-3.5 w-3.5" />
               View Details
             </button>
-            <button
-              onClick={handleArchive}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted text-left"
-            >
-              {isArchived ? (
-                <>
-                  <ArchiveRestore className="h-3.5 w-3.5" />
-                  Unarchive
-                </>
-              ) : (
-                <>
-                  <Archive className="h-3.5 w-3.5" />
-                  Archive
-                </>
-              )}
-            </button>
-            <div className="border-t my-1" />
-            <button
-              onClick={handleDelete}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-red-50 text-red-600 text-left"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              Delete
-            </button>
+            {canManage && (
+              <>
+                <button
+                  onClick={handleArchive}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted text-left"
+                >
+                  {isArchived ? (
+                    <>
+                      <ArchiveRestore className="h-3.5 w-3.5" />
+                      Unarchive
+                    </>
+                  ) : (
+                    <>
+                      <Archive className="h-3.5 w-3.5" />
+                      Archive
+                    </>
+                  )}
+                </button>
+                <div className="border-t my-1" />
+                <button
+                  onClick={handleDelete}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-red-50 text-red-600 text-left"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Delete
+                </button>
+              </>
+            )}
           </div>
         </>
       )}
