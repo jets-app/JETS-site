@@ -15,14 +15,20 @@ export default async function QuickBooksSettingsPage(props: {
   }
 
   const searchParams = await props.searchParams;
-  const [status, history] = await Promise.all([
+  const [statusOrError, history] = await Promise.all([
     getQuickBooksStatus(),
     getSyncHistory(25),
   ]);
 
+  // The page already gated on ADMIN above, so this branch shouldn't fire,
+  // but the action's auth check returns an error shape we have to handle.
+  if ("error" in statusOrError) {
+    redirect("/dashboard");
+  }
+
   return (
     <QuickBooksSettingsClient
-      status={status}
+      status={statusOrError}
       history={history}
       flash={{
         error: searchParams.qb_error ?? null,

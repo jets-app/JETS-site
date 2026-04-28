@@ -3,6 +3,8 @@
 import { db } from "@/server/db";
 import { auth } from "@/server/auth";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+import { randomBytes } from "crypto";
 import {
   isMockMode,
   isQuickBooksConfigured,
@@ -25,8 +27,45 @@ async function requireAdmin() {
   return { session };
 }
 
+// ==================== OAuth State (CSRF protection) ====================
+const OAUTH_STATE_COOKIE = "jets-qb-oauth-state";
+const OAUTH_STATE_TTL_SECONDS = 60 * 10; // 10 min — long enough to complete OAuth
+
+async function issueOAuthState(): Promise<string> {
+  const state = randomBytes(32).toString("base64url");
+  const jar = await cookies();
+  jar.set(OAUTH_STATE_COOKIE, state, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: OAUTH_STATE_TTL_SECONDS,
+  });
+  return state;
+}
+
+async function consumeOAuthState(provided: string | undefined): Promise<boolean> {
+  if (!provided) return false;
+  const jar = await cookies();
+  const stored = jar.get(OAUTH_STATE_COOKIE)?.value;
+  jar.delete(OAUTH_STATE_COOKIE);
+  if (!stored) return false;
+  // Constant-time comparison to avoid timing attacks (overkill for this length
+  // but cheap and good practice).
+  if (stored.length !== provided.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < stored.length; i++) {
+    mismatch |= stored.charCodeAt(i) ^ provided.charCodeAt(i);
+  }
+  return mismatch === 0;
+}
+
 // ==================== Status ====================
 export async function getQuickBooksStatus() {
+  const check = await requireAdmin();
+  if ("error" in check) {
+    return { error: check.error };
+  }
   const state = await loadTokenState();
   return {
     connected: state.connected,
@@ -63,9 +102,10 @@ export async function getAuthorizationUrl() {
     return { error: "QuickBooks OAuth client unavailable." };
   }
 
+  const state = await issueOAuthState();
   const url = oauth.authorizeUri({
     scope: QB_SCOPES,
-    state: "jets-qb-" + Date.now(),
+    state,
   });
 
   return { url, mockMode: false as const };
@@ -99,6 +139,19 @@ export async function handleOAuthCallback(params: {
   state?: string;
   fullUrl?: string;
 }) {
+  // Auth check — only an admin can finalize a QuickBooks connection. The
+  // state cookie below pins the OAuth flow to a specific admin session.
+  const check = await requireAdmin();
+  if ("error" in check) return { error: check.error };
+
+  // CSRF: verify the `state` we issued is the one that came back. Without
+  // this an attacker could redirect a logged-in admin's browser to an attacker-
+  // controlled QuickBooks account's authorization URL.
+  const stateOk = await consumeOAuthState(params.state);
+  if (!stateOk) {
+    return { error: "Invalid OAuth state — please try connecting again." };
+  }
+
   if (!isQuickBooksConfigured()) {
     return { error: "QuickBooks not configured." };
   }
@@ -588,6 +641,10 @@ export async function bulkSyncAll() {
 
 // ==================== Sync History ====================
 export async function getSyncHistory(limit = 50) {
+  const check = await requireAdmin();
+  if ("error" in check) {
+    return { records: [], stats: { total: 0, success: 0, failed: 0, mock: 0, pending: 0 } };
+  }
   const records = await db.quickBooksSync.findMany({
     orderBy: { createdAt: "desc" },
     take: limit,
