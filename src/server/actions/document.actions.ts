@@ -8,13 +8,16 @@ import type {
   DocumentStatus,
   DocumentRecipientType,
 } from "@prisma/client";
+import { isStaff } from "@/lib/roles";
 
 // ---------- Helpers ----------
 
+// Allows any staff role (admin/principal/secretary/reviewer). Kept the name
+// historically — the function predates the SECRETARY role.
 async function requireAdmin() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
-    throw new Error("Unauthorized: Admin access required");
+  if (!session?.user || !isStaff(session.user.role)) {
+    throw new Error("Unauthorized: Staff access required");
   }
   return session.user;
 }

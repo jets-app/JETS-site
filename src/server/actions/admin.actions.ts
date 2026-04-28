@@ -6,13 +6,28 @@ import { revalidatePath } from "next/cache";
 import type { ApplicationStatus, ApplicationType } from "@prisma/client";
 import { triggerStatusNotifications } from "@/server/notifications";
 import { recordAudit } from "@/server/security/audit-log";
+import { isStaff } from "@/lib/roles";
 
 // ---------- Helpers ----------
 
+/**
+ * For sensitive ops only: archive, unarchive, delete, billing, system settings.
+ * Most reads + normal status changes use requireStaff() instead so principals
+ * and secretaries can do their day-to-day work.
+ */
 async function requireAdmin() {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") {
     throw new Error("Unauthorized: Admin access required");
+  }
+  return session.user;
+}
+
+/** Any staff role (admin/principal/secretary/reviewer). */
+async function requireStaff() {
+  const session = await auth();
+  if (!session?.user || !isStaff(session.user.role)) {
+    throw new Error("Unauthorized: Staff access required");
   }
   return session.user;
 }
@@ -102,7 +117,7 @@ export interface ApplicationFilters {
 }
 
 export async function getAllApplications(filters?: ApplicationFilters) {
-  await requireAdmin();
+  await requireStaff();
 
   const page = filters?.page ?? 1;
   const pageSize = filters?.pageSize ?? 20;
@@ -186,7 +201,7 @@ export async function getAllApplications(filters?: ApplicationFilters) {
 }
 
 export async function getApplicationDetail(id: string) {
-  await requireAdmin();
+  await requireStaff();
 
   const application = await db.application.findUnique({
     where: { id },
@@ -248,7 +263,7 @@ export async function addApplicationNote(
   applicationId: string,
   content: string
 ) {
-  const user = await requireAdmin();
+  const user = await requireStaff();
 
   if (!content.trim()) {
     throw new Error("Note content cannot be empty");
@@ -289,7 +304,7 @@ export async function updateApplicationStatus(
   applicationId: string,
   newStatus: ApplicationStatus
 ) {
-  const user = await requireAdmin();
+  const user = await requireStaff();
 
   const application = await db.application.findUnique({
     where: { id: applicationId },
@@ -348,7 +363,7 @@ export async function updateApplicationStatus(
 }
 
 export async function getApplicationStats() {
-  await requireAdmin();
+  await requireStaff();
 
   const settings = await db.systemSettings.findFirst();
   const academicYear = settings?.currentAcademicYear ?? "2026-2027";
@@ -368,7 +383,7 @@ export async function getApplicationStats() {
 }
 
 export async function getDashboardStats() {
-  await requireAdmin();
+  await requireStaff();
 
   const settings = await db.systemSettings.findFirst();
   const academicYear = settings?.currentAcademicYear ?? "2026-2027";
@@ -419,7 +434,7 @@ export async function getDashboardStats() {
 }
 
 export async function getAcademicYears() {
-  await requireAdmin();
+  await requireStaff();
 
   const years = await db.application.findMany({
     select: { academicYear: true },
@@ -491,7 +506,7 @@ export async function deleteApplication(applicationId: string) {
 }
 
 export async function getApplicationsByStatus(academicYear?: string) {
-  await requireAdmin();
+  await requireStaff();
 
   const settings = await db.systemSettings.findFirst();
   const year = academicYear ?? settings?.currentAcademicYear ?? "2026-2027";
@@ -532,7 +547,7 @@ export async function moveApplicationStatus(
   applicationId: string,
   newStatus: ApplicationStatus
 ) {
-  const user = await requireAdmin();
+  const user = await requireStaff();
 
   const application = await db.application.findUnique({
     where: { id: applicationId },

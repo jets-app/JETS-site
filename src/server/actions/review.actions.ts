@@ -22,7 +22,12 @@ async function requireReviewer() {
     throw new Error("Unauthorized: Login required");
   }
   const role = session.user.role;
-  if (role !== "PRINCIPAL" && role !== "REVIEWER" && role !== "ADMIN") {
+  if (
+    role !== "PRINCIPAL" &&
+    role !== "REVIEWER" &&
+    role !== "ADMIN" &&
+    role !== "SECRETARY"
+  ) {
     throw new Error("Unauthorized: Reviewer access required");
   }
   return session.user;
@@ -42,7 +47,7 @@ async function requireAdminOrPrincipal() {
     throw new Error("Unauthorized: Login required");
   }
   const role = session.user.role;
-  if (role !== "ADMIN" && role !== "PRINCIPAL") {
+  if (role !== "ADMIN" && role !== "PRINCIPAL" && role !== "SECRETARY") {
     throw new Error("Unauthorized: Admin or Principal access required");
   }
   return session.user;
