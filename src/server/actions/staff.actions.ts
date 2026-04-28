@@ -156,3 +156,87 @@ export async function resendPasswordSetup(userId: string) {
     error: result.error,
   };
 }
+
+export async function updateStaff(input: {
+  userId: string;
+  name: string;
+  email: string;
+  role: StaffRole;
+}) {
+  const me = await requireAdmin();
+
+  if (!STAFF_ROLES.includes(input.role)) {
+    return { error: "Invalid role." };
+  }
+
+  const user = await db.user.findUnique({ where: { id: input.userId } });
+  if (!user) return { error: "User not found." };
+
+  // Don't let an admin downgrade themselves to a non-admin and lock themselves out
+  if (user.id === me.id && input.role !== "ADMIN") {
+    return { error: "You can't change your own role away from Admin." };
+  }
+
+  const newEmail = input.email.toLowerCase().trim();
+  const newName = input.name.trim();
+
+  // If email is changing, make sure it's not already taken
+  if (newEmail !== user.email) {
+    const existing = await db.user.findUnique({ where: { email: newEmail } });
+    if (existing && existing.id !== user.id) {
+      return { error: "That email is already in use by another account." };
+    }
+  }
+
+  await db.user.update({
+    where: { id: user.id },
+    data: { name: newName, email: newEmail, role: input.role },
+  });
+
+  revalidatePath("/admin/settings/staff");
+  return { success: true };
+}
+
+export async function deleteStaff(userId: string) {
+  const me = await requireAdmin();
+
+  if (userId === me.id) {
+    return { error: "You can't delete your own account." };
+  }
+
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: { id: true, role: true, email: true },
+  });
+  if (!user) return { error: "User not found." };
+
+  // Only allow deleting staff accounts via this action — never a parent
+  if (!(STAFF_ROLES as readonly string[]).includes(user.role)) {
+    return { error: "Only staff accounts can be removed here." };
+  }
+
+  // If they have any audit/login history, downgrade to INACTIVE PARENT instead
+  // of hard-delete to preserve history. Otherwise, hard-delete.
+  const [auditCount, loginCount] = await Promise.all([
+    db.auditLog.count({ where: { actorId: user.id } }),
+    db.loginEvent.count({ where: { userId: user.id } }),
+  ]);
+
+  if (auditCount > 0 || loginCount > 0) {
+    // Soft-delete: strip access by demoting + deactivating, keep historical records
+    await db.user.update({
+      where: { id: user.id },
+      data: { role: "PARENT", status: "INACTIVE" },
+    });
+    // Wipe any pending password reset tokens for this email
+    await db.passwordResetToken.deleteMany({ where: { email: user.email } });
+    revalidatePath("/admin/settings/staff");
+    return { success: true, mode: "deactivated" as const };
+  }
+
+  await db.passwordResetToken.deleteMany({ where: { email: user.email } });
+  await db.user.delete({ where: { id: user.id } });
+
+  revalidatePath("/admin/settings/staff");
+  return { success: true, mode: "deleted" as const };
+}

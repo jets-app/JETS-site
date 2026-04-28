@@ -10,11 +10,15 @@ export default async function DashboardRedirect() {
 
   const role = session.user.role;
 
-  if (role === "ADMIN") {
+  // All staff (admin, principal, secretary, reviewer) get the full admin
+  // experience — the old /review/dashboard was a legacy stripped-down view.
+  if (
+    role === "ADMIN" ||
+    role === "PRINCIPAL" ||
+    role === "SECRETARY" ||
+    role === "REVIEWER"
+  ) {
     redirect("/admin/dashboard");
-  } else if (role === "PRINCIPAL" || role === "REVIEWER") {
-    redirect("/review/dashboard");
-  } else {
-    redirect("/portal/dashboard");
   }
+  redirect("/portal/dashboard");
 }
