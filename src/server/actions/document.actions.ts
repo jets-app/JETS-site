@@ -722,13 +722,14 @@ export async function getDocumentStats() {
 
 // ---------- Seed Default Templates ----------
 
-export async function seedDefaultTemplates() {
+/**
+ * Seeds JETS-specific document templates. Upserts by (name, type) so re-running
+ * picks up content updates from this file. Set force=true to overwrite even
+ * when an admin has hand-edited the template (use sparingly).
+ */
+export async function seedDefaultTemplates(opts?: { force?: boolean }) {
   await requireAdmin();
-
-  const existingCount = await db.documentTemplate.count();
-  if (existingCount > 0) {
-    return { message: "Templates already exist. Skipping seed.", seeded: 0 };
-  }
+  const force = opts?.force ?? false;
 
   const defaultTemplates: Array<{
     name: string;
@@ -737,40 +738,52 @@ export async function seedDefaultTemplates() {
     content: { fields: Array<{ name: string; label: string; type: string; required: boolean }> };
   }> = [
     {
-      name: "Medical Form",
+      name: "Medical Treatment Form",
       type: "MEDICAL_FORM",
       content: {
         fields: [
-          { name: "studentName", label: "Student Full Name", type: "text", required: true },
-          { name: "dateOfBirth", label: "Date of Birth", type: "date", required: true },
-          { name: "allergies", label: "Known Allergies", type: "textarea", required: false },
-          { name: "medications", label: "Current Medications", type: "textarea", required: false },
-          { name: "insuranceProvider", label: "Insurance Provider", type: "text", required: true },
-          { name: "insurancePolicyNumber", label: "Insurance Policy #", type: "text", required: true },
-          { name: "physicianName", label: "Physician Name", type: "text", required: true },
-          { name: "physicianPhone", label: "Physician Phone", type: "tel", required: true },
+          { name: "allergies", label: "Known allergies (food, medication, environmental, etc.)", type: "textarea", required: true },
+          { name: "conditions", label: "Existing health conditions (asthma, diabetes, epilepsy, anxiety, etc.)", type: "textarea", required: true },
+          { name: "medications", label: "Current medications, dosage, and reason prescribed", type: "textarea", required: false },
+          { name: "physicianName", label: "Family doctor / pediatrician name", type: "text", required: true },
+          { name: "physicianPhone", label: "Family doctor phone", type: "tel", required: true },
+          { name: "insuranceProvider", label: "Primary insurance provider", type: "text", required: true },
+          { name: "insurancePolicyNumber", label: "Policy number", type: "text", required: true },
+          { name: "insuranceGroupNumber", label: "Group number (if applicable)", type: "text", required: false },
+          { name: "subscriberName", label: "Subscriber / policy-holder name", type: "text", required: true },
+          { name: "emergencyContactName", label: "Local emergency contact (not living with you)", type: "text", required: true },
+          { name: "emergencyContactRelation", label: "Relationship to student", type: "text", required: true },
+          { name: "emergencyContactPhone", label: "Emergency contact phone", type: "tel", required: true },
+          { name: "counselingConsent", label: "I authorize JETS counselors, parents, and staff to share information about my counseling for the purpose of supporting the student's wellbeing.", type: "checkbox", required: true },
         ],
       },
-      htmlContent: `<div style="font-family: Georgia, serif; max-width: 700px; margin: 0 auto;">
-  <h2 style="text-align: center; color: #7a0012; border-bottom: 2px solid #7a0012; padding-bottom: 12px;">JETS School &mdash; Medical Information Form</h2>
+      htmlContent: `<div style="font-family: Georgia, serif; max-width: 720px; margin: 0 auto; color: #1a1a1a;">
+  <h2 style="text-align: center; color: #7a0012; border-bottom: 2px solid #7a0012; padding-bottom: 12px;">JETS School &mdash; Medical Treatment Form</h2>
   <p style="color: #555; text-align: center; margin-bottom: 24px;">Academic Year {{academicYear}}</p>
 
-  <p>This form authorizes JETS School to take any necessary emergency medical action for the student listed below. Please complete all fields accurately.</p>
+  <h3 style="color: #7a0012; margin-top: 24px;">Student</h3>
+  <p><strong>Name:</strong> {{studentName}} &nbsp;&middot;&nbsp; <strong>Date of Birth:</strong> {{dateOfBirth}}</p>
 
-  <h3 style="color: #7a0012; margin-top: 24px;">Student Information</h3>
-  <p><strong>Student Name:</strong> {{studentName}}</p>
-  <p><strong>Date of Birth:</strong> {{dateOfBirth}}</p>
+  <h3 style="color: #7a0012; margin-top: 24px;">Medical history</h3>
+  <p>Please complete the fields below with allergies, current health conditions, and any medications. Accurate information protects your son in an emergency.</p>
 
-  <h3 style="color: #7a0012; margin-top: 24px;">Medical Details</h3>
-  <p>Please provide the following information in the fields below.</p>
+  <h3 style="color: #7a0012; margin-top: 24px;">Family doctor</h3>
+  <p>Provide your family doctor / pediatrician's name and phone in the fields below so JETS staff can coordinate with them when needed.</p>
 
-  <h3 style="color: #7a0012; margin-top: 24px;">Insurance Information</h3>
-  <p>Please fill in your insurance details in the fields below.</p>
+  <h3 style="color: #7a0012; margin-top: 24px;">Insurance</h3>
+  <p>Please provide primary insurance details in the fields below. JETS does not collect Social Security numbers; your insurance card information is sufficient for billing.</p>
 
-  <h3 style="color: #7a0012; margin-top: 24px;">Authorization</h3>
-  <p>I, the undersigned parent/guardian, authorize JETS School and its staff to seek emergency medical treatment for my child in the event that I cannot be reached. I understand that every effort will be made to contact me first.</p>
+  <h3 style="color: #7a0012; margin-top: 24px;">Local emergency contact</h3>
+  <p>Provide one local relative or family friend (not living with the student) who can be reached if neither parent is available.</p>
 
-  <p style="margin-top: 24px; color: #555; font-size: 0.9em;">Date: {{date}}</p>
+  <h3 style="color: #7a0012; margin-top: 24px;">Authorization for emergency medical treatment</h3>
+  <p>I, {{parentName}}, parent/guardian of {{studentName}}, authorize JETS School and its staff to seek emergency medical, surgical, or psychological care for my child <strong>when I cannot be reached in time</strong> and the care provider deems treatment immediately necessary. JETS will make every reasonable effort to contact me first. I will be notified of any treatment as soon as possible afterward.</p>
+  <p>I authorize my insurance benefits to be paid directly to the care provider and understand I am financially responsible for any balance not covered by insurance. I authorize JETS or my insurance company to release any information required to process claims.</p>
+
+  <h3 style="color: #7a0012; margin-top: 24px;">Counseling information sharing</h3>
+  <p>To allow JETS counselors, parents, and relevant staff to coordinate care when appropriate, please check the consent box below. This applies only to counseling notes shared between JETS staff, your child's counselor, and you as the parent/guardian.</p>
+
+  <p style="margin-top: 32px; color: #555; font-size: 0.85em;">Date: {{date}} &nbsp;&middot;&nbsp; JETS School &middot; 16601 Rinaldi St., Granada Hills, CA 91344 &middot; (818) 831-3000</p>
 </div>`,
     },
     {
@@ -825,40 +838,62 @@ export async function seedDefaultTemplates() {
       type: "TUITION_CONTRACT",
       content: {
         fields: [
-          { name: "tuitionAmount", label: "Annual Tuition Amount", type: "text", required: false },
-          { name: "paymentPlan", label: "Preferred Payment Plan", type: "select", required: false },
+          { name: "paymentPlan", label: "Payment plan: Annual (full), Semi-Annual (2x), Quarterly (4x), or Monthly (10x)", type: "select", required: true },
+          { name: "billingAddress", label: "Billing address (street, city, state, zip)", type: "text", required: true },
+          { name: "agreeToTerms", label: "I have read, reviewed, and understand the entire tuition contract and agree to all provisions.", type: "checkbox", required: true },
         ],
       },
-      htmlContent: `<div style="font-family: Georgia, serif; max-width: 700px; margin: 0 auto;">
+      htmlContent: `<div style="font-family: Georgia, serif; max-width: 720px; margin: 0 auto; color: #1a1a1a;">
   <h2 style="text-align: center; color: #7a0012; border-bottom: 2px solid #7a0012; padding-bottom: 12px;">JETS School &mdash; Tuition Contract</h2>
   <p style="color: #555; text-align: center; margin-bottom: 24px;">Academic Year {{academicYear}}</p>
 
-  <p><strong>Student Name:</strong> {{studentName}}</p>
-  <p><strong>Parent/Guardian:</strong> {{parentName}}</p>
+  <div style="background: #fef7f7; border-left: 4px solid #A30018; padding: 10px 14px; margin-bottom: 20px; font-size: 0.9em;">
+    <strong>Note:</strong> This contract is a working draft pending final attorney review. Once approved by counsel the bracketed flags will be removed.
+  </div>
 
-  <h3 style="color: #7a0012; margin-top: 24px;">Tuition Details</h3>
-  <p><strong>Annual Tuition:</strong> {{tuitionAmount}}</p>
-  <p>If a scholarship has been awarded, the adjusted amount will be reflected above.</p>
+  <p><strong>Student:</strong> {{studentName}} &nbsp;&middot;&nbsp; <strong>Parent / Guardian:</strong> {{parentName}}</p>
 
-  <h3 style="color: #7a0012; margin-top: 24px;">Payment Terms</h3>
+  <h3 style="color: #7a0012; margin-top: 24px;">Tuition for {{academicYear}}</h3>
+  <p><strong>Total tuition:</strong> {{tuitionAmount}}</p>
+  <p>If a scholarship or Pay-It-Forward award has been granted, the amount above is the net balance after that award.</p>
+
+  <h3 style="color: #7a0012; margin-top: 24px;">Payment</h3>
   <ul>
-    <li>Tuition is due in full by August 15th, or according to an approved payment plan.</li>
-    <li>Payment plans include: Annual (full payment), Semi-Annual (2 payments), Quarterly (4 payments), or Monthly (10 payments).</li>
-    <li>A late fee of $50 will be assessed for payments received more than 10 days past due.</li>
-    <li>Returned checks or failed electronic payments will incur a $35 fee.</li>
+    <li>Tuition may be paid in full at enrollment, or split across an approved plan: Annual, Semi-Annual (2 payments), Quarterly (4 payments), or Monthly (10 payments &mdash; first due at enrollment, the remaining nine due on the 1st of the month from September through May).</li>
+    <li>A <strong>$50 late fee</strong> applies to payments more than 10 days past due. Three late payments may result in suspension or termination of enrollment.</li>
+    <li>Returned checks or failed electronic payments incur a <strong>$35 fee</strong>.</li>
+    <li>JETS uses Stripe for credit and debit card payments; <strong>card details are entered through our secure payment portal</strong> and are not collected on this contract.</li>
   </ul>
 
-  <h3 style="color: #7a0012; margin-top: 24px;">Withdrawal Policy</h3>
+  <h3 style="color: #7a0012; margin-top: 24px;">Parent responsibilities</h3>
+  <ol>
+    <li>Review the Student Handbook with your son and abide by its guidelines.</li>
+    <li>Arrange housing for your son when school is not in session, and notify JETS of those arrangements at least 10 days in advance. If you do not, JETS may help locate an alternative; in that case the family is responsible for a minimum of $100 per day of additional accommodation costs.</li>
+    <li>Ensure your son arrives with everything needed to live away from home (bedding, clothing per the handbook, etc.).</li>
+    <li>Provide weekly spending money (minimum $25). JETS recommends giving spending money to the office for safekeeping; JETS is not responsible for funds not held by the office.</li>
+    <li>Provide proof of medical insurance prior to your son's arrival and report any coverage changes during the year.</li>
+  </ol>
+
+  <h3 style="color: #7a0012; margin-top: 24px;">Withdrawal &amp; refunds</h3>
   <ul>
-    <li>Written notice of withdrawal must be provided at least 30 days in advance.</li>
-    <li>Refunds will be prorated based on the date of withdrawal.</li>
-    <li>No refunds will be issued after the midpoint of the academic year.</li>
+    <li>Application processing and enrollment fees are non-refundable.</li>
+    <li>Withdrawal requires <strong>30 days written notice</strong> to the administration. Payments are due for the month of notice plus two additional installments.</li>
+    <li>If a student is withdrawn after April 1, all remaining tuition payments for the balance of the school year are due.</li>
   </ul>
 
-  <h3 style="color: #7a0012; margin-top: 24px;">Agreement</h3>
-  <p>By signing below, I agree to the tuition amount and payment terms as described above. I understand that failure to meet payment obligations may result in the student being unable to continue enrollment.</p>
+  <h3 style="color: #7a0012; margin-top: 24px;">Hold harmless</h3>
+  <p>I/we, the parent(s) or legal guardian(s), authorize my son's participation in JETS programs and activities, including school-related field trips. I/we assume the ordinary risks incidental to those activities and release JETS, its directors, employees, and agents from claims arising from those ordinary risks.</p>
+  <p>I/we authorize JETS staff to (a) seek emergency medical care when I cannot be reached in time, (b) administer reasonable discipline consistent with the Student Handbook, and (c) supervise field-trip and activity participation. I/we understand JETS is not a legal guardian for matters outside these specific authorities.</p>
+  <p>I/we understand this agreement may be terminated and my son dismissed for repeated failure to comply with the Student Handbook or the terms of this contract.</p>
 
-  <p style="margin-top: 24px; color: #555; font-size: 0.9em;">Date: {{date}}</p>
+  <h3 style="color: #7a0012; margin-top: 24px;">Binding arbitration (Bais Din)</h3>
+  <p>Any dispute arising out of or related to this agreement &mdash; including claims of negligence or malpractice &mdash; will be decided exclusively by binding arbitration before a Bais Din applying Jewish law. This serves as binding arbitration under California law; a court of competent jurisdiction may enter judgment on any award.</p>
+  <p>By signing, the parties give up the right to a court trial, jury trial, and the right to appeal an arbitration award. Each party has the right to consult independent counsel before signing.</p>
+
+  <h3 style="color: #7a0012; margin-top: 24px;">Acknowledgment</h3>
+  <p>By signing below, I/we confirm that I/we have read this entire contract, including the binding arbitration clause, and agree to be bound by all of its provisions.</p>
+
+  <p style="margin-top: 32px; color: #555; font-size: 0.85em;">Date: {{date}} &nbsp;&middot;&nbsp; JETS School &middot; 16601 Rinaldi St., Granada Hills, CA 91344</p>
 </div>`,
     },
     {
@@ -903,59 +938,102 @@ export async function seedDefaultTemplates() {
 </div>`,
     },
     {
-      name: "Pay It Forward Scholarship Contract",
+      name: "Pay It Forward Contract",
       type: "SCHOLARSHIP_CONTRACT",
       content: {
         fields: [
-          { name: "scholarshipAmount", label: "Scholarship Amount", type: "text", required: false },
+          { name: "agreeToCap", label: "I understand my total Pay It Forward repayment will never exceed the scholarship amount listed above.", type: "checkbox", required: true },
+          { name: "agreeToTerms", label: "I have read and agree to all the terms of the Pay It Forward Contract.", type: "checkbox", required: true },
         ],
       },
-      htmlContent: `<div style="font-family: Georgia, serif; max-width: 700px; margin: 0 auto;">
-  <h2 style="text-align: center; color: #7a0012; border-bottom: 2px solid #7a0012; padding-bottom: 12px;">JETS School &mdash; Pay It Forward Scholarship Contract</h2>
+      htmlContent: `<div style="font-family: Georgia, serif; max-width: 720px; margin: 0 auto; color: #1a1a1a;">
+  <h2 style="text-align: center; color: #7a0012; border-bottom: 2px solid #7a0012; padding-bottom: 12px;">JETS School &mdash; Pay It Forward Contract</h2>
   <p style="color: #555; text-align: center; margin-bottom: 24px;">Academic Year {{academicYear}}</p>
 
-  <p><strong>Student Name:</strong> {{studentName}}</p>
-  <p><strong>Scholarship Amount:</strong> {{scholarshipAmount}}</p>
+  <div style="background: #fef7f7; border-left: 4px solid #A30018; padding: 10px 14px; margin-bottom: 20px; font-size: 0.9em;">
+    <strong>Note:</strong> This contract is a working draft. Final attorney review for compliance with California Income Share Agreement law (DFPI registration) is pending before this is used for new awards.
+  </div>
 
-  <h3 style="color: #7a0012; margin-top: 24px;">Scholarship Terms</h3>
-  <p>You have been awarded a scholarship from the JETS School "Pay It Forward" fund. This scholarship is funded by alumni and community members who believe in giving back. In accepting this scholarship, you commit to the following:</p>
-
-  <h3 style="color: #7a0012; margin-top: 24px;">Student Commitments</h3>
-  <ul>
-    <li><strong>Academic Excellence:</strong> Maintain satisfactory academic standing throughout the school year.</li>
-    <li><strong>Community Service:</strong> Complete a minimum of 20 hours of community service during the academic year.</li>
-    <li><strong>Pay It Forward:</strong> When you are financially able after completing your education, contribute back to the JETS School scholarship fund to help future students.</li>
-    <li><strong>Good Standing:</strong> Remain in good behavioral standing as defined in the Student Handbook.</li>
-  </ul>
-
-  <h3 style="color: #7a0012; margin-top: 24px;">Scholarship Conditions</h3>
-  <ul>
-    <li>This scholarship is for the {{academicYear}} academic year only and must be renewed annually.</li>
-    <li>The scholarship may be revoked if the student fails to meet the commitments above.</li>
-    <li>This scholarship cannot be combined with other JETS School financial awards unless approved by the administration.</li>
-  </ul>
+  <h3 style="color: #7a0012; margin-top: 24px;">The Pay It Forward idea</h3>
+  <p>JETS believes every motivated student deserves a JETS education regardless of family finances. Through the Pay It Forward (PIF) Program we offer <strong>deferred tuition &mdash; an interest-free advance from JETS that you repay only when you can</strong>, so we can fund the next student in need.</p>
 
   <h3 style="color: #7a0012; margin-top: 24px;">Acknowledgment</h3>
-  <p>By signing below, I acknowledge that I have read, understand, and agree to the terms of this scholarship. I commit to honoring the "Pay It Forward" spirit of this award.</p>
+  <p>I, {{studentName}} (the &ldquo;Pledger&rdquo;), acknowledge that during my enrollment at JETS I have received or may receive financial consideration in the form of deferred tuition through the Pay It Forward Program. The deferred tuition is a debenture from JETS, not a subsidy or concession.</p>
+  <p><strong>Total deferred tuition awarded:</strong> {{scholarshipAmount}}</p>
 
-  <p style="margin-top: 24px; color: #555; font-size: 0.9em;">Date: {{date}}</p>
+  <h3 style="color: #7a0012; margin-top: 24px;">My commitment</h3>
+  <p>As a member of the JETS learning community, I affirm my commitment <em>(bli neder)</em> to the Pay It Forward Program and agree to the following:</p>
+  <ol>
+    <li>Upon my transition from JETS, I will receive an accounting from the school of the full deferred-tuition amount.</li>
+    <li>Once I am gainfully employed (defined below), I will donate <strong>10% of my gross annual income</strong> to JETS each year until my deferred tuition has been repaid.</li>
+    <li><strong>Total payment cap.</strong> The cumulative amount I am required to pay back will <strong>never exceed the original deferred-tuition amount listed above</strong> &mdash; not 10x, not 1.5x, not even slightly more. Once I have paid that amount in total, my obligation under this contract ends.</li>
+  </ol>
+
+  <h3 style="color: #7a0012; margin-top: 24px;">Income floor</h3>
+  <p>Repayment is paused for any year in which my gross annual income is below <strong>$50,000</strong> (adjusted for inflation every five years). Years below the floor do not extend the maximum term.</p>
+
+  <h3 style="color: #7a0012; margin-top: 24px;">Maximum term</h3>
+  <p>My obligation under this contract ends automatically <strong>10 years</strong> after my transition from JETS, even if I have not paid the full deferred-tuition amount. After year 10, no further payment is owed.</p>
+
+  <h3 style="color: #7a0012; margin-top: 24px;">Hardship pause</h3>
+  <p>I may request a temporary pause for hardship (job loss, serious illness, family emergency, etc.). JETS will pause my obligation in good faith for up to 12 consecutive months at a time. Pause periods do not extend the 10-year maximum term.</p>
+
+  <h3 style="color: #7a0012; margin-top: 24px;">What I'll provide</h3>
+  <p>I'll provide a copy of my annual tax filing each year my obligation is active, so JETS can calculate my 10% contribution. JETS keeps this confidential.</p>
+
+  <h3 style="color: #7a0012; margin-top: 24px;">Why this matters</h3>
+  <p>Donations from PIF alumni are critical to the operating viability of JETS. Every dollar you pay forward funds another student who otherwise couldn't attend. Donations are made annually, at minimum.</p>
+
+  <h3 style="color: #7a0012; margin-top: 24px;">Disputes (Bais Din)</h3>
+  <p>Any dispute arising out of or related to this agreement will be settled exclusively by arbitration in accordance with the rules of a Bais Din.</p>
+
+  <h3 style="color: #7a0012; margin-top: 24px;">Acknowledgment</h3>
+  <p>By signing below, I acknowledge that I have read, understand, and agree to all the terms above &mdash; especially the <strong>cap of 1&times; the deferred-tuition amount</strong>, the income floor, the 10-year maximum, and the hardship pause.</p>
+
+  <p style="margin-top: 32px; color: #555; font-size: 0.85em;">Date: {{date}} &nbsp;&middot;&nbsp; JETS School &middot; 16601 Rinaldi St., Granada Hills, CA 91344</p>
 </div>`,
     },
   ];
 
-  let seeded = 0;
+  let created = 0;
+  let updated = 0;
+  let skipped = 0;
   for (const template of defaultTemplates) {
-    await db.documentTemplate.create({
-      data: {
-        name: template.name,
-        type: template.type,
-        htmlContent: template.htmlContent,
-        content: JSON.parse(JSON.stringify(template.content)),
-      },
+    const existing = await db.documentTemplate.findFirst({
+      where: { type: template.type, name: template.name },
     });
-    seeded++;
+    if (existing) {
+      // Skip if admin has bumped the version (manual edit) and force is not set.
+      if (!force && existing.version > 1) {
+        skipped++;
+        continue;
+      }
+      await db.documentTemplate.update({
+        where: { id: existing.id },
+        data: {
+          htmlContent: template.htmlContent,
+          content: JSON.parse(JSON.stringify(template.content)),
+          isActive: true,
+          version: { increment: 1 },
+        },
+      });
+      updated++;
+    } else {
+      await db.documentTemplate.create({
+        data: {
+          name: template.name,
+          type: template.type,
+          htmlContent: template.htmlContent,
+          content: JSON.parse(JSON.stringify(template.content)),
+        },
+      });
+      created++;
+    }
   }
 
   revalidatePath("/admin/documents");
-  return { message: `Successfully seeded ${seeded} default templates.`, seeded };
+  return {
+    message: `${created} created, ${updated} updated, ${skipped} skipped (manually edited; pass force=true to overwrite).`,
+    seeded: created + updated,
+  };
 }
