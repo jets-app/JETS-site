@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/avatar";
 import {
   updateProfile,
-  updateEmail,
   changePassword,
   signOutAllSessions,
 } from "@/server/actions/profile.actions";
@@ -141,14 +140,21 @@ export function ProfileForm({ user }: { user: ProfileUser }) {
   const handleSaveEmail = () => {
     setEmailFeedback(null);
     startEmailTransition(async () => {
-      const res = await updateEmail(newEmail, emailPassword);
+      const { requestEmailChange } = await import(
+        "@/server/actions/email-change.actions"
+      );
+      const res = await requestEmailChange({
+        newEmail,
+        currentPassword: emailPassword,
+      });
       if (res?.error) {
         setEmailFeedback({ type: "error", message: res.error });
       } else {
         setEmailFeedback({
           type: "success",
           message:
-            "Email updated. You may need to sign in again next time to refresh your session.",
+            res.message ??
+            `Confirmation sent to ${newEmail}. Click the link there to finalize. We've also notified your current email so you can revert if this wasn't you.`,
         });
         setNewEmail("");
         setEmailPassword("");
