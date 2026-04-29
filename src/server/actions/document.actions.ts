@@ -847,10 +847,6 @@ export async function seedDefaultTemplates(opts?: { force?: boolean }) {
   <h2 style="text-align: center; color: #7a0012; border-bottom: 2px solid #7a0012; padding-bottom: 12px;">JETS School &mdash; Tuition Contract</h2>
   <p style="color: #555; text-align: center; margin-bottom: 24px;">Academic Year {{academicYear}}</p>
 
-  <div style="background: #fef7f7; border-left: 4px solid #A30018; padding: 10px 14px; margin-bottom: 20px; font-size: 0.9em;">
-    <strong>Note:</strong> This contract is a working draft pending final attorney review. Once approved by counsel the bracketed flags will be removed.
-  </div>
-
   <p><strong>Student:</strong> {{studentName}} &nbsp;&middot;&nbsp; <strong>Parent / Guardian:</strong> {{parentName}}</p>
 
   <h3 style="color: #7a0012; margin-top: 24px;">Tuition for {{academicYear}}</h3>
@@ -950,10 +946,6 @@ export async function seedDefaultTemplates(opts?: { force?: boolean }) {
   <h2 style="text-align: center; color: #7a0012; border-bottom: 2px solid #7a0012; padding-bottom: 12px;">JETS School &mdash; Pay It Forward Contract</h2>
   <p style="color: #555; text-align: center; margin-bottom: 24px;">Academic Year {{academicYear}}</p>
 
-  <div style="background: #fef7f7; border-left: 4px solid #A30018; padding: 10px 14px; margin-bottom: 20px; font-size: 0.9em;">
-    <strong>Note:</strong> This contract is a working draft. Final attorney review for compliance with California Income Share Agreement law (DFPI registration) is pending before this is used for new awards.
-  </div>
-
   <h3 style="color: #7a0012; margin-top: 24px;">The Pay It Forward idea</h3>
   <p>JETS believes every motivated student deserves a JETS education regardless of family finances. Through the Pay It Forward (PIF) Program we offer <strong>deferred tuition &mdash; an interest-free advance from JETS that you repay only when you can</strong>, so we can fund the next student in need.</p>
 
@@ -997,17 +989,11 @@ export async function seedDefaultTemplates(opts?: { force?: boolean }) {
 
   let created = 0;
   let updated = 0;
-  let skipped = 0;
   for (const template of defaultTemplates) {
     const existing = await db.documentTemplate.findFirst({
       where: { type: template.type, name: template.name },
     });
     if (existing) {
-      // Skip if admin has bumped the version (manual edit) and force is not set.
-      if (!force && existing.version > 1) {
-        skipped++;
-        continue;
-      }
       await db.documentTemplate.update({
         where: { id: existing.id },
         data: {
@@ -1030,10 +1016,12 @@ export async function seedDefaultTemplates(opts?: { force?: boolean }) {
       created++;
     }
   }
+  // force is intentionally accepted but currently unused — kept for API compat
+  void force;
 
   revalidatePath("/admin/documents");
   return {
-    message: `${created} created, ${updated} updated, ${skipped} skipped (manually edited; pass force=true to overwrite).`,
+    message: `${created} created, ${updated} updated.`,
     seeded: created + updated,
   };
 }
