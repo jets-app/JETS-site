@@ -159,6 +159,7 @@ model User {
   interviewAvailability   InterviewAvailability[]
   loginEvents             LoginEvent[]
   auditLogs               AuditLog[]
+  emailChangeRequests     EmailChangeRequest[]
 
   @@index([role])
 }
@@ -206,6 +207,27 @@ model PasswordResetToken {
   expires DateTime
 
   @@unique([email, token])
+}
+
+// Tracks pending and recently-completed email change requests so we can:
+//   1. Block the change until the NEW address clicks "confirm"
+//   2. Let the OLD address click "revert" within 24h of confirmation
+// in case the change was malicious (account takeover scenario).
+model EmailChangeRequest {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  oldEmail     String
+  newEmail     String
+  confirmToken String    @unique
+  confirmedAt  DateTime?
+  revertToken  String    @unique
+  revertedAt   DateTime?
+  expiresAt    DateTime
+  createdAt    DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 // ==================== APPLICATION ====================
