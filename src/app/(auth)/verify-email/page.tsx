@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { CheckCircle2, XCircle, Mail } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
 import { verifyEmailToken } from "@/server/actions/email-verification.actions";
+import { PendingVerifyClient } from "./_components/pending-verify-client";
 
 interface PageProps {
   searchParams: Promise<{ token?: string }>;
@@ -14,44 +15,11 @@ export default async function VerifyEmailPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const token = params.token;
 
-  // No token in the URL — show a "check your inbox" landing for users who
-  // arrived from the post-signup screen.
+  // No token → "check your inbox" landing for the device the user registered on.
+  // Polls every 3s so it auto-redirects when the user clicks the link on
+  // another device (e.g. their phone).
   if (!token) {
-    return (
-      <div className="space-y-8 text-center">
-        <div className="flex justify-center">
-          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-            <Mail className="h-6 w-6 text-primary" />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <h1 className="text-lg font-semibold tracking-tight">
-            Verify your email
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            We sent you a verification link. Click it to finish creating your
-            account.
-          </p>
-        </div>
-        <div className="text-xs text-muted-foreground space-y-3">
-          <p>Didn&apos;t get the email? Check your spam folder.</p>
-          <Link
-            href="/verify-email/resend"
-            className="text-primary font-medium hover:underline"
-          >
-            Send me a new link
-          </Link>
-        </div>
-        <div className="text-center">
-          <Link
-            href="/login"
-            className="text-xs text-muted-foreground hover:text-foreground"
-          >
-            ← Back to sign in
-          </Link>
-        </div>
-      </div>
-    );
+    return <PendingVerifyClient />;
   }
 
   // Token present — verify it server-side

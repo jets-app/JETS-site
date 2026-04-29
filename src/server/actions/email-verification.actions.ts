@@ -1,6 +1,7 @@
 "use server";
 
 import { nanoid } from "nanoid";
+import { cookies } from "next/headers";
 import { db } from "@/server/db";
 import { sendEmail } from "@/server/email";
 import { rateLimitPasswordReset } from "@/server/security/rate-limit";
@@ -55,7 +56,74 @@ async function issueVerificationToken(email: string, name: string) {
 }
 
 export async function sendVerificationOnSignup(email: string, name: string) {
+  // Stash the pending email in an httpOnly cookie so the /verify-email page
+  // can poll for completion without us having to expose the email lookup
+  // publicly. The cookie is read-only from the browser's perspective.
+  const jar = await cookies();
+  jar.set("jets-pending-verify", email.toLowerCase().trim(), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24, // 24h, same as the verification token
+  });
   return issueVerificationToken(email, name);
+}
+
+/**
+ * Polled by /verify-email every few seconds. Returns whether the email in
+ * the user's pending-verify cookie has flipped to verified — used to auto-
+ * redirect the original device when the user clicks the link on another.
+ */
+export async function checkPendingVerification() {
+  const jar = await cookies();
+  const pending = jar.get("jets-pending-verify")?.value;
+  if (!pending) return { verified: false };
+
+  const user = await db.user.findUnique({
+    where: { email: pending },
+    select: { emailVerified: true },
+  });
+  if (user?.emailVerified) {
+    // Clean up the cookie so we stop polling
+    jar.delete("jets-pending-verify");
+    return { verified: true };
+  }
+  return { verified: false };
+}
+
+/**
+ * Resends the verification email for whichever address is currently stored
+ * in the pending-verify cookie. No need for the user to retype.
+ */
+export async function resendPendingVerification() {
+  const jar = await cookies();
+  const pending = jar.get("jets-pending-verify")?.value;
+  if (!pending) {
+    return { error: "No pending verification — please register or use the resend page." };
+  }
+
+  const rl = await rateLimitPasswordReset(pending);
+  if (!rl.ok) {
+    return {
+      success: "If an unverified account exists for that email, a new link has been sent.",
+    };
+  }
+
+  const user = await db.user.findUnique({
+    where: { email: pending },
+    select: { name: true, emailVerified: true },
+  });
+
+  if (user && !user.emailVerified) {
+    await issueVerificationToken(pending, user.name).catch((e) =>
+      console.error("[resendPendingVerification] failed:", e),
+    );
+  }
+
+  return {
+    success: "Verification link sent. Check your inbox (and spam folder).",
+  };
 }
 
 /**
@@ -88,6 +156,14 @@ export async function verifyEmailToken(token: string) {
     });
   }
   await db.verificationToken.delete({ where: { token } }).catch(() => {});
+
+  // If the same browser still has the pending-verify cookie (e.g. user clicked
+  // the link in the same window they registered from), clear it — there's no
+  // longer anything to poll for.
+  const jar = await cookies();
+  if (jar.get("jets-pending-verify")?.value === user.email) {
+    jar.delete("jets-pending-verify");
+  }
 
   return { success: true, email: user.email };
 }

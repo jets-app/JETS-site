@@ -110,6 +110,8 @@ function LoginForm() {
     }
   }
 
+  const justVerified = searchParams.get("verified") === "1";
+
   return (
     <div className="space-y-8">
       {/* Logo + name */}
@@ -124,6 +126,12 @@ function LoginForm() {
           </p>
         </div>
       </div>
+
+      {justVerified && !needsTotp && (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs text-emerald-800 text-center">
+          ✓ Email verified. Sign in to continue.
+        </div>
+      )}
 
       {/* TOTP step — shown after email/password succeeds when the account has 2FA */}
       {needsTotp ? (
