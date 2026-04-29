@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 // Content Security Policy — shipped in Report-Only mode first so we can
 // observe violations without blocking real traffic. After ~1 week of clean
@@ -71,4 +72,19 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Wrap with Sentry only when an org/project is configured. Without those,
+// the wrapper is a no-op so local dev doesn't fail.
+export default process.env.SENTRY_ORG && process.env.SENTRY_PROJECT
+  ? withSentryConfig(nextConfig, {
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      // Only print upload logs in CI; quiet locally
+      silent: !process.env.CI,
+      // Don't crash the build if Sentry source-map upload fails (common in
+      // ephemeral environments without auth tokens)
+      sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN },
+      disableLogger: true,
+      // Tunnel sends through our origin so ad-blockers don't drop reports
+      tunnelRoute: "/monitoring",
+    })
+  : nextConfig;
