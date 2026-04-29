@@ -25,6 +25,16 @@ type RatingWithComments = {
   comments: string;
 };
 
+// Short labels under each 1-5 rating button — gives the rater a frame
+// of reference without making them guess at the scale.
+const RATING_HINTS: Record<string, string> = {
+  "1": "Concern",
+  "2": "Below avg",
+  "3": "Average",
+  "4": "Strong",
+  "5": "Exceptional",
+};
+
 export function RecommendationFormClient({
   token,
   refereeName,
@@ -55,11 +65,23 @@ export function RecommendationFormClient({
 
   // Section 3: Student Questions
   const [strengthsAndWeaknesses, setStrengthsAndWeaknesses] = useState("");
-  const [specialNeeds, setSpecialNeeds] = useState("");
   const [socialSkills, setSocialSkills] = useState("");
   const [academicSkills, setAcademicSkills] = useState("");
-  const [disciplineIssues, setDisciplineIssues] = useState("");
   const [additionalComments, setAdditionalComments] = useState("");
+
+  // Yes/No questions with conditional details. Stored as a single string at
+  // submit time (e.g. "No" or "Yes — they were suspended in 2023 for...") so
+  // the schema/DB shape stays compatible with old records.
+  const [specialNeedsAnswer, setSpecialNeedsAnswer] = useState<"" | "no" | "yes">("");
+  const [specialNeedsDetails, setSpecialNeedsDetails] = useState("");
+  const [disciplineAnswer, setDisciplineAnswer] = useState<"" | "no" | "yes">("");
+  const [disciplineDetails, setDisciplineDetails] = useState("");
+
+  function composeYesNo(answer: "" | "no" | "yes", details: string): string {
+    if (answer === "no") return "No";
+    if (answer === "yes") return details.trim() ? `Yes — ${details.trim()}` : "Yes";
+    return "";
+  }
 
   // Section 4: Overall Recommendation
   const [overallRecommendation, setOverallRecommendation] = useState("");
@@ -81,6 +103,15 @@ export function RecommendationFormClient({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (!specialNeedsAnswer || !disciplineAnswer) {
+      setError("Please answer the Yes/No questions in Section 3.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    const specialNeeds = composeYesNo(specialNeedsAnswer, specialNeedsDetails);
+    const disciplineIssues = composeYesNo(disciplineAnswer, disciplineDetails);
 
     const responses: RecommendationResponse = {
       recommenderName,
@@ -258,31 +289,33 @@ export function RecommendationFormClient({
             </p>
 
             {/* Rating scale row */}
-            <div className="flex items-center gap-2 sm:gap-4">
-              <span className="text-xs text-gray-400 w-12 text-right shrink-0">
-                Low
-              </span>
-              <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex items-start gap-2 sm:gap-4">
+              <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
                 {["1", "2", "3", "4", "5"].map((val) => {
                   const isSelected = ratings[category.key]?.rating === val;
                   return (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => setRatingValue(category.key, val)}
-                      className={`flex size-10 items-center justify-center rounded-full border-2 text-sm font-semibold transition-all ${
-                        isSelected
-                          ? "border-[#A30018] bg-[#A30018] text-white shadow-sm"
-                          : "border-gray-300 bg-white text-gray-600 hover:border-[#A30018]/50 hover:text-[#A30018]"
-                      }`}
-                      aria-label={`Rate ${category.label} ${val} out of 5`}
-                    >
-                      {val}
-                    </button>
+                    <div key={val} className="flex flex-col items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setRatingValue(category.key, val)}
+                        className={`flex size-10 items-center justify-center rounded-full border-2 text-sm font-semibold transition-all ${
+                          isSelected
+                            ? "border-[#A30018] bg-[#A30018] text-white shadow-sm"
+                            : "border-gray-300 bg-white text-gray-600 hover:border-[#A30018]/50 hover:text-[#A30018]"
+                        }`}
+                        aria-label={`Rate ${category.label} ${val} out of 5 — ${RATING_HINTS[val]}`}
+                      >
+                        {val}
+                      </button>
+                      <span className={`text-[10px] uppercase tracking-wide ${
+                        isSelected ? "text-[#A30018] font-semibold" : "text-gray-400"
+                      }`}>
+                        {RATING_HINTS[val]}
+                      </span>
+                    </div>
                   );
                 })}
               </div>
-              <span className="text-xs text-gray-400 w-12 shrink-0">High</span>
             </div>
 
             {/* Optional comments */}
@@ -321,18 +354,43 @@ export function RecommendationFormClient({
           />
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="specialNeeds">
+        <div className="space-y-3">
+          <Label>
             2. Does this student have any special physical or emotional needs?{" "}
             <span className="text-red-500">*</span>
           </Label>
-          <Textarea
-            id="specialNeeds"
-            value={specialNeeds}
-            onChange={(e) => setSpecialNeeds(e.target.value)}
-            rows={3}
-            required
-          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setSpecialNeedsAnswer("no")}
+              className={`flex-1 rounded-lg border-2 px-4 py-2.5 text-sm font-medium transition-all ${
+                specialNeedsAnswer === "no"
+                  ? "border-[#A30018] bg-[#A30018]/5 text-[#A30018]"
+                  : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              No
+            </button>
+            <button
+              type="button"
+              onClick={() => setSpecialNeedsAnswer("yes")}
+              className={`flex-1 rounded-lg border-2 px-4 py-2.5 text-sm font-medium transition-all ${
+                specialNeedsAnswer === "yes"
+                  ? "border-[#A30018] bg-[#A30018]/5 text-[#A30018]"
+                  : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Yes
+            </button>
+          </div>
+          {specialNeedsAnswer === "yes" && (
+            <Textarea
+              value={specialNeedsDetails}
+              onChange={(e) => setSpecialNeedsDetails(e.target.value)}
+              placeholder="Please describe…"
+              rows={3}
+            />
+          )}
         </div>
 
         <div className="space-y-1.5">
@@ -363,19 +421,44 @@ export function RecommendationFormClient({
           />
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="disciplineIssues">
+        <div className="space-y-3">
+          <Label>
             5. Has the applicant had any discipline issues in the last 3 years,
             including fighting, misbehavior, being suspended or expelled?{" "}
             <span className="text-red-500">*</span>
           </Label>
-          <Textarea
-            id="disciplineIssues"
-            value={disciplineIssues}
-            onChange={(e) => setDisciplineIssues(e.target.value)}
-            rows={3}
-            required
-          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setDisciplineAnswer("no")}
+              className={`flex-1 rounded-lg border-2 px-4 py-2.5 text-sm font-medium transition-all ${
+                disciplineAnswer === "no"
+                  ? "border-[#A30018] bg-[#A30018]/5 text-[#A30018]"
+                  : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              No
+            </button>
+            <button
+              type="button"
+              onClick={() => setDisciplineAnswer("yes")}
+              className={`flex-1 rounded-lg border-2 px-4 py-2.5 text-sm font-medium transition-all ${
+                disciplineAnswer === "yes"
+                  ? "border-[#A30018] bg-[#A30018]/5 text-[#A30018]"
+                  : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Yes
+            </button>
+          </div>
+          {disciplineAnswer === "yes" && (
+            <Textarea
+              value={disciplineDetails}
+              onChange={(e) => setDisciplineDetails(e.target.value)}
+              placeholder="Please describe what happened, when, and how the student responded…"
+              rows={3}
+            />
+          )}
         </div>
 
         <div className="space-y-1.5">
