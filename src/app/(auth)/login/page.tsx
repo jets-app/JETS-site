@@ -43,6 +43,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || undefined;
   const [error, setError] = useState<string | null>(null);
+  const [needsVerification, setNeedsVerification] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -55,8 +56,13 @@ function LoginForm() {
 
   async function onSubmit(data: LoginInput) {
     setError(null);
+    setNeedsVerification(false);
     try {
       const result = await loginUser({ ...data, callbackUrl });
+      if (result?.error === "EMAIL_NOT_VERIFIED") {
+        setNeedsVerification(true);
+        return;
+      }
       if (result?.error) {
         setError(result.error);
       }
@@ -138,6 +144,21 @@ function LoginForm() {
 
         {error && (
           <p className="text-xs text-destructive">{error}</p>
+        )}
+        {needsVerification && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-900 space-y-1.5">
+            <p className="font-medium">Please verify your email first.</p>
+            <p>
+              Check your inbox for a link from JETS School. Didn&apos;t get it?{" "}
+              <Link
+                href="/verify-email/resend"
+                className="font-semibold underline hover:no-underline"
+              >
+                Send a new verification email
+              </Link>
+              .
+            </p>
+          </div>
         )}
 
         <Button

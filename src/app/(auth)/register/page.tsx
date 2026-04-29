@@ -61,11 +61,11 @@ function RegisterForm() {
     }
 
     if (result.success) {
-      setSuccess(result.success);
-      setTimeout(() => {
-        router.push(callbackUrl);
-        router.refresh();
-      }, 1200);
+      // Send them to the verify-email landing — they need to click the link
+      // in their inbox before they can sign in. callbackUrl is preserved on
+      // the verify-email page → login link so the original intent (e.g.
+      // /portal/reapply) survives the round-trip.
+      router.push("/verify-email");
     }
   }
 

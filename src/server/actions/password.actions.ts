@@ -132,11 +132,17 @@ export async function resetPassword(formData: {
       return { error: "Account not found" };
     }
 
-    // Hash new password and update
+    // Hash new password and update. Receiving + clicking a reset link proves
+    // email ownership, so mark verified at the same time. Also bump status
+    // out of PENDING_VERIFICATION if applicable.
     const passwordHash = await bcrypt.hash(password, 12);
     await db.user.update({
       where: { id: user.id },
-      data: { passwordHash },
+      data: {
+        passwordHash,
+        emailVerified: user.emailVerified ?? new Date(),
+        status: user.status === "PENDING_VERIFICATION" ? "ACTIVE" : user.status,
+      },
     });
 
     // Delete the used token

@@ -49,6 +49,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
+        // Strict email verification: block sign-in until the user has clicked
+        // the verification link. The login page surfaces this message and
+        // offers a "resend" link.
+        if (!user.emailVerified) {
+          throw new Error("EMAIL_NOT_VERIFIED");
+        }
+
         return {
           id: user.id,
           email: user.email,

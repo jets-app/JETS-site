@@ -6,6 +6,7 @@ import { signIn } from "@/server/auth";
 import { registerSchema } from "@/lib/validators/auth";
 import { AuthError } from "next-auth";
 import { rateLimitRegistration } from "@/server/security/rate-limit";
+import { sendVerificationOnSignup } from "@/server/actions/email-verification.actions";
 
 export async function registerUser(formData: {
   firstName: string;
@@ -44,7 +45,8 @@ export async function registerUser(formData: {
     // Hash password
     const passwordHash = await bcrypt.hash(password, 12);
 
-    // Create user (default role: PARENT)
+    // Create user as PENDING_VERIFICATION — emailVerified stays null until
+    // they click the link in the email we're about to send.
     await db.user.create({
       data: {
         name,
@@ -52,22 +54,23 @@ export async function registerUser(formData: {
         phone: phone || null,
         passwordHash,
         role: "PARENT",
-        status: "ACTIVE",
+        status: "PENDING_VERIFICATION",
       },
     });
 
-    // Auto-login after registration
-    try {
-      await signIn("credentials", {
-        email: email.toLowerCase(),
-        password,
-        redirect: false,
-      });
-    } catch {
-      // If auto-login fails, still return success — they can log in manually
-    }
+    // Send verification email. Errors here are best-effort — we don't fail
+    // the registration just because Resend hiccupped. The user can request
+    // a resend from the post-signup screen.
+    const emailResult = await sendVerificationOnSignup(email.toLowerCase(), name).catch((e) => {
+      console.error("[register] verification email failed:", e);
+      return { success: false, error: String(e) };
+    });
 
-    return { success: "Account created successfully!" };
+    return {
+      success: "Account created. Check your inbox for a verification link to finish signing up.",
+      email: email.toLowerCase(),
+      emailDelivered: "success" in emailResult ? !!emailResult.success : false,
+    };
   } catch (error) {
     console.error("Registration error:", error);
     return { error: "Something went wrong. Please try again later." };
@@ -92,14 +95,20 @@ export async function loginUser(formData: {
       throw error;
     }
     if (error instanceof AuthError) {
-      // The authorize callback throws a plain Error("RATE_LIMITED") when the
-      // user has exceeded the login rate limit. NextAuth wraps it in a
-      // CallbackRouteError; we sniff the cause to surface a clearer message.
+      // The authorize callback throws plain Error(...) for cases that need
+      // distinct UI: rate limiting, email-not-verified. NextAuth wraps them
+      // in a CallbackRouteError; sniff the cause to recover the original.
       const cause = (error as { cause?: { err?: { message?: string } } })?.cause?.err?.message;
       if (cause === "RATE_LIMITED") {
         return {
           error:
             "Too many sign-in attempts. Please wait 15 minutes and try again, or use 'Forgot?' to reset your password.",
+        };
+      }
+      if (cause === "EMAIL_NOT_VERIFIED") {
+        return {
+          error: "EMAIL_NOT_VERIFIED",
+          email: formData.email.toLowerCase(),
         };
       }
       if (error.type === "CredentialsSignin") {
