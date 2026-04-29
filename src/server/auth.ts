@@ -6,6 +6,7 @@ import { db } from "@/server/db";
 import { authConfig } from "./auth.config";
 import { recordSignIn } from "@/server/security/login-events";
 import { isFounder } from "@/lib/roles";
+import { rateLimitLogin } from "@/server/security/rate-limit";
 
 // Full auth config with providers (Node.js only — NOT used in middleware)
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -20,6 +21,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           return null;
+        }
+
+        // Rate limit BEFORE bcrypt (which is intentionally slow).
+        // Limits: 5/IP per 15 min, 10/email per hour.
+        const rl = await rateLimitLogin(credentials.email as string);
+        if (!rl.ok) {
+          // Throw so the user sees a distinct error in the UI rather than the
+          // generic "Invalid credentials" — they're locked out, not wrong.
+          throw new Error("RATE_LIMITED");
         }
 
         const user = await db.user.findUnique({

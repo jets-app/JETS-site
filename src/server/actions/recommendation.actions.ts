@@ -209,6 +209,12 @@ export async function submitRecommendation(
   token: string,
   responses: RecommendationResponse
 ) {
+  const { rateLimitPublicToken } = await import("@/server/security/rate-limit");
+  const rl = await rateLimitPublicToken();
+  if (!rl.ok) {
+    return { error: "Too many requests from this network. Please wait a moment and try again." };
+  }
+
   const validated = recommendationResponseSchema.safeParse(responses);
   if (!validated.success) {
     return { error: validated.error.issues[0].message };

@@ -3,12 +3,25 @@
 import bcrypt from "bcryptjs";
 import { nanoid } from "nanoid";
 import { db } from "@/server/db";
+import { rateLimitPasswordReset } from "@/server/security/rate-limit";
 
 export async function requestPasswordReset(formData: { email: string }) {
   const email = formData.email.toLowerCase().trim();
 
   if (!email) {
     return { error: "Please enter your email address" };
+  }
+
+  // Rate limit so an attacker can't spam reset emails (DoS the user's inbox)
+  // or use the endpoint to map valid emails.
+  const rl = await rateLimitPasswordReset(email);
+  if (!rl.ok) {
+    // Mirror the generic success message — never reveal that the rate limit
+    // was hit. Otherwise an attacker could probe for valid emails.
+    return {
+      success:
+        "If an account with that email exists, we've sent a password reset link.",
+    };
   }
 
   try {

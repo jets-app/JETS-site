@@ -525,6 +525,12 @@ export async function submitSignedDocument(
   signerName: string,
   fieldValues?: Record<string, string>
 ) {
+  const { rateLimitPublicToken } = await import("@/server/security/rate-limit");
+  const rl = await rateLimitPublicToken();
+  if (!rl.ok) {
+    return { error: "Too many requests from this network. Please wait a moment and try again." };
+  }
+
   const document = await db.document.findUnique({
     where: { token },
   });

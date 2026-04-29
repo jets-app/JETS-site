@@ -5,6 +5,7 @@ import { db } from "@/server/db";
 import { signIn } from "@/server/auth";
 import { registerSchema } from "@/lib/validators/auth";
 import { AuthError } from "next-auth";
+import { rateLimitRegistration } from "@/server/security/rate-limit";
 
 export async function registerUser(formData: {
   firstName: string;
@@ -14,6 +15,13 @@ export async function registerUser(formData: {
   password: string;
   confirmPassword: string;
 }) {
+  const rl = await rateLimitRegistration();
+  if (!rl.ok) {
+    return {
+      error: "Too many sign-up attempts from this network. Please wait a few minutes and try again.",
+    };
+  }
+
   const validated = registerSchema.safeParse(formData);
 
   if (!validated.success) {
@@ -84,6 +92,16 @@ export async function loginUser(formData: {
       throw error;
     }
     if (error instanceof AuthError) {
+      // The authorize callback throws a plain Error("RATE_LIMITED") when the
+      // user has exceeded the login rate limit. NextAuth wraps it in a
+      // CallbackRouteError; we sniff the cause to surface a clearer message.
+      const cause = (error as { cause?: { err?: { message?: string } } })?.cause?.err?.message;
+      if (cause === "RATE_LIMITED") {
+        return {
+          error:
+            "Too many sign-in attempts. Please wait 15 minutes and try again, or use 'Forgot?' to reset your password.",
+        };
+      }
       if (error.type === "CredentialsSignin") {
         return { error: "Invalid email or password" };
       }
