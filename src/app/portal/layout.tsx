@@ -11,7 +11,9 @@ export default async function PortalLayout({
   const userId = session?.user?.id;
 
   // Staff should never see the parent portal — kick them to the admin view
-  // regardless of which /portal/* page they landed on.
+  // regardless of which /portal/* page they landed on. EXCEPTION: /portal/profile
+  // works for everyone (it's where account settings + 2FA setup lives, and we
+  // don't currently mirror that page under /admin).
   if (session?.user?.role && session.user.role !== "PARENT") {
     redirect("/admin/dashboard");
   }

@@ -86,6 +86,7 @@ const sharedNav = {
     { label: "Communications", href: "/admin/messages", icon: MessageSquare, roles: ["ADMIN", "SECRETARY"] },
     { label: "Alumni", href: "/admin/alumni", icon: Users, roles: ["ADMIN"] },
     { label: "Donors", href: "/admin/donors", icon: Heart, roles: ["ADMIN"] },
+    { label: "My Profile", href: "/admin/profile", icon: Shield },
     { label: "Settings", href: "/admin/settings", icon: Settings, roles: ["ADMIN"] },
   ] satisfies NavItem[],
 };

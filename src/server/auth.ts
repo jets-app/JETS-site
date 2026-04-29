@@ -1,12 +1,15 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
+import { authenticator } from "otplib";
 import { headers } from "next/headers";
 import { db } from "@/server/db";
 import { authConfig } from "./auth.config";
 import { recordSignIn } from "@/server/security/login-events";
 import { isFounder } from "@/lib/roles";
 import { rateLimitLogin } from "@/server/security/rate-limit";
+
+authenticator.options = { window: 1, digits: 6, step: 30 };
 
 // Full auth config with providers (Node.js only — NOT used in middleware)
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -17,6 +20,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        totpCode: { label: "2FA code", type: "text" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -54,6 +58,43 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // offers a "resend" link.
         if (!user.emailVerified) {
           throw new Error("EMAIL_NOT_VERIFIED");
+        }
+
+        // 2FA gate. If the user has TOTP enabled, require a valid 6-digit
+        // code OR a one-time backup code on this sign-in.
+        if (user.totpEnabled && user.totpSecret) {
+          const submitted = (credentials.totpCode as string | undefined)?.trim() ?? "";
+          if (!submitted) {
+            throw new Error("TOTP_REQUIRED");
+          }
+
+          // Try TOTP first (most common case)
+          const totpOk = authenticator.verify({
+            token: submitted,
+            secret: user.totpSecret,
+          });
+
+          let backupOk = false;
+          if (!totpOk && user.totpBackupCodes.length > 0) {
+            // Backup code path. Codes are bcrypt-hashed; check each, and if
+            // one matches, remove it so it can't be reused.
+            for (let i = 0; i < user.totpBackupCodes.length; i++) {
+              const match = await bcrypt.compare(submitted, user.totpBackupCodes[i]!);
+              if (match) {
+                backupOk = true;
+                const remaining = user.totpBackupCodes.filter((_, idx) => idx !== i);
+                await db.user.update({
+                  where: { id: user.id },
+                  data: { totpBackupCodes: remaining },
+                });
+                break;
+              }
+            }
+          }
+
+          if (!totpOk && !backupOk) {
+            throw new Error("TOTP_INVALID");
+          }
         }
 
         return {

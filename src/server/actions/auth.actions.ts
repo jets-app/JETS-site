@@ -80,12 +80,14 @@ export async function registerUser(formData: {
 export async function loginUser(formData: {
   email: string;
   password: string;
+  totpCode?: string;
   callbackUrl?: string;
 }) {
   try {
     await signIn("credentials", {
       email: formData.email.toLowerCase(),
       password: formData.password,
+      totpCode: formData.totpCode ?? "",
       redirectTo: formData.callbackUrl || "/dashboard",
     });
   } catch (error) {
@@ -110,6 +112,12 @@ export async function loginUser(formData: {
           error: "EMAIL_NOT_VERIFIED",
           email: formData.email.toLowerCase(),
         };
+      }
+      if (cause === "TOTP_REQUIRED") {
+        return { error: "TOTP_REQUIRED" };
+      }
+      if (cause === "TOTP_INVALID") {
+        return { error: "TOTP_INVALID" };
       }
       if (error.type === "CredentialsSignin") {
         return { error: "Invalid email or password" };

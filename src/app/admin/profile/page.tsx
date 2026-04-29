@@ -1,13 +1,16 @@
 import { auth } from "@/server/auth";
+import { isStaff } from "@/lib/roles";
 import { redirect } from "next/navigation";
 import { db } from "@/server/db";
-import { ProfileForm } from "./_components/profile-form";
-import { TOTPSection } from "./_components/totp-section";
+import { ProfileForm } from "@/app/portal/profile/_components/profile-form";
+import { TOTPSection } from "@/app/portal/profile/_components/totp-section";
 
-export default async function PortalProfilePage() {
+export const metadata = { title: "My Profile — JETS Admin" };
+
+export default async function AdminProfilePage() {
   const session = await auth();
-  if (!session?.user?.id) {
-    redirect("/login");
+  if (!session?.user?.id || !isStaff(session.user.role)) {
+    redirect("/dashboard");
   }
 
   const user = await db.user.findUnique({

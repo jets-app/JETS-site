@@ -45,6 +45,12 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [needsVerification, setNeedsVerification] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  // 2FA state — once the server tells us this account requires TOTP, show
+  // the code field. We keep email+password in state so we can re-submit
+  // them along with the code without making the user retype.
+  const [needsTotp, setNeedsTotp] = useState(false);
+  const [totpCode, setTotpCode] = useState("");
+  const [stashedCreds, setStashedCreds] = useState<LoginInput | null>(null);
 
   const {
     register,
@@ -63,11 +69,44 @@ function LoginForm() {
         setNeedsVerification(true);
         return;
       }
+      if (result?.error === "TOTP_REQUIRED") {
+        setStashedCreds(data);
+        setNeedsTotp(true);
+        return;
+      }
+      if (result?.error === "TOTP_INVALID") {
+        setStashedCreds(data);
+        setNeedsTotp(true);
+        setError("Code didn't match. Try again — or use a backup code.");
+        return;
+      }
       if (result?.error) {
         setError(result.error);
       }
     } catch {
       // Redirect throws are expected on success — Next.js handles it
+    }
+  }
+
+  async function onSubmitTotp(e: React.FormEvent) {
+    e.preventDefault();
+    if (!stashedCreds) return;
+    setError(null);
+    try {
+      const result = await loginUser({
+        ...stashedCreds,
+        totpCode: totpCode.trim(),
+        callbackUrl,
+      });
+      if (result?.error === "TOTP_INVALID") {
+        setError("Code didn't match. Try again — or use a backup code.");
+        return;
+      }
+      if (result?.error) {
+        setError(result.error);
+      }
+    } catch {
+      // Redirect throws are expected on success
     }
   }
 
@@ -86,7 +125,55 @@ function LoginForm() {
         </div>
       </div>
 
-      {/* Form */}
+      {/* TOTP step — shown after email/password succeeds when the account has 2FA */}
+      {needsTotp ? (
+        <form onSubmit={onSubmitTotp} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="totp" className="text-sm">
+              6-digit code from your authenticator app
+            </Label>
+            <Input
+              id="totp"
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              autoFocus
+              value={totpCode}
+              onChange={(e) => setTotpCode(e.target.value.replace(/\s/g, ""))}
+              className="h-10 tracking-[0.4em] font-mono text-center text-lg"
+              placeholder="000000"
+              maxLength={11}
+            />
+            <p className="text-xs text-muted-foreground">
+              Open Google Authenticator (or your 2FA app) and enter the current code. If you&apos;ve lost access, type one of your backup codes instead.
+            </p>
+          </div>
+          {error && <p className="text-xs text-destructive">{error}</p>}
+          <Button type="submit" className="w-full h-10" disabled={isSubmitting || !totpCode}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Verifying
+              </>
+            ) : (
+              "Verify and sign in"
+            )}
+          </Button>
+          <button
+            type="button"
+            onClick={() => {
+              setNeedsTotp(false);
+              setStashedCreds(null);
+              setTotpCode("");
+              setError(null);
+            }}
+            className="block w-full text-xs text-muted-foreground hover:text-foreground text-center"
+          >
+            ← Use a different account
+          </button>
+        </form>
+      ) : (
+      /* Form */
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-1.5">
           <Label htmlFor="email" className="text-sm">
@@ -176,6 +263,7 @@ function LoginForm() {
           )}
         </Button>
       </form>
+      )}
 
       {/* Footer */}
       <p className="text-center text-xs text-muted-foreground">

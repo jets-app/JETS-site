@@ -161,6 +161,12 @@ model User {
   auditLogs               AuditLog[]
   emailChangeRequests     EmailChangeRequest[]
 
+  // TOTP-based 2FA. Optional for all staff today; can be required-for-admins
+  // later by gating sign-in on totpEnabled when role === ADMIN.
+  totpSecret              String?    // base32-encoded shared secret
+  totpEnabled             Boolean    @default(false)
+  totpBackupCodes         String[]   // bcrypt-hashed one-time backup codes
+
   @@index([role])
 }
 
