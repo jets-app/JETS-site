@@ -20,6 +20,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { submitSignedDocument } from "@/server/actions/document.actions";
+import { sanitizeTemplateHtml } from "@/lib/sanitize-html";
 
 interface DocumentData {
   id: string;
@@ -154,10 +155,13 @@ export function DocumentSigningView({ document }: DocumentSigningViewProps) {
           </CardHeader>
           <CardContent className="pt-6">
             {document.customizedHtml ? (
+              // customizedHtml was already sanitized server-side when the doc
+              // was created. We sanitize again at render as a belt-and-
+              // suspenders measure in case stored data predates the sanitizer.
               <div
                 className="prose prose-sm max-w-none"
                 dangerouslySetInnerHTML={{
-                  __html: document.customizedHtml,
+                  __html: sanitizeTemplateHtml(document.customizedHtml),
                 }}
               />
             ) : (

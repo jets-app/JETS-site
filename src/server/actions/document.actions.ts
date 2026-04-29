@@ -9,6 +9,7 @@ import type {
   DocumentRecipientType,
 } from "@prisma/client";
 import { isStaff } from "@/lib/roles";
+import { sanitizeTemplateHtml } from "@/lib/sanitize-html";
 
 // ---------- Helpers ----------
 
@@ -63,7 +64,7 @@ export async function createDocumentTemplate(data: {
     data: {
       name: data.name,
       type: data.type,
-      htmlContent: data.htmlContent,
+      htmlContent: sanitizeTemplateHtml(data.htmlContent),
       content: JSON.parse(JSON.stringify({ fields: data.fields ?? [] })),
     },
   });
@@ -94,7 +95,7 @@ export async function updateDocumentTemplate(
     data: {
       ...(data.name !== undefined && { name: data.name }),
       ...(data.type !== undefined && { type: data.type }),
-      ...(data.htmlContent !== undefined && { htmlContent: data.htmlContent }),
+      ...(data.htmlContent !== undefined && { htmlContent: sanitizeTemplateHtml(data.htmlContent) }),
       ...(data.fields !== undefined && { content: JSON.parse(JSON.stringify({ fields: data.fields })) }),
       ...(data.isActive !== undefined && { isActive: data.isActive }),
       version: { increment: 1 },
@@ -140,7 +141,10 @@ export async function sendDocumentToRecipient(
     ? `${application.student.firstName} ${application.student.lastName}`
     : "Student";
 
-  // Customize HTML content with application data
+  // Customize HTML content with application data. The replaced values come
+  // from user-controlled fields (parent name, student name) so we re-run the
+  // sanitizer after substitution to strip anything injected via, say, a
+  // registration name like "<script>...".
   let customizedHtml = template.htmlContent ?? "";
   customizedHtml = customizedHtml
     .replace(/\{\{studentName\}\}/g, studentName)
@@ -165,6 +169,7 @@ export async function sendDocumentToRecipient(
         ? `$${(customizations.scholarshipAmount / 100).toLocaleString()}`
         : "TBD"
     );
+  customizedHtml = sanitizeTemplateHtml(customizedHtml);
 
   const recipientLabel =
     recipientType === "PARENT" ? "Parent" : "Student";
