@@ -25,7 +25,7 @@ type SettingCard = {
   description: string;
   href: string | null;
   icon: React.ComponentType<{ className?: string }>;
-  status: "ready" | "coming-soon";
+  status: "ready" | "active" | "coming-soon";
 };
 
 const INTEGRATION_CARDS: SettingCard[] = [
@@ -40,25 +40,26 @@ const INTEGRATION_CARDS: SettingCard[] = [
   {
     title: "Stripe",
     description:
-      "Accept online payments for application fees, tuition, and donations.",
+      "Live — accepting application fees, tuition autopay, and refunds. Keys managed via environment variables.",
     href: null,
     icon: CreditCard,
-    status: "coming-soon",
+    status: "active",
   },
   {
-    title: "Email",
+    title: "Email (Resend)",
     description:
-      "SMTP / transactional email provider configuration and templates.",
+      "Live — sending from info@jetsschool.org. Domain verified, templates managed in code.",
     href: null,
     icon: Mail,
-    status: "coming-soon",
+    status: "active",
   },
   {
-    title: "SMS / Twilio",
-    description: "Send text notifications to parents and staff.",
+    title: "SMS (Twilio)",
+    description:
+      "Live — A2P 10DLC registered. Sending parent and staff notifications.",
     href: null,
     icon: MessageSquare,
-    status: "coming-soon",
+    status: "active",
   },
   {
     title: "Staff Accounts",
@@ -134,6 +135,10 @@ export default async function AdminSettingsPage() {
                     </div>
                     {setting.status === "coming-soon" ? (
                       <Badge variant="outline">Coming soon</Badge>
+                    ) : setting.status === "active" ? (
+                      <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800">
+                        Active
+                      </Badge>
                     ) : (
                       <Badge variant="secondary">Available</Badge>
                     )}
@@ -148,6 +153,10 @@ export default async function AdminSettingsPage() {
                       Configure
                       <ArrowRight className="size-3.5" />
                     </LinkButton>
+                  ) : setting.status === "active" ? (
+                    <span className="text-xs text-muted-foreground">
+                      Managed via environment variables
+                    </span>
                   ) : (
                     <span className="text-xs text-muted-foreground">
                       Configuration UI pending
