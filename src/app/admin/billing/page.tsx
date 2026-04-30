@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { BillingActions } from "./_components/billing-actions";
 import { ChargeInvoiceButton } from "./_components/charge-invoice-button";
+import { InvoiceActionsMenu } from "./_components/invoice-actions-menu";
 
 function formatCents(cents: number): string {
   return `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
@@ -211,7 +212,14 @@ export default async function AdminBillingPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      {onAutoPay && <ChargeInvoiceButton invoiceId={inv.id} />}
+                      <InvoiceActionsMenu
+                        invoiceId={inv.id}
+                        invoiceNumber={inv.invoiceNumber}
+                        status={inv.status}
+                        total={inv.total}
+                        amountPaid={inv.amountPaid}
+                        hasAutoPayMethod={!!onAutoPay}
+                      />
                     </TableCell>
                   </TableRow>
                 );
@@ -322,7 +330,14 @@ export default async function AdminBillingPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      {onAutoPay && <ChargeInvoiceButton invoiceId={inv.id} />}
+                      <InvoiceActionsMenu
+                        invoiceId={inv.id}
+                        invoiceNumber={inv.invoiceNumber}
+                        status={inv.status}
+                        total={inv.total}
+                        amountPaid={inv.amountPaid}
+                        hasAutoPayMethod={!!onAutoPay}
+                      />
                     </TableCell>
                   </TableRow>
                 );

@@ -499,6 +499,17 @@ model Invoice {
   stripeInvoiceId String? @unique
   pdfUrl          String?
 
+  // Late fee — single $50 fee applied once per invoice when 10+ days past due.
+  // The fee is added to `total` and recorded as a line item; `lateFeeAppliedAt`
+  // gates the cron so we don't apply it twice.
+  lateFeeAppliedAt DateTime?
+
+  // Refund tracking for invoices that were paid then refunded. We keep the
+  // original paid stamps as audit trail and record the refund here.
+  refundedAt       DateTime?
+  refundedAmount   Int       @default(0)
+  refundReason     String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

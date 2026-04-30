@@ -12,6 +12,14 @@
     {
       "path": "/api/cron/autopay",
       "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/apply-late-fees",
+      "schedule": "0 15 * * *"
+    },
+    {
+      "path": "/api/cron/monthly-invoices",
+      "schedule": "0 16 1 * *"
     }
   ]
 }
