@@ -68,6 +68,14 @@ const INTEGRATION_CARDS: SettingCard[] = [
     icon: Users,
     status: "ready",
   },
+  {
+    title: "Database Backups",
+    description:
+      "Daily off-platform backups to AWS S3 (auto-deleted after 30 days). Run an extra backup on demand.",
+    href: "/admin/settings/backups",
+    icon: FileBarChart,
+    status: "ready",
+  },
 ];
 
 export default async function AdminSettingsPage() {
