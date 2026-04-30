@@ -50,7 +50,7 @@ const STATUS_NOTIFICATIONS: Partial<
         `Reference: ${d.referenceNumber}\n\n` +
         `Warm regards,\nThe JETS Admissions Team`,
       sms: (d) =>
-        `JETS School: We received ${d.studentName}'s application. Track progress at ${d.appHost}/portal — Ref ${d.referenceNumber}`,
+        `JETS School: We received ${d.studentName}'s application. Track progress at ${d.appHost}/portal — Ref ${d.referenceNumber}. Reply STOP to opt out.`,
     },
     {
       recipient: "office_and_principals",
@@ -91,7 +91,7 @@ const STATUS_NOTIFICATIONS: Partial<
         `Reference: ${d.referenceNumber}\n\n` +
         `Warm regards,\nThe JETS Admissions Team`,
       sms: (d) =>
-        `JETS School: ${d.studentName} is invited to interview! Pick a time: ${d.appHost}/portal/interview/${d.applicationId}`,
+        `JETS School: ${d.studentName} is invited to interview! Pick a time: ${d.appHost}/portal/interview/${d.applicationId}. Reply STOP to opt out.`,
     },
   ],
 
@@ -120,7 +120,7 @@ const STATUS_NOTIFICATIONS: Partial<
         `Reference: ${d.referenceNumber}\n\n` +
         `Warm regards,\nThe JETS Admissions Team`,
       sms: (d) =>
-        `JETS School: Enrollment forms are ready to sign for ${d.studentName}. Open: ${PORTAL_LINK(d)}`,
+        `JETS School: Enrollment forms are ready to sign for ${d.studentName}. Open: ${PORTAL_LINK(d)}. Reply STOP to opt out.`,
     },
   ],
 
@@ -136,7 +136,7 @@ const STATUS_NOTIFICATIONS: Partial<
         `Reference: ${d.referenceNumber}\n\n` +
         `Warm regards,\nThe JETS Admissions Team`,
       sms: (d) =>
-        `Welcome to ${d.schoolName}! ${d.studentName} is officially enrolled. Orientation info coming soon.`,
+        `Welcome to ${d.schoolName}! ${d.studentName} is officially enrolled. Orientation info coming soon. Reply STOP to opt out.`,
     },
     {
       recipient: "office_and_principals",

@@ -179,8 +179,8 @@ async function sendInterviewReminder(
   if (app.parent.phone) {
     const { sendSMS } = await import("@/server/sms");
     const smsBody = app.interviewZoomJoinUrl
-      ? `JETS School: Reminder — ${studentName}'s interview is in ${hoursLabel} at ${when}. Zoom: ${app.interviewZoomJoinUrl}`
-      : `JETS School: Reminder — ${studentName}'s interview is in ${hoursLabel} at ${when}.`;
+      ? `JETS School: Reminder — ${studentName}'s interview is in ${hoursLabel} at ${when}. Zoom: ${app.interviewZoomJoinUrl}. Reply STOP to opt out.`
+      : `JETS School: Reminder — ${studentName}'s interview is in ${hoursLabel} at ${when}. Reply STOP to opt out.`;
     await sendSMS({ to: app.parent.phone, body: smsBody });
   }
 }
@@ -213,7 +213,7 @@ async function sendScheduleNudge(app: AppWithRelations) {
     const { sendSMS } = await import("@/server/sms");
     await sendSMS({
       to: app.parent.phone,
-      body: `JETS School: Don't forget to pick an interview time for ${studentName}. Book here: ${host}/portal/interview/${app.id}`,
+      body: `JETS School: Don't forget to pick an interview time for ${studentName}. Book here: ${host}/portal/interview/${app.id}. Reply STOP to opt out.`,
     });
   }
 }

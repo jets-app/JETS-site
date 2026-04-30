@@ -225,8 +225,8 @@ async function sendBookingEmails(params: {
   if (params.parentPhone) {
     const { sendSMS } = await import("@/server/sms");
     const smsBody = params.zoomJoinUrl
-      ? `JETS School: ${params.studentName}'s interview confirmed for ${when} (LA time). Zoom: ${params.zoomJoinUrl}`
-      : `JETS School: ${params.studentName}'s interview confirmed for ${when} (LA time). Zoom link will follow by email.`;
+      ? `JETS School: ${params.studentName}'s interview confirmed for ${when} (LA time). Zoom: ${params.zoomJoinUrl}. Reply STOP to opt out.`
+      : `JETS School: ${params.studentName}'s interview confirmed for ${when} (LA time). Zoom link will follow by email. Reply STOP to opt out.`;
     await sendSMS({ to: params.parentPhone, body: smsBody });
   }
 
