@@ -53,7 +53,7 @@ export async function GET(request: Request) {
     },
     include: {
       student: { select: { firstName: true, lastName: true } },
-      parent: { select: { name: true, email: true } },
+      parent: { select: { name: true, email: true, phone: true } },
     },
   });
 
@@ -82,7 +82,7 @@ export async function GET(request: Request) {
     },
     include: {
       student: { select: { firstName: true, lastName: true } },
-      parent: { select: { name: true, email: true } },
+      parent: { select: { name: true, email: true, phone: true } },
     },
   });
 
@@ -110,7 +110,7 @@ export async function GET(request: Request) {
     },
     include: {
       student: { select: { firstName: true, lastName: true } },
-      parent: { select: { name: true, email: true } },
+      parent: { select: { name: true, email: true, phone: true } },
     },
   });
 
@@ -137,7 +137,7 @@ type AppWithRelations = {
   interviewZoomJoinUrl: string | null;
   interviewZoomPasscode: string | null;
   student: { firstName: string; lastName: string } | null;
-  parent: { name: string; email: string };
+  parent: { name: string; email: string; phone: string | null };
 };
 
 async function sendInterviewReminder(
@@ -174,6 +174,15 @@ async function sendInterviewReminder(
         `Looking forward to it,\nThe JETS Admissions Team`,
     ),
   });
+
+  // Companion SMS reminder — most parents will glance at this faster than email
+  if (app.parent.phone) {
+    const { sendSMS } = await import("@/server/sms");
+    const smsBody = app.interviewZoomJoinUrl
+      ? `JETS School: Reminder — ${studentName}'s interview is in ${hoursLabel} at ${when}. Zoom: ${app.interviewZoomJoinUrl}`
+      : `JETS School: Reminder — ${studentName}'s interview is in ${hoursLabel} at ${when}.`;
+    await sendSMS({ to: app.parent.phone, body: smsBody });
+  }
 }
 
 async function sendScheduleNudge(app: AppWithRelations) {
@@ -198,6 +207,15 @@ async function sendScheduleNudge(app: AppWithRelations) {
         `Warm regards,\nThe JETS Admissions Team`,
     ),
   });
+
+  // Nudge SMS too
+  if (app.parent.phone) {
+    const { sendSMS } = await import("@/server/sms");
+    await sendSMS({
+      to: app.parent.phone,
+      body: `JETS School: Don't forget to pick an interview time for ${studentName}. Book here: ${host}/portal/interview/${app.id}`,
+    });
+  }
 }
 
 function wrap(body: string) {

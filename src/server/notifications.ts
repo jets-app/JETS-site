@@ -6,6 +6,7 @@ interface NotificationData {
   studentName: string;
   parentName: string;
   parentEmail: string;
+  parentPhone: string | null;
   referenceNumber: string;
   applicationId: string;
   type: ApplicationType;
@@ -19,6 +20,9 @@ interface NotificationTemplate {
   recipient: Recipient;
   subject: (d: NotificationData) => string;
   body: (d: NotificationData) => string;
+  /** Optional short SMS body. Only sent when recipient === "parent" and the
+   *  parent's phone number is on file. SMS is best-effort, never blocking. */
+  sms?: (d: NotificationData) => string;
 }
 
 const ADMIN_LINK = (d: NotificationData) =>
@@ -45,6 +49,8 @@ const STATUS_NOTIFICATIONS: Partial<
         `You can check on progress anytime in your parent portal:\n${PORTAL_LINK(d)}\n\n` +
         `Reference: ${d.referenceNumber}\n\n` +
         `Warm regards,\nThe JETS Admissions Team`,
+      sms: (d) =>
+        `JETS School: We received ${d.studentName}'s application. Track progress at ${d.appHost}/portal — Ref ${d.referenceNumber}`,
     },
     {
       recipient: "office_and_principals",
@@ -84,6 +90,8 @@ const STATUS_NOTIFICATIONS: Partial<
         `Once you book, you'll receive a confirmation with the Zoom link.\n\n` +
         `Reference: ${d.referenceNumber}\n\n` +
         `Warm regards,\nThe JETS Admissions Team`,
+      sms: (d) =>
+        `JETS School: ${d.studentName} is invited to interview! Pick a time: ${d.appHost}/portal/interview/${d.applicationId}`,
     },
   ],
 
@@ -111,6 +119,8 @@ const STATUS_NOTIFICATIONS: Partial<
         `Please complete these to finalize ${d.studentName}'s enrollment.\n\n` +
         `Reference: ${d.referenceNumber}\n\n` +
         `Warm regards,\nThe JETS Admissions Team`,
+      sms: (d) =>
+        `JETS School: Enrollment forms are ready to sign for ${d.studentName}. Open: ${PORTAL_LINK(d)}`,
     },
   ],
 
@@ -125,6 +135,8 @@ const STATUS_NOTIFICATIONS: Partial<
         `We'll be in touch with orientation and back-to-school information soon.\n\n` +
         `Reference: ${d.referenceNumber}\n\n` +
         `Warm regards,\nThe JETS Admissions Team`,
+      sms: (d) =>
+        `Welcome to ${d.schoolName}! ${d.studentName} is officially enrolled. Orientation info coming soon.`,
     },
     {
       recipient: "office_and_principals",
@@ -149,7 +161,7 @@ export async function triggerStatusNotifications(
     where: { id: applicationId },
     include: {
       student: { select: { firstName: true, lastName: true } },
-      parent: { select: { name: true, email: true } },
+      parent: { select: { name: true, email: true, phone: true } },
     },
   });
   if (!application) return;
@@ -167,6 +179,7 @@ export async function triggerStatusNotifications(
       : "the applicant",
     parentName: application.parent.name,
     parentEmail: application.parent.email,
+    parentPhone: application.parent.phone,
     referenceNumber: application.referenceNumber,
     applicationId,
     type: application.type,
@@ -175,6 +188,7 @@ export async function triggerStatusNotifications(
   };
 
   const { sendEmail } = await import("@/server/email");
+  const { sendSMS } = await import("@/server/sms");
 
   for (const template of templates) {
     const recipients = resolveRecipients(template.recipient, data);
@@ -209,6 +223,33 @@ export async function triggerStatusNotifications(
           errorMessage: result.success ? undefined : result.error,
         },
       });
+    }
+
+    // SMS to parent — only when:
+    //   1. The template defines an `sms` body for this status
+    //   2. The recipient is the parent (we don't text staff)
+    //   3. The parent has a phone number on file
+    // Best-effort: failures are logged but never block the email path.
+    if (template.sms && template.recipient === "parent" && data.parentPhone) {
+      const smsBody = template.sms(data);
+      const smsResult = await sendSMS({ to: data.parentPhone, body: smsBody });
+      await db.notificationLog
+        .create({
+          data: {
+            templateName: `${newStatus}_${template.recipient}_sms`,
+            channel: "SMS",
+            recipientEmail: data.parentEmail,
+            recipientName: data.parentName,
+            subject: subject,
+            body: smsBody,
+            status: smsResult.success ? "SENT" : "FAILED",
+            sentAt: smsResult.success ? new Date() : undefined,
+            errorMessage: smsResult.success ? undefined : smsResult.error,
+            applicationId,
+            metadata: { trigger: newStatus, recipient: template.recipient, channel: "sms" },
+          },
+        })
+        .catch((e) => console.error("[notifications] sms log failed:", e));
     }
   }
 }

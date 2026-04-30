@@ -94,7 +94,7 @@ export async function bookInterview(
     where: { id: applicationId },
     include: {
       student: { select: { firstName: true, lastName: true } },
-      parent: { select: { name: true, email: true } },
+      parent: { select: { name: true, email: true, phone: true } },
     },
   });
   if (!application) return { error: "Application not found." };
@@ -161,11 +161,12 @@ export async function bookInterview(
     },
   });
 
-  // Send confirmations — don't block success on email delivery
+  // Send confirmations — don't block success on email/SMS delivery
   sendBookingEmails({
     studentName,
     parentName: application.parent.name,
     parentEmail: application.parent.email,
+    parentPhone: application.parent.phone,
     principalEmail: chosenPrincipal.email,
     principalName: chosenPrincipal.name,
     startAt: slotStart,
@@ -185,6 +186,7 @@ async function sendBookingEmails(params: {
   studentName: string;
   parentName: string;
   parentEmail: string;
+  parentPhone: string | null;
   principalName: string;
   principalEmail: string;
   startAt: Date;
@@ -218,6 +220,15 @@ async function sendBookingEmails(params: {
         `Warm regards,\nThe JETS Admissions Team`,
     ),
   });
+
+  // Parent SMS confirmation — short, with the Zoom link if available
+  if (params.parentPhone) {
+    const { sendSMS } = await import("@/server/sms");
+    const smsBody = params.zoomJoinUrl
+      ? `JETS School: ${params.studentName}'s interview confirmed for ${when} (LA time). Zoom: ${params.zoomJoinUrl}`
+      : `JETS School: ${params.studentName}'s interview confirmed for ${when} (LA time). Zoom link will follow by email.`;
+    await sendSMS({ to: params.parentPhone, body: smsBody });
+  }
 
   // Assigned principal + both principals (FYI) + office (FYI)
   const staffRecipients = new Set<string>([
