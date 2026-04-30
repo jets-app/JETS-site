@@ -26,6 +26,8 @@ const PUBLIC_PATHS = [
   "/faculty",
   "/contact",
   "/inquire",
+  "/privacy",
+  "/terms",
   "/v1",
   "/v2",
 ];
