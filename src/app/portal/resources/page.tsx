@@ -26,7 +26,7 @@ type Zman = {
 const ZMANIM: Zman[] = [
   {
     title: "Orientation & Winter Zman",
-    range: "Aug 24, 2025 – Jan 14, 2026",
+    range: "Aug 24, 2026 – Jan 14, 2027",
     rows: [
       { date: "Aug 24", hebrew: "11 Elul", event: "Faculty orientation — schedule TBD" },
       { date: "Sep 1", hebrew: "19 Elul", event: "Orientation Zman — students arrive / night program", highlight: true },
@@ -48,7 +48,7 @@ const ZMANIM: Zman[] = [
   },
   {
     title: "Spring Zman",
-    range: "Feb 2 – Apr 8, 2026",
+    range: "Feb 2 – Apr 8, 2027",
     rows: [
       { date: "Feb 2", hebrew: "25 Shevat", event: "Students return from winter break / night program", highlight: true },
       { date: "Feb 3", hebrew: "26 Shevat", event: "Formal classes begin", highlight: true },
@@ -63,7 +63,7 @@ const ZMANIM: Zman[] = [
   },
   {
     title: "Capstone Zman",
-    range: "May 2 – June 3, 2026",
+    range: "May 2 – June 3, 2027",
     rows: [
       { date: "May 2", hebrew: "25 Nissan", event: "Students return from Pesach break / night program", highlight: true },
       { date: "May 3", hebrew: "26 Nissan", event: "Formal classes begin", highlight: true },
@@ -114,7 +114,7 @@ export default async function PortalResourcesPage() {
           </div>
           <div>
             <h2 className="text-xl font-semibold">School Calendar 5786 – 5787</h2>
-            <p className="text-xs text-muted-foreground">2025 – 2026 academic year</p>
+            <p className="text-xs text-muted-foreground">2026 – 2027 academic year</p>
           </div>
         </div>
 
