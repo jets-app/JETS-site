@@ -15,6 +15,7 @@ import {
   GraduationCap,
   FileSignature,
   BookOpen,
+  CalendarDays,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -75,6 +76,7 @@ export function PortalSidebar({
       show: showPayments,
     },
     { label: "Scholarship", href: "/portal/scholarship", icon: BookOpen, show: showScholarship },
+    { label: "Resources", href: "/portal/resources", icon: CalendarDays, show: isEnrolled },
     { label: "Messages", href: "/portal/messages", icon: MessageSquare, show: true },
     { label: "Profile", href: "/portal/profile", icon: User, show: true },
   ].filter((item) => item.show);
