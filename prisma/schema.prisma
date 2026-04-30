@@ -167,6 +167,10 @@ model User {
   totpEnabled             Boolean    @default(false)
   totpBackupCodes         String[]   // bcrypt-hashed one-time backup codes
 
+  // Stripe Customer ID for tuition + saved payment methods. Created on demand
+  // the first time the parent saves a card or pays an invoice through Stripe.
+  stripeCustomerId        String?    @unique
+
   @@index([role])
 }
 
