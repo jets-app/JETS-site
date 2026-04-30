@@ -16,9 +16,12 @@ import { db } from "@/server/db";
  * AWS free tier. After year 1 it's about $0.04/month.
  */
 
-// All Prisma model names we want to back up. Listed explicitly so we don't
-// silently miss new models — update this list when the schema grows.
+// All Prisma model names (as the camelCase Prisma client property) we want
+// to back up. Names MUST match `db.<name>` — a typo here means the model is
+// silently skipped at backup time. Cross-check against:
+//   grep "^model " prisma/schema.prisma
 const MODELS_TO_BACKUP = [
+  // Auth / user
   "user",
   "account",
   "session",
@@ -27,48 +30,61 @@ const MODELS_TO_BACKUP = [
   "emailChangeRequest",
   "loginEvent",
   "auditLog",
+  // Admissions / pipeline
+  "inquiry",
   "application",
   "applicationNote",
+  "applicationReview",
   "student",
   "recommendation",
-  "payment",
-  "discountCode",
-  "scholarship",
-  "tuitionAssessment",
   "interviewAvailability",
+  // Documents
   "documentTemplate",
   "document",
-  "documentSignature",
+  // Billing / payments
+  "discountCode",
+  "scholarshipApplication",
+  "tuitionAssessment",
   "invoice",
-  "tuitionConfig",
+  "payment",
   "paymentMethod",
-  "autoPayConfig",
-  "lead",
-  "alumnus",
-  "alumnusEvent",
-  "job",
-  "mentorship",
+  "autoPaySettings",
+  // Communications
+  "message",
+  "messageTemplate",
+  "notificationLog",
+  "notificationTemplate",
+  // Alumni
+  "alumni",
+  "alumniEvent",
+  "eventRsvp",
+  "jobPosting",
+  "mentorProfile",
+  "mentorshipMatch",
+  // Donors
   "donor",
   "donation",
-  "message",
-  "notificationLog",
+  "donorLetterTemplate",
+  "donorReceipt",
+  // System
   "systemSettings",
   "quickBooksSync",
-  "schoolYear",
 ] as const;
 
 type Model = (typeof MODELS_TO_BACKUP)[number];
 
-const s3 = new S3Client({
-  region: process.env.AWS_REGION ?? "us-west-1",
-  credentials:
-    process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
-      ? {
-          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-        }
-      : undefined,
-});
+// Construct lazily — Next.js evaluates module top-level code at build time,
+// and the S3 SDK throws "Region is missing" if env vars aren't set during a
+// preview build with no AWS config.
+function getS3Client() {
+  return new S3Client({
+    region: process.env.AWS_REGION ?? "us-west-1",
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    },
+  });
+}
 
 export interface BackupResult {
   success: boolean;
@@ -84,6 +100,13 @@ export async function runDatabaseBackup(): Promise<BackupResult> {
   const bucket = process.env.AWS_S3_BUCKET;
   if (!bucket) {
     return { success: false, error: "AWS_S3_BUCKET env var not set." };
+  }
+  if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+    return {
+      success: false,
+      error:
+        "AWS credentials not configured (set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY).",
+    };
   }
 
   try {
@@ -123,7 +146,7 @@ export async function runDatabaseBackup(): Promise<BackupResult> {
     const datestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const key = `backups/jets-${datestamp}.json.gz`;
 
-    await s3.send(
+    await getS3Client().send(
       new PutObjectCommand({
         Bucket: bucket,
         Key: key,
