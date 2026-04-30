@@ -51,9 +51,15 @@ export async function getAutoPaySettings(userId?: string) {
   return { settings };
 }
 
+/**
+ * Autopay is mandatory while enrolled — parents can switch which saved card
+ * funds it, but they can't disable it. The `enabled` argument is ignored at
+ * the action layer and forced to true. (Kept on the function signature so
+ * existing call sites don't break.)
+ */
 export async function updateAutoPaySettings(
-  enabled: boolean,
-  paymentMethodId?: string | null
+  _enabled: boolean,
+  paymentMethodId?: string | null,
 ) {
   const check = await requireUser();
   if ("error" in check) return { error: check.error };
@@ -61,8 +67,11 @@ export async function updateAutoPaySettings(
 
   const existing = await db.autoPaySettings.findUnique({ where: { userId } });
   const data = {
-    enabled,
-    paymentMethodId: paymentMethodId === undefined ? existing?.paymentMethodId ?? null : paymentMethodId,
+    enabled: true,
+    paymentMethodId:
+      paymentMethodId === undefined
+        ? existing?.paymentMethodId ?? null
+        : paymentMethodId,
   };
 
   const settings = existing
@@ -130,6 +139,18 @@ export async function deletePaymentMethod(id: string) {
   if (!method) return { error: "Payment method not found." };
   if (method.userId !== userId && !isAdmin(check.session.user.role)) {
     return { error: "Access denied." };
+  }
+
+  // Autopay is mandatory — block deleting the last saved method. Parent must
+  // add a replacement card first, then delete the old one.
+  const remainingCount = await db.paymentMethod.count({
+    where: { userId: method.userId, NOT: { id } },
+  });
+  if (remainingCount === 0) {
+    return {
+      error:
+        "You must keep at least one payment method on file for tuition autopay. Add a new card first, then delete this one.",
+    };
   }
 
   // Detach from Stripe customer too so a deleted card can't be charged later.
