@@ -50,6 +50,7 @@ import {
 import { EditableField } from "../[id]/_components/editable-field";
 import { DocumentStatusTracker } from "@/components/documents/document-status-tracker";
 import { SendEnrollmentDocuments } from "@/components/documents/send-enrollment-documents";
+import { TuitionSettingsCard } from "./tuition-settings-card";
 import type { ApplicationStatus } from "@prisma/client";
 
 interface ApplicationDetailViewProps {
@@ -777,6 +778,24 @@ export function ApplicationDetailView({
               />
             </CardContent>
           </Card>
+
+          {/* Tuition Pricing — relevant once the family is on the enrollment path */}
+          {(application.status === "ACCEPTED" ||
+            application.status === "DOCUMENTS_PENDING" ||
+            application.status === "SCHOLARSHIP_REVIEW" ||
+            application.status === "ENROLLED") && (
+            <TuitionSettingsCard
+              applicationId={application.id}
+              tuitionTotalCents={application.tuitionTotalCents ?? 3950000}
+              tuitionScholarshipCents={application.tuitionScholarshipCents ?? 0}
+              tuitionDepositCents={application.tuitionDepositCents ?? null}
+              tuitionInstallmentCount={
+                application.tuitionInstallmentCount ?? null
+              }
+              tuitionPaymentPlan={application.tuitionPaymentPlan ?? null}
+              tuitionPlanLockedAt={application.tuitionPlanLockedAt ?? null}
+            />
+          )}
 
           {/* Internal Notes */}
           <Card>

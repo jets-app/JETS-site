@@ -77,11 +77,18 @@ function getInvoiceStatusBadge(status: string) {
   );
 }
 
-export default async function ParentPaymentsPage() {
+export default async function ParentPaymentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ pay?: string }>;
+}) {
   const session = await auth();
   if (!session?.user?.id) {
     redirect("/login");
   }
+
+  const sp = await searchParams;
+  const autoOpenInvoiceId = sp.pay ?? null;
 
   // Load every enrolled application for this parent. JETS rarely has siblings,
   // so the multi-child list is usually a list of one — but if a parent has 2+
@@ -182,6 +189,7 @@ export default async function ParentPaymentsPage() {
               methods={methodsLite}
               wireInstructions={wireInstructions}
               hideHeader={isMultiChild}
+              autoOpenInvoiceId={autoOpenInvoiceId}
               invoices={invoices.map((inv) => ({
                 id: inv.id,
                 invoiceNumber: inv.invoiceNumber,

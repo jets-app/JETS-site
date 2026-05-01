@@ -54,7 +54,13 @@ export async function generateMonthlyInvoices(targetMonth?: Date) {
   const dueDate = new Date(target.getFullYear(), target.getMonth(), 1);
 
   const enrolled = await db.application.findMany({
-    where: { status: "ENROLLED" },
+    where: {
+      status: "ENROLLED",
+      // Skip students whose tuition plan was locked at contract signing — all
+      // their invoices were generated upfront. The cron only fills in for
+      // students still on the legacy "ad-hoc monthly" path (TuitionAssessment).
+      tuitionPlanLockedAt: null,
+    },
     include: {
       student: { select: { firstName: true, lastName: true } },
     },

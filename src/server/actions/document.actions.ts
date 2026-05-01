@@ -513,6 +513,12 @@ export async function getDocumentByToken(token: string) {
       parentName: document.application.parent.name,
       studentDob: document.application.student?.dateOfBirth ?? null,
       templateType: document.template?.type ?? null,
+      // Tuition pricing — surfaced so the signer can see calculated amounts
+      // when picking a payment plan on a TUITION_CONTRACT.
+      tuitionTotalCents: document.application.tuitionTotalCents,
+      tuitionScholarshipCents: document.application.tuitionScholarshipCents,
+      tuitionDepositCents: document.application.tuitionDepositCents,
+      tuitionInstallmentCount: document.application.tuitionInstallmentCount,
     },
   };
 }
@@ -581,7 +587,35 @@ export async function submitSignedDocument(
   // Check if all documents for this application are signed
   await checkAllDocumentsSigned(document.applicationId);
 
-  return { success: true };
+  // For tuition contracts: lock the payment plan and generate invoices.
+  // The plan choice arrives via the `paymentPlan` field. We fail open — if
+  // it's missing or unrecognized, the document still signs but no schedule
+  // gets generated (admin can fix offline).
+  let depositInvoiceId: string | null = null;
+  let plan: string | null = null;
+  if (document.templateId) {
+    const tpl = await db.documentTemplate.findUnique({
+      where: { id: document.templateId },
+      select: { type: true },
+    });
+    if (tpl?.type === "TUITION_CONTRACT") {
+      const raw = (fieldValues?.paymentPlan ?? "").toString().trim().toUpperCase();
+      const valid = (
+        ["MONTHLY_10", "ONE_SHOT_NOW", "ONE_SHOT_DEFERRED"] as const
+      ).find((p) => p === raw);
+      if (valid) {
+        plan = valid;
+        const { lockTuitionPlan } = await import("./tuition-plan.actions");
+        const r = await lockTuitionPlan({
+          applicationId: document.applicationId,
+          plan: valid,
+        });
+        if ("depositInvoiceId" in r) depositInvoiceId = r.depositInvoiceId ?? null;
+      }
+    }
+  }
+
+  return { success: true, depositInvoiceId, plan };
 }
 
 // ---------- Void Document ----------
@@ -838,7 +872,10 @@ export async function seedDefaultTemplates(opts?: { force?: boolean }) {
       type: "TUITION_CONTRACT",
       content: {
         fields: [
-          { name: "paymentPlan", label: "Payment plan: Annual (full), Semi-Annual (2x), Quarterly (4x), or Monthly (10x)", type: "select", required: true },
+          // The actual plan choice is rendered by the dedicated <TuitionPlanPicker>
+          // for TUITION_CONTRACT documents — this declaration is kept so the
+          // submitted plan flows through the standard fieldValues path.
+          { name: "paymentPlan", label: "Tuition payment plan", type: "select", required: true },
           { name: "billingAddress", label: "Billing address (street, city, state, zip)", type: "text", required: true },
           { name: "agreeToTerms", label: "I have read, reviewed, and understand the entire tuition contract and agree to all provisions.", type: "checkbox", required: true },
         ],
@@ -855,7 +892,7 @@ export async function seedDefaultTemplates(opts?: { force?: boolean }) {
 
   <h3 style="color: #7a0012; margin-top: 24px;">Payment</h3>
   <ul>
-    <li>Tuition may be paid in full at enrollment, or split across an approved plan: Annual, Semi-Annual (2 payments), Quarterly (4 payments), or Monthly (10 payments &mdash; first due at enrollment, the remaining nine due on the 1st of the month from September through May).</li>
+    <li>You will choose one of three payment options below at signing: <strong>(1) 10-month plan</strong> &mdash; 10% deposit today plus 9 monthly installments due on the 1st of the month from September through May; <strong>(2) Pay in full</strong> &mdash; the full balance is charged today; or <strong>(3) Deposit + September 1</strong> &mdash; 10% deposit today and the remaining 90% on September 1.</li>
     <li>A <strong>$50 late fee</strong> applies to payments more than 10 days past due. Three late payments may result in suspension or termination of enrollment.</li>
     <li>Returned checks or failed electronic payments incur a <strong>$35 fee</strong>.</li>
     <li>JETS uses Stripe for credit and debit card payments; <strong>card details are entered through our secure payment portal</strong> and are not collected on this contract.</li>

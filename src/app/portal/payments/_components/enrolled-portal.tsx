@@ -72,6 +72,7 @@ export function EnrolledPortal({
   balance,
   wireInstructions,
   hideHeader,
+  autoOpenInvoiceId,
 }: {
   studentName: string;
   autoPayEnabled: boolean;
@@ -82,6 +83,8 @@ export function EnrolledPortal({
   balance: number;
   wireInstructions: WireInstructions | null;
   hideHeader?: boolean;
+  /** Invoice id to auto-open the pay dialog for (post-contract-signing flow). */
+  autoOpenInvoiceId?: string | null;
 }) {
   const upcoming = invoices
     .filter((i) => i.status !== "paid")
@@ -265,6 +268,7 @@ export function EnrolledPortal({
                             invoiceNumber={inv.invoiceNumber}
                             amount={balance}
                             methods={methods}
+                            autoOpen={autoOpenInvoiceId === inv.id}
                           />
                         )}
                       </div>

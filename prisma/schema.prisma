@@ -259,6 +259,24 @@ model Application {
   discountCode         String?
   discountAmount       Int     @default(0)
 
+  // Tuition pricing — set per student. Defaults to JETS' standard $39,500
+  // total. The "scholarship" is a discount the office applies before the
+  // contract is signed; net = tuitionTotalCents - tuitionScholarshipCents.
+  tuitionTotalCents       Int  @default(3950000)
+  tuitionScholarshipCents Int  @default(0)
+  // Optional admin override for the deposit (defaults to 10% of net).
+  tuitionDepositCents     Int?
+  // Optional admin override for installment count (defaults to 9 = Sept-May).
+  tuitionInstallmentCount Int?
+
+  // Payment plan chosen by parent at contract signing.
+  //   MONTHLY_10        — 10% deposit + 9 monthly installments (Sept-May)
+  //   ONE_SHOT_NOW      — 100% on contract day
+  //   ONE_SHOT_DEFERRED — 10% deposit + 90% on Sept 1
+  tuitionPaymentPlan  String?
+  // When the plan was locked in (i.e. contract signed). Cron skips when set.
+  tuitionPlanLockedAt DateTime?
+
   currentStep   Int @default(1)
   completionPct Int @default(0)
 

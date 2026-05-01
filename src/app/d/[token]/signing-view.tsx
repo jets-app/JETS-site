@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { submitSignedDocument } from "@/server/actions/document.actions";
 import { sanitizeTemplateHtml } from "@/lib/sanitize-html";
+import { TuitionPlanPicker } from "./tuition-plan-picker";
+import type { PaymentPlan } from "@/lib/tuition-plan";
 
 interface DocumentData {
   id: string;
@@ -40,6 +42,10 @@ interface DocumentData {
   parentName: string;
   studentDob: string | null;
   templateType: string | null;
+  tuitionTotalCents?: number;
+  tuitionScholarshipCents?: number;
+  tuitionDepositCents?: number | null;
+  tuitionInstallmentCount?: number | null;
 }
 
 interface DocumentSigningViewProps {
@@ -53,8 +59,15 @@ export function DocumentSigningView({ document }: DocumentSigningViewProps) {
   const [agreed, setAgreed] = useState(false);
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+  const [tuitionPlan, setTuitionPlan] = useState<PaymentPlan | "">("");
 
-  const fields = document.content?.fields ?? [];
+  const isTuitionContract = document.templateType === "TUITION_CONTRACT";
+
+  // Hide the generic paymentPlan dropdown — replaced with the dedicated
+  // picker below for tuition contracts. Other field types render normally.
+  const fields = (document.content?.fields ?? []).filter(
+    (f) => !(isTuitionContract && f.name === "paymentPlan"),
+  );
 
   const handleFieldChange = (name: string, value: string) => {
     setFieldValues((prev) => ({ ...prev, [name]: value }));
@@ -81,8 +94,18 @@ export function DocumentSigningView({ document }: DocumentSigningViewProps) {
       }
     }
 
+    if (isTuitionContract && !tuitionPlan) {
+      setError("Please choose a tuition payment plan before signing.");
+      return;
+    }
+
     // Generate a text-based signature representation
     const signatureDataUrl = `text-signature:${signerName.trim()}|${new Date().toISOString()}`;
+
+    // Inject the tuition plan into fieldValues so the server can pick it up.
+    const submission = isTuitionContract
+      ? { ...fieldValues, paymentPlan: tuitionPlan as string }
+      : fieldValues;
 
     startTransition(async () => {
       try {
@@ -90,12 +113,22 @@ export function DocumentSigningView({ document }: DocumentSigningViewProps) {
           document.token,
           signatureDataUrl,
           signerName.trim(),
-          fieldValues
+          submission
         );
 
         if (result.error) {
           setError(result.error);
         } else {
+          // For tuition contracts: bounce parent straight to the deposit
+          // payment screen if we generated invoices.
+          if (
+            isTuitionContract &&
+            "depositInvoiceId" in result &&
+            result.depositInvoiceId
+          ) {
+            window.location.href = `/portal/payments?pay=${result.depositInvoiceId}`;
+            return;
+          }
           setIsComplete(true);
         }
       } catch {
@@ -230,6 +263,27 @@ export function DocumentSigningView({ document }: DocumentSigningViewProps) {
                   )}
                 </div>
               ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Tuition Payment Plan — only for TUITION_CONTRACT */}
+        {isTuitionContract && (
+          <Card>
+            <CardHeader className="border-b">
+              <CardTitle className="text-sm">
+                Choose Your Tuition Payment Plan
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <TuitionPlanPicker
+                totalCents={document.tuitionTotalCents ?? 3950000}
+                scholarshipCents={document.tuitionScholarshipCents ?? 0}
+                depositCents={document.tuitionDepositCents ?? null}
+                installmentCount={document.tuitionInstallmentCount ?? null}
+                value={tuitionPlan}
+                onChange={setTuitionPlan}
+              />
             </CardContent>
           </Card>
         )}

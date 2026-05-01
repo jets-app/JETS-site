@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -42,14 +42,21 @@ export function PayInvoiceWithFee({
   invoiceNumber,
   amount,
   methods,
+  autoOpen,
 }: {
   invoiceId: string;
   invoiceNumber: string;
   amount: number;
   methods: MethodLite[];
+  autoOpen?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+
+  // Triggered when redirected from contract signing — auto-prompt payment.
+  useEffect(() => {
+    if (autoOpen) setOpen(true);
+  }, [autoOpen]);
   const [pending, startTransition] = useTransition();
   const [msg, setMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [selectedId, setSelectedId] = useState<string>(
