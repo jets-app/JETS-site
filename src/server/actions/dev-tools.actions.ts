@@ -14,18 +14,16 @@ async function requireFounder() {
 }
 
 /**
- * Creates a fully-formed test parent + student at INTERVIEW_COMPLETED status,
- * ready for the office to send acceptance email + enrollment docs. Founder-
- * only. Returns the parent's login credentials.
+ * Internal helper — does the actual creation. Reused by the action below
+ * (auth-gated, called from the admin UI) and the API route at
+ * /api/dev/create-test-student (token-gated, for use when the admin UI is
+ * unreachable).
  */
-export async function createTestStudent(input: {
+export async function createTestStudentInternal(input: {
   baseEmail: string;
   studentFirstName?: string;
   studentLastName?: string;
 }) {
-  const check = await requireFounder();
-  if ("error" in check) return { error: check.error };
-
   const baseEmail = input.baseEmail.trim().toLowerCase();
   const [local, domain] = baseEmail.split("@");
   if (!local || !domain) return { error: "Invalid email." };
@@ -126,4 +124,17 @@ export async function createTestStudent(input: {
       name: parentName,
     },
   };
+}
+
+/**
+ * Public action used by the admin UI. Auth-gates the internal helper.
+ */
+export async function createTestStudent(input: {
+  baseEmail: string;
+  studentFirstName?: string;
+  studentLastName?: string;
+}) {
+  const check = await requireFounder();
+  if ("error" in check) return { error: check.error };
+  return createTestStudentInternal(input);
 }
