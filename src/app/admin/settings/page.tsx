@@ -16,6 +16,7 @@ import {
   MessageSquare,
   ArrowRight,
   Users,
+  UserCircle,
 } from "lucide-react";
 import { getSettings } from "@/server/actions/settings.actions";
 import { SchoolInfoCard } from "./_components/school-info-card";
@@ -30,6 +31,14 @@ type SettingCard = {
 };
 
 const INTEGRATION_CARDS: SettingCard[] = [
+  {
+    title: "My Profile",
+    description:
+      "Update your name, photo, phone, email, password, and 2FA.",
+    href: "/admin/profile",
+    icon: UserCircle,
+    status: "ready",
+  },
   {
     title: "QuickBooks Integration",
     description:

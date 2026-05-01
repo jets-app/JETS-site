@@ -14,7 +14,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2, CheckCircle2, XCircle, Plus, X as XIcon, Star } from "lucide-react";
+import {
+  Building2,
+  CheckCircle2,
+  XCircle,
+  Plus,
+  X as XIcon,
+  Star,
+  Pencil,
+} from "lucide-react";
 import {
   updateSettings,
   toggleApplicationsOpen,
@@ -40,6 +48,7 @@ export function SchoolInfoCard({ settings }: SchoolInfoCardProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
     schoolName: settings.schoolName,
     schoolLegalName: settings.schoolLegalName,
@@ -130,6 +139,7 @@ export function SchoolInfoCard({ settings }: SchoolInfoCardProps) {
           calendlyUrl: form.calendlyUrl,
         });
         setSavedAt(new Date());
+        setEditing(false);
         router.refresh();
       } catch (err: unknown) {
         const msg =
@@ -137,6 +147,29 @@ export function SchoolInfoCard({ settings }: SchoolInfoCardProps) {
         alert(msg);
       }
     });
+  };
+
+  const handleCancel = () => {
+    // Revert local state to the saved settings
+    setForm({
+      schoolName: settings.schoolName,
+      schoolLegalName: settings.schoolLegalName,
+      schoolEin: settings.schoolEin,
+      schoolAddress: settings.schoolAddress,
+      schoolPhone: settings.schoolPhone,
+      schoolEmail: settings.schoolEmail,
+      currentAcademicYear: settings.currentAcademicYear,
+      applicationFeeAmountDollars: (
+        settings.applicationFeeAmount / 100
+      ).toFixed(2),
+      calendlyUrl: settings.calendlyUrl ?? "",
+    });
+    setOpenYears(
+      settings.openSchoolYears.length > 0
+        ? settings.openSchoolYears
+        : [settings.currentAcademicYear],
+    );
+    setEditing(false);
   };
 
   const handleToggleOpen = () => {
@@ -170,19 +203,99 @@ export function SchoolInfoCard({ settings }: SchoolInfoCardProps) {
               </CardDescription>
             </div>
           </div>
-          {settings.applicationsOpen ? (
-            <Badge variant="secondary" className="gap-1">
-              <CheckCircle2 className="size-3" /> Applications Open
-            </Badge>
-          ) : (
-            <Badge variant="outline" className="gap-1">
-              <XCircle className="size-3" /> Applications Closed
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {settings.applicationsOpen ? (
+              <Badge variant="secondary" className="gap-1">
+                <CheckCircle2 className="size-3" /> Applications Open
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="gap-1">
+                <XCircle className="size-3" /> Applications Closed
+              </Badge>
+            )}
+            {!editing && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditing(true)}
+              >
+                <Pencil className="size-3.5" />
+                Edit
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+
+      {!editing ? (
+        <CardContent className="space-y-6">
+          {/* ============ View mode ============ */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold">Academic Year</h3>
+            <div className="rounded-lg border bg-muted/20 px-3 py-2 space-y-1.5">
+              {openYears.map((year) => {
+                const isCurrent = settings.currentAcademicYear === year;
+                return (
+                  <div
+                    key={year}
+                    className="flex items-center gap-2 text-sm"
+                  >
+                    {isCurrent && (
+                      <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+                    )}
+                    <span className={isCurrent ? "font-medium" : ""}>
+                      {year}
+                    </span>
+                    {isCurrent && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        Current
+                      </Badge>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <ReadField
+              label="Application Fee"
+              value={`$${(settings.applicationFeeAmount / 100).toFixed(2)}`}
+            />
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <p className="text-sm font-medium">Applications Open</p>
+                <p className="text-xs text-muted-foreground">
+                  Controls whether parents can start new applications.
+                </p>
+              </div>
+              <Switch
+                checked={settings.applicationsOpen}
+                onCheckedChange={handleToggleOpen}
+                disabled={isPending}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-3 pt-4 border-t">
+            <h3 className="text-sm font-semibold">School Details</h3>
+            <div className="grid sm:grid-cols-2 gap-x-4 gap-y-3">
+              <ReadField label="Display Name" value={settings.schoolName} />
+              <ReadField label="Legal Name" value={settings.schoolLegalName} />
+              <ReadField label="EIN" value={settings.schoolEin} />
+              <ReadField label="Email" value={settings.schoolEmail} />
+              <ReadField label="Phone" value={settings.schoolPhone} />
+              <ReadField
+                label="Calendly URL"
+                value={settings.calendlyUrl || "—"}
+              />
+              <div className="sm:col-span-2">
+                <ReadField label="Address" value={settings.schoolAddress} />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      ) : (
+        <CardContent>
+          {/* ============ Edit mode ============ */}
+          <form onSubmit={handleSubmit} className="space-y-6">
           {/* Academic Year Section */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold">Academic Year</h3>
@@ -382,9 +495,18 @@ export function SchoolInfoCard({ settings }: SchoolInfoCardProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 pt-2">
+          <div className="flex items-center gap-3 pt-2 border-t">
             <Button type="submit" disabled={isPending} size="sm">
               {isPending ? "Saving…" : "Save Changes"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleCancel}
+              disabled={isPending}
+            >
+              Cancel
             </Button>
             {savedAt && (
               <span className="text-xs text-muted-foreground">
@@ -394,6 +516,18 @@ export function SchoolInfoCard({ settings }: SchoolInfoCardProps) {
           </div>
         </form>
       </CardContent>
+      )}
     </Card>
+  );
+}
+
+function ReadField({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="space-y-0.5">
+      <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+        {label}
+      </p>
+      <p className="text-sm font-medium break-words">{value || "—"}</p>
+    </div>
   );
 }

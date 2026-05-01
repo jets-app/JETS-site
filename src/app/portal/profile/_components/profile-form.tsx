@@ -13,6 +13,7 @@ import {
   Mail,
   Lock,
   Shield,
+  Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,6 +71,7 @@ export function ProfileForm({ user }: { user: ProfileUser }) {
   const [phone, setPhone] = useState(user.phone ?? "");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(user.avatarUrl);
   const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [editingProfile, setEditingProfile] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [profileFeedback, setProfileFeedback] = useState<Feedback | null>(null);
@@ -133,8 +135,18 @@ export function ProfileForm({ user }: { user: ProfileUser }) {
           type: "success",
           message: "Profile updated successfully.",
         });
+        setEditingProfile(false);
       }
     });
+  };
+
+  const handleCancelProfile = () => {
+    setName(user.name);
+    setPhone(user.phone ?? "");
+    setAvatarUrl(user.avatarUrl);
+    setAvatarError(null);
+    setProfileFeedback(null);
+    setEditingProfile(false);
   };
 
   const handleSaveEmail = () => {
@@ -223,116 +235,168 @@ export function ProfileForm({ user }: { user: ProfileUser }) {
 
       {/* ============ Profile Details ============ */}
       <section className="rounded-xl border bg-card p-4 sm:p-6 space-y-5">
-        <div className="flex items-center gap-2">
-          <UserIcon className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-base font-semibold">Profile Details</h2>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <UserIcon className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-base font-semibold">Profile Details</h2>
+          </div>
+          {!editingProfile && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setEditingProfile(true)}
+            >
+              <Pencil className="h-3.5 w-3.5 mr-1.5" />
+              Edit
+            </Button>
+          )}
         </div>
 
-        {/* Avatar */}
-        <div className="flex items-center gap-4">
-          <Avatar size="lg" className="size-16">
-            {avatarUrl ? (
-              <AvatarImage src={avatarUrl} alt={user.name} />
-            ) : null}
-            <AvatarFallback>{initials || "?"}</AvatarFallback>
-          </Avatar>
-          <div className="space-y-1.5">
-            <div className="flex flex-wrap gap-2">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) =>
-                  handleAvatarSelect(e.target.files?.[0] ?? null)
-                }
+        {!editingProfile ? (
+          <>
+            {/* View mode */}
+            <div className="flex items-center gap-4">
+              <Avatar size="lg" className="size-16">
+                {avatarUrl ? (
+                  <AvatarImage src={avatarUrl} alt={user.name} />
+                ) : null}
+                <AvatarFallback>{initials || "?"}</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="font-semibold">{user.name}</p>
+                <p className="text-sm text-muted-foreground">{user.email}</p>
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-x-4 gap-y-3 pt-2">
+              <div className="space-y-0.5">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+                  Full name
+                </p>
+                <p className="text-sm font-medium">{user.name}</p>
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+                  Phone
+                </p>
+                <p className="text-sm font-medium">{user.phone || "—"}</p>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Edit mode */}
+            {/* Avatar */}
+            <div className="flex items-center gap-4">
+              <Avatar size="lg" className="size-16">
+                {avatarUrl ? (
+                  <AvatarImage src={avatarUrl} alt={user.name} />
+                ) : null}
+                <AvatarFallback>{initials || "?"}</AvatarFallback>
+              </Avatar>
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) =>
+                      handleAvatarSelect(e.target.files?.[0] ?? null)
+                    }
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isSavingProfile}
+                  >
+                    <Upload className="h-3.5 w-3.5 mr-1.5" />
+                    Upload Photo
+                  </Button>
+                  {avatarUrl && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleRemoveAvatar}
+                      disabled={isSavingProfile}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                      Remove
+                    </Button>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  JPG, PNG or GIF. Max 5MB.
+                </p>
+                {avatarError && (
+                  <p className="text-xs text-destructive">{avatarError}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={isSavingProfile}
+                placeholder="Your full name"
               />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="email-readonly">Email</Label>
+              <Input
+                id="email-readonly"
+                value={user.email}
+                readOnly
+                disabled
+                className="bg-muted"
+              />
+              <p className="text-xs text-muted-foreground">
+                To change your email, use the Change Email section below.
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="phone">Phone</Label>
+              <Input
+                id="phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                disabled={isSavingProfile}
+                placeholder="(555) 123-4567"
+              />
+            </div>
+
+            {profileFeedback && <Alert feedback={profileFeedback} />}
+
+            <div className="flex items-center gap-3 pt-2 border-t">
               <Button
-                type="button"
+                onClick={handleSaveProfile}
+                disabled={isSavingProfile || !name.trim()}
+              >
+                {isSavingProfile ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                ) : (
+                  <Save className="h-4 w-4 mr-1.5" />
+                )}
+                Save Changes
+              </Button>
+              <Button
                 variant="outline"
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={handleCancelProfile}
                 disabled={isSavingProfile}
               >
-                <Upload className="h-3.5 w-3.5 mr-1.5" />
-                Upload Photo
+                Cancel
               </Button>
-              {avatarUrl && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleRemoveAvatar}
-                  disabled={isSavingProfile}
-                >
-                  <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                  Remove
-                </Button>
-              )}
             </div>
-            <p className="text-xs text-muted-foreground">
-              JPG, PNG or GIF. Max 5MB.
-            </p>
-            {avatarError && (
-              <p className="text-xs text-destructive">{avatarError}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Name */}
-        <div className="space-y-1.5">
-          <Label htmlFor="name">Full Name</Label>
-          <Input
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            disabled={isSavingProfile}
-            placeholder="Your full name"
-          />
-        </div>
-
-        {/* Email (readonly) */}
-        <div className="space-y-1.5">
-          <Label htmlFor="email-readonly">Email</Label>
-          <Input
-            id="email-readonly"
-            value={user.email}
-            readOnly
-            disabled
-            className="bg-muted"
-          />
-          <p className="text-xs text-muted-foreground">
-            To change your email, use the Change Email section below.
-          </p>
-        </div>
-
-        {/* Phone */}
-        <div className="space-y-1.5">
-          <Label htmlFor="phone">Phone</Label>
-          <Input
-            id="phone"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            disabled={isSavingProfile}
-            placeholder="(555) 123-4567"
-          />
-        </div>
-
-        {profileFeedback && <Alert feedback={profileFeedback} />}
-
-        <div className="flex justify-end">
-          <Button
-            onClick={handleSaveProfile}
-            disabled={isSavingProfile || !name.trim()}
-          >
-            {isSavingProfile ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-            ) : (
-              <Save className="h-4 w-4 mr-1.5" />
-            )}
-            Save Changes
-          </Button>
-        </div>
+          </>
+        )}
       </section>
 
       {/* ============ Change Email ============ */}
