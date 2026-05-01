@@ -2,13 +2,13 @@
 
 import { db } from "@/server/db";
 import { auth } from "@/server/auth";
-import { isFounder } from "@/lib/roles";
+import { isFullAdmin } from "@/lib/roles";
 import bcrypt from "bcryptjs";
 
 async function requireFounder() {
   const session = await auth();
-  if (!session?.user || !isFounder(session.user.email ?? null)) {
-    return { error: "Founder access required." as const };
+  if (!session?.user || !isFullAdmin(session.user.role)) {
+    return { error: "Admin access required." as const };
   }
   return { session };
 }

@@ -1,11 +1,11 @@
 import { auth } from "@/server/auth";
 import { redirect } from "next/navigation";
-import { isFounder } from "@/lib/roles";
+import { isFullAdmin } from "@/lib/roles";
 import { DevToolsClient } from "./_components/dev-tools-client";
 
 export default async function DevToolsPage() {
   const session = await auth();
-  if (!session?.user || !isFounder(session.user.email ?? null)) {
+  if (!session?.user || !isFullAdmin(session.user.role)) {
     redirect("/admin/dashboard");
   }
 
