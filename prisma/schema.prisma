@@ -483,9 +483,22 @@ model Payment {
   currency    String        @default("usd")
   description String?
 
+  // Method JETS used to receive money. Drives which deposit account a batch
+  // lands in (stripe_card / stripe_ach → qbStripeDepositAccountId, check →
+  // qbCheckDepositAccountId, etc.). Null when not applicable (refunds, etc.).
+  method String?
+
   stripePaymentIntentId   String? @unique
   stripeCheckoutSessionId String?
   stripeReceiptUrl        String?
+  stripePayoutId          String?
+
+  // Link to the deposit batch this payment was rolled up into (if any).
+  // A null batchId on a SUCCEEDED card/ACH payment means it's still waiting
+  // for the matching Stripe payout. On a check, null = still in "open
+  // checks" awaiting deposit.
+  batchId String?
+  batch   DepositBatch? @relation(fields: [batchId], references: [id])
 
   paidAt    DateTime?
   createdAt DateTime  @default(now())
@@ -493,6 +506,41 @@ model Payment {
 
   @@index([applicationId])
   @@index([stripePaymentIntentId])
+  @@index([stripePayoutId])
+  @@index([batchId])
+}
+
+// ==================== DEPOSIT BATCHES ====================
+// Groups N payments that landed in the bank as a single deposit. Posted to
+// QBO as one Deposit transaction with split lines per income category.
+//
+// Sources:
+//   stripe — created from a Stripe payout.paid webhook
+//   check  — created manually by admin from N "open" check payments
+model DepositBatch {
+  id          String    @id @default(cuid())
+  source      String    // "stripe" | "check"
+  status      String    @default("pending") // pending | posted | failed
+  depositDate DateTime
+  totalCents  Int       @default(0)
+
+  // Stripe-specific — the Stripe payout id this batch represents.
+  stripePayoutId String? @unique
+
+  // QBO posting state
+  qbDepositId String?
+  qbPostedAt  DateTime?
+  qbError     String?   @db.Text
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payments Payment[]
+
+  @@index([source, status])
+  @@index([depositDate])
 }
 
 model Invoice {
@@ -1040,6 +1088,25 @@ model SystemSettings {
   qbAutoSyncInvoices Boolean   @default(true)
   qbAutoSyncPayments Boolean   @default(true)
   qbAutoSyncCustomers Boolean  @default(true)
+
+  // ===== Batch-deposit posting (the new way — replaces per-invoice sync) =====
+  // "auto" → Stripe payouts post to QBO automatically when the webhook fires.
+  // "manual" → admin reviews each batch on the Daily Batches page first.
+  qbBatchMode String @default("manual")
+
+  // Which QBO bank/asset accounts deposits land in.
+  qbStripeDepositAccountId String?
+  qbStripeDepositAccountName String?
+  qbCheckDepositAccountId String?
+  qbCheckDepositAccountName String?
+
+  // JETS revenue category → QBO income account ID. Stored as JSON keyed by
+  // PaymentType enum values (APPLICATION_FEE, TUITION, DONATION, etc.) plus
+  // a "OTHER" fallback. Each entry = { accountId, accountName }.
+  qbCategoryAccountMap Json?
+
+  // Last time we refreshed the QBO accounts list (for the dropdown UI).
+  qbAccountsLastRefreshedAt DateTime?
 
   // Wire transfer instructions — shown to parents/donors who choose to pay by
   // wire. Stored here so the office can update bank info without a code deploy.

@@ -237,3 +237,95 @@ export function qbCall<T>(
     );
   });
 }
+
+// ==================== QBO Account & Deposit helpers ====================
+
+export interface QbAccountLite {
+  id: string;
+  name: string;
+  type: string;        // QBO AccountType (Bank, OtherCurrentAsset, Income, etc.)
+  subType?: string;
+  currency?: string;
+}
+
+/**
+ * Pulls the chart of accounts from QBO. Used for the Settings → QuickBooks
+ * mapping screen so the admin can pick which bank + income accounts deposits
+ * post to.
+ */
+export async function fetchQbAccounts(): Promise<QbAccountLite[]> {
+  const qbo = await getQBClient();
+  if (!qbo) return [];
+
+  type RawAccount = {
+    Id: string;
+    Name: string;
+    AccountType: string;
+    AccountSubType?: string;
+    CurrencyRef?: { value: string };
+  };
+  type AccountQueryResponse = {
+    QueryResponse?: { Account?: RawAccount[] };
+  };
+
+  // We pull active accounts and filter to the kinds that make sense for
+  // batch-deposit posting (Bank/OtherCurrentAsset for the deposit account,
+  // Income/OtherIncome for the category lines).
+  const result = await qbCall<AccountQueryResponse>(
+    qbo,
+    "findAccounts",
+    {
+      where: "Active = true",
+      limit: 500,
+    },
+  );
+
+  const raw = result.QueryResponse?.Account ?? [];
+  return raw.map((a) => ({
+    id: a.Id,
+    name: a.Name,
+    type: a.AccountType,
+    subType: a.AccountSubType,
+    currency: a.CurrencyRef?.value,
+  }));
+}
+
+export interface DepositLineInput {
+  accountId: string;
+  accountName?: string;
+  amountCents: number;
+  description?: string;
+}
+
+/**
+ * Posts a single Deposit transaction to QBO with split income lines. The
+ * total of the lines is what lands in the deposit-to bank account.
+ */
+export async function createQbDeposit(input: {
+  depositDate: Date;
+  depositToAccountId: string;
+  lines: DepositLineInput[];
+  privateNote?: string;
+}): Promise<{ id: string }> {
+  const qbo = await getQBClient();
+  if (!qbo) throw new Error("QuickBooks not connected.");
+
+  const lines = input.lines.map((line) => ({
+    DetailType: "DepositLineDetail",
+    Amount: line.amountCents / 100,
+    Description: line.description ?? "Batch deposit",
+    DepositLineDetail: {
+      AccountRef: { value: line.accountId, name: line.accountName },
+    },
+  }));
+
+  const payload = {
+    DepositToAccountRef: { value: input.depositToAccountId },
+    TxnDate: input.depositDate.toISOString().slice(0, 10),
+    Line: lines,
+    PrivateNote: input.privateNote,
+  };
+
+  const created = await qbCall<{ Id: string }>(qbo, "createDeposit", payload);
+  return { id: created.Id };
+}
