@@ -48,6 +48,13 @@ export interface UpdateSettingsInput {
   schoolPhone?: string;
   schoolEmail?: string;
   calendlyUrl?: string | null;
+  wireBankName?: string | null;
+  wireAccountName?: string | null;
+  wireRoutingNumber?: string | null;
+  wireAccountNumber?: string | null;
+  wireSwiftCode?: string | null;
+  wireBankAddress?: string | null;
+  wireInstructions?: string | null;
 }
 
 export async function updateSettings(data: UpdateSettingsInput) {
@@ -73,6 +80,21 @@ export async function updateSettings(data: UpdateSettingsInput) {
   if (data.schoolEmail !== undefined) update.schoolEmail = data.schoolEmail.trim();
   if (data.calendlyUrl !== undefined)
     update.calendlyUrl = data.calendlyUrl?.trim() || null;
+
+  // Wire fields — null clears, empty string clears, trimmed value otherwise.
+  const wireFields = [
+    "wireBankName",
+    "wireAccountName",
+    "wireRoutingNumber",
+    "wireAccountNumber",
+    "wireSwiftCode",
+    "wireBankAddress",
+    "wireInstructions",
+  ] as const;
+  for (const f of wireFields) {
+    const v = data[f];
+    if (v !== undefined) update[f] = v?.trim() || null;
+  }
 
   const settings = await db.systemSettings.upsert({
     where: { id: SETTINGS_ID },

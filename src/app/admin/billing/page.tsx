@@ -190,10 +190,18 @@ export default async function AdminBillingPage() {
               {dueThisMonthRaw.map((inv) => {
                 const ap = apMap.get(inv.parentId);
                 const onAutoPay = ap?.enabled && hasMethod.has(inv.parentId);
+                const wirePending = !!inv.wirePendingAt;
                 return (
                   <TableRow key={inv.id}>
                     <TableCell className="font-medium">
-                      {studentOf(inv.parentId, inv.applicationId)}
+                      <div className="flex items-center gap-2">
+                        {studentOf(inv.parentId, inv.applicationId)}
+                        {wirePending && (
+                          <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-transparent text-[10px]">
+                            Wire pending
+                          </Badge>
+                        )}
+                      </div>
                       <div className="text-xs text-muted-foreground">
                         {inv.invoiceNumber}
                       </div>

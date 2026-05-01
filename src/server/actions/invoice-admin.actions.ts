@@ -56,7 +56,9 @@ export async function markInvoicePaidManually(input: {
         amountPaid: invoice.total,
         status: "paid",
         paidAt: new Date(),
-        paymentMethodType: null, // not a card/ACH
+        paymentMethodType: input.method, // cash | check | wire | other
+        // Clear any pending wire flag — admin reconciliation completes the cycle.
+        wirePendingAt: null,
       },
     }),
     db.payment.create({

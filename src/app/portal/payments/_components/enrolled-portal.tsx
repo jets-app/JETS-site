@@ -13,7 +13,6 @@ import {
 import {
   AlertTriangle,
   CheckCircle2,
-  Building2,
   CreditCard,
   CalendarClock,
   Settings2,
@@ -21,6 +20,8 @@ import {
   Zap,
 } from "lucide-react";
 import { PayInvoiceWithFee } from "./pay-invoice-with-fee";
+import { PayByWire, type WireInstructions } from "./pay-by-wire";
+import { PaymentTimeline } from "./payment-timeline";
 
 interface MethodLite {
   id: string;
@@ -39,6 +40,7 @@ interface InvoiceRow {
   status: string;
   paidAt: string | null;
   paymentMethodType: string | null;
+  wirePendingAt?: string | null;
 }
 interface PaymentRow {
   id: string;
@@ -68,6 +70,8 @@ export function EnrolledPortal({
   invoices,
   payments,
   balance,
+  wireInstructions,
+  hideHeader,
 }: {
   studentName: string;
   autoPayEnabled: boolean;
@@ -76,6 +80,8 @@ export function EnrolledPortal({
   invoices: InvoiceRow[];
   payments: PaymentRow[];
   balance: number;
+  wireInstructions: WireInstructions | null;
+  hideHeader?: boolean;
 }) {
   const upcoming = invoices
     .filter((i) => i.status !== "paid")
@@ -84,13 +90,23 @@ export function EnrolledPortal({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <p className="text-sm text-muted-foreground">{studentName}</p>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-          Tuition & Payments
-        </h1>
-      </div>
+      {/* Header — hidden when stacked under a multi-child layout */}
+      {!hideHeader && (
+        <div>
+          <p className="text-sm text-muted-foreground">{studentName}</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            Tuition & Payments
+          </h1>
+        </div>
+      )}
+      {hideHeader && (
+        <div className="flex items-center gap-2 pt-2 border-t border-foreground/5">
+          <h2 className="text-lg font-semibold">{studentName}</h2>
+          <Badge variant="outline" className="text-[10px]">
+            {invoices.filter((i) => i.status !== "paid").length} open
+          </Badge>
+        </div>
+      )}
 
       {/* Auto-Pay banner */}
       <div
@@ -179,6 +195,20 @@ export function EnrolledPortal({
         </LinkButton>
       </div>
 
+      {/* Visual Payment Timeline */}
+      <Section
+        title="Payment Schedule"
+        subtitle="Your tuition invoices at a glance — past, current, and upcoming"
+      >
+        <div className="px-2 sm:px-2 py-2">
+          <PaymentTimeline
+            invoices={invoices}
+            autoPayMethod={autoPayMethod}
+            autoPayEnabled={autoPayEnabled}
+          />
+        </div>
+      </Section>
+
       {/* Upcoming Invoices */}
       <Section title="Upcoming Invoices" subtitle="Pay any invoice manually anytime">
         {upcoming.length === 0 ? (
@@ -198,6 +228,7 @@ export function EnrolledPortal({
               {upcoming.map((inv) => {
                 const balance = inv.total - inv.amountPaid;
                 const overdue = new Date(inv.dueDate) < new Date();
+                const wirePending = !!inv.wirePendingAt;
                 return (
                   <TableRow key={inv.id}>
                     <TableCell className="font-medium">
@@ -206,7 +237,11 @@ export function EnrolledPortal({
                     <TableCell>{fmtDate(inv.dueDate)}</TableCell>
                     <TableCell>{fmt(balance)}</TableCell>
                     <TableCell>
-                      {overdue ? (
+                      {wirePending ? (
+                        <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-transparent">
+                          Wire pending
+                        </Badge>
+                      ) : overdue ? (
                         <Badge className="bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 border-transparent">
                           Overdue
                         </Badge>
@@ -215,12 +250,24 @@ export function EnrolledPortal({
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <PayInvoiceWithFee
-                        invoiceId={inv.id}
-                        invoiceNumber={inv.invoiceNumber}
-                        amount={balance}
-                        methods={methods}
-                      />
+                      <div className="flex justify-end gap-1.5">
+                        {wireInstructions && !wirePending && (
+                          <PayByWire
+                            invoiceId={inv.id}
+                            invoiceNumber={inv.invoiceNumber}
+                            amount={balance}
+                            instructions={wireInstructions}
+                          />
+                        )}
+                        {!wirePending && (
+                          <PayInvoiceWithFee
+                            invoiceId={inv.id}
+                            invoiceNumber={inv.invoiceNumber}
+                            amount={balance}
+                            methods={methods}
+                          />
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 );

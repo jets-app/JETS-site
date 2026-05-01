@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { getSettings } from "@/server/actions/settings.actions";
 import { SchoolInfoCard } from "./_components/school-info-card";
+import { WireInstructionsCard } from "./_components/wire-instructions-card";
 
 type SettingCard = {
   title: string;
@@ -112,6 +113,19 @@ export default async function AdminSettingsPage() {
           schoolPhone: settings.schoolPhone,
           schoolEmail: settings.schoolEmail,
           calendlyUrl: settings.calendlyUrl,
+        }}
+      />
+
+      {/* Wire transfer instructions */}
+      <WireInstructionsCard
+        settings={{
+          wireBankName: settings.wireBankName,
+          wireAccountName: settings.wireAccountName,
+          wireRoutingNumber: settings.wireRoutingNumber,
+          wireAccountNumber: settings.wireAccountNumber,
+          wireSwiftCode: settings.wireSwiftCode,
+          wireBankAddress: settings.wireBankAddress,
+          wireInstructions: settings.wireInstructions,
         }}
       />
 

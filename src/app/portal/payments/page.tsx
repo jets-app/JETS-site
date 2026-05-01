@@ -30,6 +30,7 @@ import {
 import { PayApplicationFeeButton } from "./_components/pay-fee-button";
 import { ApplyDiscountForm } from "./_components/apply-discount-form";
 import { EnrolledPortal } from "./_components/enrolled-portal";
+import { getWireInstructions } from "@/server/actions/wire-payment.actions";
 
 function formatCents(cents: number): string {
   return `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
@@ -82,39 +83,40 @@ export default async function ParentPaymentsPage() {
     redirect("/login");
   }
 
-  // Load the primary application (one per parent currently)
-  const primaryApp = await db.application.findFirst({
-    where: { parentId: session.user.id },
+  // Load every enrolled application for this parent. JETS rarely has siblings,
+  // so the multi-child list is usually a list of one — but if a parent has 2+
+  // boys at JETS we render a section per child.
+  const enrolledApps = await db.application.findMany({
+    where: { parentId: session.user.id, status: "ENROLLED" },
     include: {
       student: { select: { firstName: true, lastName: true } },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { createdAt: "asc" },
   });
 
-  const isEnrolled = primaryApp?.status === "ENROLLED";
+  const isEnrolled = enrolledApps.length > 0;
 
   // ==================== ENROLLED: AppFolio-style portal ====================
-  if (isEnrolled && primaryApp) {
-    const [invoices, paymentsRaw, methodsRaw, autoPay] = await Promise.all([
-      db.invoice.findMany({
-        where: { applicationId: primaryApp.id },
-        orderBy: { dueDate: "asc" },
-      }),
-      db.payment.findMany({
-        where: { applicationId: primaryApp.id, status: "SUCCEEDED" },
-        orderBy: { createdAt: "desc" },
-        take: 50,
-      }),
-      db.paymentMethod.findMany({
-        where: { userId: session.user.id },
-        orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
-      }),
-      db.autoPaySettings.findUnique({ where: { userId: session.user.id } }),
-    ]);
-
-    const balance = invoices
-      .filter((i) => i.status !== "paid")
-      .reduce((s, i) => s + (i.total - i.amountPaid), 0);
+  if (isEnrolled) {
+    const appIds = enrolledApps.map((a) => a.id);
+    const [allInvoices, allPaymentsRaw, methodsRaw, autoPay, wireInstructions] =
+      await Promise.all([
+        db.invoice.findMany({
+          where: { applicationId: { in: appIds } },
+          orderBy: { dueDate: "asc" },
+        }),
+        db.payment.findMany({
+          where: { applicationId: { in: appIds }, status: "SUCCEEDED" },
+          orderBy: { createdAt: "desc" },
+          take: 100,
+        }),
+        db.paymentMethod.findMany({
+          where: { userId: session.user.id },
+          orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
+        }),
+        db.autoPaySettings.findUnique({ where: { userId: session.user.id } }),
+        getWireInstructions(),
+      ]);
 
     const methodsLite = methodsRaw.map((m) => ({
       id: m.id,
@@ -131,37 +133,78 @@ export default async function ParentPaymentsPage() {
       methodsLite[0] ??
       null;
 
+    const familyBalance = allInvoices
+      .filter((i) => i.status !== "paid")
+      .reduce((s, i) => s + (i.total - i.amountPaid), 0);
+
+    const isMultiChild = enrolledApps.length > 1;
+
     return (
-      <div className="max-w-5xl mx-auto">
-        <EnrolledPortal
-          studentName={
-            primaryApp.student
-              ? `${primaryApp.student.firstName} ${primaryApp.student.lastName}`
-              : "Student"
-          }
-          autoPayEnabled={autoPay?.enabled ?? true}
-          autoPayMethod={apMethod}
-          methods={methodsLite}
-          invoices={invoices.map((inv) => ({
-            id: inv.id,
-            invoiceNumber: inv.invoiceNumber,
-            dueDate: inv.dueDate.toISOString(),
-            total: inv.total,
-            amountPaid: inv.amountPaid,
-            status: inv.status,
-            paidAt: inv.paidAt?.toISOString() ?? null,
-            paymentMethodType: inv.paymentMethodType,
-          }))}
-          payments={paymentsRaw.map((p) => ({
-            id: p.id,
-            createdAt: p.createdAt.toISOString(),
-            paidAt: p.paidAt?.toISOString() ?? null,
-            description: p.description,
-            amount: p.amount,
-            type: p.type,
-          }))}
-          balance={balance}
-        />
+      <div className="max-w-5xl mx-auto space-y-8">
+        {/* Family-level header (only when multi-child) */}
+        {isMultiChild && (
+          <div className="rounded-xl border bg-card p-5">
+            <p className="text-sm text-muted-foreground">Family Tuition</p>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mt-0.5">
+              {enrolledApps.length} students enrolled
+            </h1>
+            <p className="text-sm text-muted-foreground mt-2">
+              Combined balance:{" "}
+              <span className="font-semibold text-foreground tabular-nums">
+                {`$${(familyBalance / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
+              </span>
+            </p>
+          </div>
+        )}
+
+        {enrolledApps.map((app) => {
+          const studentName = app.student
+            ? `${app.student.firstName} ${app.student.lastName}`
+            : "Student";
+
+          const invoices = allInvoices.filter(
+            (i) => i.applicationId === app.id,
+          );
+          const payments = allPaymentsRaw.filter(
+            (p) => p.applicationId === app.id,
+          );
+
+          const balance = invoices
+            .filter((i) => i.status !== "paid")
+            .reduce((s, i) => s + (i.total - i.amountPaid), 0);
+
+          return (
+            <EnrolledPortal
+              key={app.id}
+              studentName={studentName}
+              autoPayEnabled={autoPay?.enabled ?? true}
+              autoPayMethod={apMethod}
+              methods={methodsLite}
+              wireInstructions={wireInstructions}
+              hideHeader={isMultiChild}
+              invoices={invoices.map((inv) => ({
+                id: inv.id,
+                invoiceNumber: inv.invoiceNumber,
+                dueDate: inv.dueDate.toISOString(),
+                total: inv.total,
+                amountPaid: inv.amountPaid,
+                status: inv.status,
+                paidAt: inv.paidAt?.toISOString() ?? null,
+                paymentMethodType: inv.paymentMethodType,
+                wirePendingAt: inv.wirePendingAt?.toISOString() ?? null,
+              }))}
+              payments={payments.map((p) => ({
+                id: p.id,
+                createdAt: p.createdAt.toISOString(),
+                paidAt: p.paidAt?.toISOString() ?? null,
+                description: p.description,
+                amount: p.amount,
+                type: p.type,
+              }))}
+              balance={balance}
+            />
+          );
+        })}
       </div>
     );
   }
