@@ -68,6 +68,7 @@ export async function markInvoicePaidManually(input: {
         status: "SUCCEEDED",
         amount: remaining,
         description,
+        method: input.method, // cash | check | wire | other — drives batching
         paidAt: new Date(),
       },
     }),

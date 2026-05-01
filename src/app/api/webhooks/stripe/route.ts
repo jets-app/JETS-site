@@ -109,6 +109,13 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Stripe payout landed at the bank — roll the included payments into a
+  // DepositBatch so they can be posted to QBO (auto or manually).
+  if (event.type === "payout.paid") {
+    const payout = event.data.object;
+    await rollUpStripePayout(payout.id, new Date(payout.arrival_date * 1000));
+  }
+
   return NextResponse.json({ received: true });
 }
 
@@ -399,5 +406,105 @@ async function sendChargeFailedNotice(args: {
       to: args.phone,
       body: `JETS School: Tuition charge for invoice ${args.invoiceNumber} failed. Please update your payment: ${portalUrl}/portal/payments. Reply STOP to opt out.`,
     }).catch((e) => console.error("[charge-failed sms] failed:", e));
+  }
+}
+
+/**
+ * payout.paid handler — rolls every payment included in the payout into a
+ * single DepositBatch. Idempotent: if a batch with this payout id already
+ * exists, no-op. If the org has qbBatchMode = "auto", auto-posts to QBO.
+ */
+async function rollUpStripePayout(payoutId: string, depositDate: Date) {
+  const existing = await db.depositBatch.findUnique({
+    where: { stripePayoutId: payoutId },
+  });
+  if (existing) return; // already rolled up
+
+  // Pull every balance transaction for this payout. Charges (incl. captured
+  // off-session charges for tuition) carry the payment_intent id we use to
+  // match against our Payment rows.
+  type BTSource =
+    | string
+    | { object?: string; payment_intent?: string | null };
+  type BT = { type: string; source: BTSource | null };
+
+  const allBts: BT[] = [];
+  let starting_after: string | undefined;
+  for (let page = 0; page < 10; page++) {
+    const list = (await stripe.balanceTransactions.list({
+      payout: payoutId,
+      limit: 100,
+      expand: ["data.source"],
+      starting_after,
+    })) as { data: BT[]; has_more: boolean };
+    allBts.push(...list.data);
+    if (!list.has_more) break;
+    const last = list.data[list.data.length - 1];
+    starting_after = (last as unknown as { id?: string }).id;
+    if (!starting_after) break;
+  }
+
+  const piIds: string[] = [];
+  for (const bt of allBts) {
+    if (bt.type !== "charge" && bt.type !== "payment") continue;
+    const src = bt.source;
+    if (src && typeof src === "object" && src.payment_intent) {
+      piIds.push(src.payment_intent);
+    }
+  }
+
+  if (piIds.length === 0) {
+    console.log(
+      `[stripe-webhook] payout.paid ${payoutId}: no matching charges`,
+    );
+    return;
+  }
+
+  const payments = await db.payment.findMany({
+    where: {
+      stripePaymentIntentId: { in: piIds },
+      status: "SUCCEEDED",
+      batchId: null,
+    },
+  });
+  if (payments.length === 0) {
+    console.log(
+      `[stripe-webhook] payout.paid ${payoutId}: no JETS payments matched`,
+    );
+    return;
+  }
+
+  const totalCents = payments.reduce((s, p) => s + p.amount, 0);
+
+  const batch = await db.$transaction(async (tx) => {
+    const b = await tx.depositBatch.create({
+      data: {
+        source: "stripe",
+        status: "pending",
+        depositDate,
+        totalCents,
+        stripePayoutId: payoutId,
+      },
+    });
+    await tx.payment.updateMany({
+      where: { id: { in: payments.map((p) => p.id) } },
+      data: { batchId: b.id, stripePayoutId: payoutId },
+    });
+    return b;
+  });
+
+  // Auto-post to QBO if the org is on auto mode.
+  const settings = await db.systemSettings.findUnique({
+    where: { id: "settings" },
+    select: { qbBatchMode: true },
+  });
+  if (settings?.qbBatchMode === "auto") {
+    const { postBatchToQbInternal } = await import(
+      "@/server/actions/deposit-batch.actions"
+    );
+    const r = await postBatchToQbInternal(batch.id);
+    if ("error" in r) {
+      console.error(`[stripe-webhook] auto-post failed: ${r.error}`);
+    }
   }
 }

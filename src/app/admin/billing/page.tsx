@@ -17,6 +17,7 @@ import {
   CalendarClock,
   Tag,
   ArrowRight,
+  Layers,
 } from "lucide-react";
 import { BillingActions } from "./_components/billing-actions";
 import { ChargeInvoiceButton } from "./_components/charge-invoice-button";
@@ -133,6 +134,9 @@ export default async function AdminBillingPage() {
           </h1>
         </div>
         <div className="flex items-center gap-2">
+          <LinkButton href="/admin/billing/batches" variant="outline" size="sm">
+            <Layers className="h-3.5 w-3.5" /> Daily Batches
+          </LinkButton>
           <LinkButton href="/admin/billing/discount-codes" variant="outline" size="sm">
             <Tag className="h-3.5 w-3.5" /> Discount Codes
           </LinkButton>

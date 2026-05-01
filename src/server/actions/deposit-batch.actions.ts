@@ -256,10 +256,17 @@ export async function createCheckBatch(input: {
 
 // ==================== Post a batch to QBO ====================
 
+/** Auth-gated version. Calls the internal helper below. */
 export async function postBatchToQb(batchId: string) {
   const check = await requireAdmin();
   if ("error" in check) return { error: check.error as string };
+  return postBatchToQbInternal(batchId);
+}
 
+/**
+ * Internal — does the actual posting. No auth check, callable from a webhook.
+ */
+export async function postBatchToQbInternal(batchId: string) {
   const batch = await db.depositBatch.findUnique({
     where: { id: batchId },
     include: { payments: true },

@@ -4,7 +4,9 @@ import {
   getQuickBooksStatus,
   getSyncHistory,
 } from "@/server/actions/quickbooks.actions";
+import { getQbBatchSettings } from "@/server/actions/deposit-batch.actions";
 import { QuickBooksSettingsClient } from "./quickbooks-client";
+import { BatchMappingCard } from "./_components/batch-mapping-card";
 
 export default async function QuickBooksSettingsPage(props: {
   searchParams: Promise<{ qb_error?: string; qb_connected?: string }>;
@@ -15,9 +17,10 @@ export default async function QuickBooksSettingsPage(props: {
   }
 
   const searchParams = await props.searchParams;
-  const [statusOrError, history] = await Promise.all([
+  const [statusOrError, history, batchSettings] = await Promise.all([
     getQuickBooksStatus(),
     getSyncHistory(25),
+    getQbBatchSettings(),
   ]);
 
   // The page already gated on ADMIN above, so this branch shouldn't fire,
@@ -27,13 +30,21 @@ export default async function QuickBooksSettingsPage(props: {
   }
 
   return (
-    <QuickBooksSettingsClient
-      status={statusOrError}
-      history={history}
-      flash={{
-        error: searchParams.qb_error ?? null,
-        connected: searchParams.qb_connected === "1",
-      }}
-    />
+    <div className="space-y-6">
+      <QuickBooksSettingsClient
+        status={statusOrError}
+        history={history}
+        flash={{
+          error: searchParams.qb_error ?? null,
+          connected: searchParams.qb_connected === "1",
+        }}
+      />
+      {!("error" in batchSettings) && (
+        <BatchMappingCard
+          settings={batchSettings}
+          connected={statusOrError.connected}
+        />
+      )}
+    </div>
   );
 }
