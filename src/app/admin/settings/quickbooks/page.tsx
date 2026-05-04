@@ -39,7 +39,15 @@ export default async function QuickBooksSettingsPage(props: {
           connected: searchParams.qb_connected === "1",
         }}
       />
-      {!("error" in batchSettings) && (
+      {/* DEBUG MARKER v3 — if you see this string, the new code is deployed */}
+      <div className="text-[10px] text-muted-foreground italic">
+        Build marker: qbo-batch-v3
+      </div>
+      {"error" in batchSettings ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-300">
+          Batch settings error: {batchSettings.error}
+        </div>
+      ) : (
         <BatchMappingCard
           settings={batchSettings}
           connected={statusOrError.connected}
