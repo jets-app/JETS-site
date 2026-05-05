@@ -48,7 +48,17 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["@prisma/client", ".prisma/client", "bcryptjs"],
+  // Mark jsdom (and its CJS/ESM-flaky dep chain) as external so Next doesn't
+  // try to bundle them — let Node.js resolve them at runtime. Fixes the
+  // "Failed to load external module jsdom — require() of ES Module @exodus/
+  // bytes" error on /admin/documents and any other page that sanitizes HTML.
+  serverExternalPackages: [
+    "@prisma/client",
+    ".prisma/client",
+    "bcryptjs",
+    "isomorphic-dompurify",
+    "jsdom",
+  ],
   experimental: {
     serverActions: {
       bodySizeLimit: "10mb",
