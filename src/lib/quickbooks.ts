@@ -231,8 +231,30 @@ export function qbCall<T>(
       qbo,
       ...args,
       (err: unknown, result: T) => {
-        if (err) reject(err);
-        else resolve(result);
+        if (err) {
+          // QBO error responses are nested. Surface the deepest message
+          // we can find so callers don't just see "Request failed with 403".
+          let msg = "QuickBooks request failed";
+          const e = err as Record<string, unknown>;
+          const fault = (e?.fault ??
+            (e?.Fault as Record<string, unknown> | undefined)) as
+            | Record<string, unknown>
+            | undefined;
+          const faultErrors = fault?.Error ?? fault?.error;
+          if (Array.isArray(faultErrors) && faultErrors.length > 0) {
+            const f = faultErrors[0] as Record<string, unknown>;
+            msg = `${f.Message ?? f.message ?? msg}${f.Detail ? ` — ${f.Detail}` : ""}${f.code ? ` (code ${f.code})` : ""}`;
+          } else if (typeof e?.message === "string") {
+            msg = e.message as string;
+          } else if (typeof e === "string") {
+            msg = e as unknown as string;
+          }
+          // Log the entire error object for server-side diagnosis.
+          console.error("[qbo error]", method, JSON.stringify(err, null, 2));
+          reject(new Error(msg));
+        } else {
+          resolve(result);
+        }
       }
     );
   });
