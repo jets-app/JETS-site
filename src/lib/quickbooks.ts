@@ -268,19 +268,36 @@ export async function fetchQbAccounts(): Promise<QbAccountLite[]> {
     QueryResponse?: { Account?: RawAccount[] };
   };
 
-  // We pull active accounts and filter to the kinds that make sense for
-  // batch-deposit posting (Bank/OtherCurrentAsset for the deposit account,
-  // Income/OtherIncome for the category lines).
-  const result = await qbCall<AccountQueryResponse>(
-    qbo,
-    "findAccounts",
-    {
-      where: "Active = true",
-      limit: 500,
-    },
-  );
-
-  const raw = result.QueryResponse?.Account ?? [];
+  // node-quickbooks expects a plain criteria object (e.g. { Active: true })
+  // OR a special key like `fetchAll: true`. We pull all accounts and filter
+  // client-side — small list, cheap.
+  let raw: RawAccount[] = [];
+  try {
+    const result = await qbCall<AccountQueryResponse | RawAccount[]>(
+      qbo,
+      "findAccounts",
+      { Active: true, fetchAll: true },
+    );
+    if (Array.isArray(result)) {
+      raw = result;
+    } else {
+      raw = result.QueryResponse?.Account ?? [];
+    }
+  } catch (err) {
+    // Fall back to the no-criteria form if the lib rejects the filter.
+    console.warn("[qbo] findAccounts with criteria failed, retrying", err);
+    const result = await qbCall<AccountQueryResponse | RawAccount[]>(
+      qbo,
+      "findAccounts",
+      {},
+    );
+    if (Array.isArray(result)) {
+      raw = result;
+    } else {
+      raw = result.QueryResponse?.Account ?? [];
+    }
+  }
+  raw = raw.filter((a) => (a as RawAccount & { Active?: boolean }).Active !== false);
   return raw.map((a) => ({
     id: a.Id,
     name: a.Name,
