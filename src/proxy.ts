@@ -28,6 +28,7 @@ const PUBLIC_PATHS = [
   "/inquire",
   "/privacy",
   "/terms",
+  "/donate",
   "/v1",
   "/v2",
 ];

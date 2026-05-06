@@ -61,6 +61,11 @@ export async function POST(req: NextRequest) {
         amount: intent.amount,
         paymentIntentId: intent.id,
       });
+    } else if (type === "donation_one_time") {
+      await markDonationPaid({
+        paymentIntentId: intent.id,
+        amount: intent.amount,
+      });
     } else if (intent.metadata?.invoiceId && type === "tuition_invoice") {
       // Receipt URL lives on the underlying Charge, not the PaymentIntent.
       // Look it up if we have a latest_charge ID — best effort, falls back
@@ -105,6 +110,19 @@ export async function POST(req: NextRequest) {
       await persistSavedCard({
         userId: setup.metadata.jetsUserId!,
         stripePaymentMethodId: setup.payment_method as string,
+      });
+    } else if (
+      setup.metadata?.type === "donation_recurring_setup" &&
+      setup.payment_method &&
+      setup.metadata.jetsDonorId
+    ) {
+      // Recurring donor — we have their card on file. Create the Stripe
+      // Subscription so monthly charges fire automatically.
+      await activateRecurringDonation({
+        donorId: setup.metadata.jetsDonorId,
+        stripePaymentMethodId: setup.payment_method as string,
+        amountCents: parseInt(setup.metadata.amountCents ?? "0", 10),
+        purpose: setup.metadata.purpose ?? "general",
       });
     }
   }
@@ -507,4 +525,206 @@ async function rollUpStripePayout(payoutId: string, depositDate: Date) {
       console.error(`[stripe-webhook] auto-post failed: ${r.error}`);
     }
   }
+}
+
+
+// ==================== Public donations ====================
+
+/**
+ * One-time donation paid — mark Donation as receipt-eligible and email
+ * the donor. Idempotent: re-firing this webhook is a no-op.
+ */
+async function markDonationPaid(args: {
+  paymentIntentId: string;
+  amount: number;
+}) {
+  const donation = await db.donation.findUnique({
+    where: { stripePaymentIntentId: args.paymentIntentId },
+    include: { donor: true },
+  });
+  if (!donation) {
+    console.warn(
+      `[stripe-webhook] donation_one_time succeeded for unknown PI ${args.paymentIntentId}`,
+    );
+    return;
+  }
+  if (donation.receiptSent) return; // already processed
+
+  await db.donation.update({
+    where: { id: donation.id },
+    data: { amount: args.amount }, // Stripe amount is the source of truth
+  });
+
+  await sendDonationReceipt({ donationId: donation.id });
+}
+
+/**
+ * Recurring donation — card saved successfully. Create the Stripe
+ * Subscription so future monthly charges fire automatically. Each
+ * successful charge will hit invoice.payment_succeeded which we'll
+ * forward to the receipt path.
+ */
+async function activateRecurringDonation(args: {
+  donorId: string;
+  stripePaymentMethodId: string;
+  amountCents: number;
+  purpose: string;
+}) {
+  const donor = await db.donor.findUnique({ where: { id: args.donorId } });
+  if (!donor || !donor.stripeCustomerId) {
+    console.warn(
+      `[stripe-webhook] recurring setup for missing donor ${args.donorId}`,
+    );
+    return;
+  }
+
+  // Make this card the default for invoices on the customer.
+  try {
+    await stripe.paymentMethods.attach(args.stripePaymentMethodId, {
+      customer: donor.stripeCustomerId,
+    });
+  } catch (e) {
+    // Already attached — fine.
+    const msg = e instanceof Error ? e.message : "";
+    if (!msg.includes("already")) {
+      console.error("[stripe-webhook] attach PM failed:", e);
+    }
+  }
+  await stripe.customers.update(donor.stripeCustomerId, {
+    invoice_settings: { default_payment_method: args.stripePaymentMethodId },
+  });
+
+  // Create a Price on the fly (a Recurring Price for the chosen amount).
+  const price = await stripe.prices.create({
+    unit_amount: args.amountCents,
+    currency: "usd",
+    recurring: { interval: "month" },
+    product_data: { name: `JETS Monthly Donation — ${args.purpose}` },
+  });
+
+  const subscription = await stripe.subscriptions.create({
+    customer: donor.stripeCustomerId,
+    items: [{ price: price.id }],
+    default_payment_method: args.stripePaymentMethodId,
+    metadata: {
+      type: "donation_recurring",
+      jetsDonorId: donor.id,
+      purpose: args.purpose,
+    },
+  });
+
+  // Find the most-recent Donation row for this donor that's still
+  // unrecorded and link it to the subscription.
+  const pendingDonation = await db.donation.findFirst({
+    where: {
+      donorId: donor.id,
+      frequency: "MONTHLY",
+      stripeSubscriptionId: null,
+    },
+    orderBy: { createdAt: "desc" },
+  });
+  if (pendingDonation) {
+    await db.donation.update({
+      where: { id: pendingDonation.id },
+      data: {
+        stripeSubscriptionId: subscription.id,
+      },
+    });
+    await sendDonationReceipt({ donationId: pendingDonation.id });
+  }
+}
+
+/**
+ * Email the donor a tax-deductible receipt. Uses the school's settings
+ * for EIN and address. Idempotent — won't re-send if receiptSent is true.
+ */
+async function sendDonationReceipt(args: { donationId: string }) {
+  const donation = await db.donation.findUnique({
+    where: { id: args.donationId },
+    include: { donor: true },
+  });
+  if (!donation || donation.receiptSent) return;
+  if (!donation.donor.email) return;
+
+  const settings = await db.systemSettings.findUnique({
+    where: { id: "settings" },
+    select: {
+      schoolName: true,
+      schoolLegalName: true,
+      schoolEin: true,
+      schoolAddress: true,
+      schoolEmail: true,
+      schoolPhone: true,
+    },
+  });
+
+  const dollars = (donation.amount / 100).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  const dateStr = (donation.donatedAt ?? donation.createdAt).toLocaleDateString(
+    "en-US",
+    { year: "numeric", month: "long", day: "numeric" },
+  );
+  const isMonthly = donation.frequency === "MONTHLY";
+  const honorMatch = donation.notes?.match(/^In honor of: (.+)$/m);
+  const honorLine = honorMatch ? `<p><strong>In honor of:</strong> ${honorMatch[1]}</p>` : "";
+
+  const { sendEmail } = await import("@/server/email");
+  await sendEmail({
+    to: donation.donor.email,
+    subject: `Your donation receipt — ${settings?.schoolName ?? "JETS School"}`,
+    html: `
+<div style="font-family: Georgia, serif; max-width: 640px; margin: 0 auto; padding: 24px; color: #1a1a1a;">
+  <div style="text-align: center; padding-bottom: 16px; border-bottom: 2px solid #7a0012;">
+    <h1 style="color: #7a0012; margin: 0; font-size: 24px;">${settings?.schoolName ?? "JETS School"}</h1>
+    <p style="color: #555; margin: 4px 0 0; font-size: 13px;">${settings?.schoolLegalName ?? "JETS Synagogue"} — 501(c)(3) Nonprofit</p>
+  </div>
+
+  <h2 style="margin-top: 28px; color: #1a1a1a;">Thank you for your donation</h2>
+  <p>Dear ${donation.donor.firstName},</p>
+  <p>Thank you for your ${isMonthly ? "monthly" : "generous"} gift to ${settings?.schoolName ?? "JETS School"}. Your support directly funds our mission of providing young men with a Torah-rich education paired with real-world professional skills.</p>
+
+  <div style="background: #f9f5f5; border-left: 4px solid #7a0012; padding: 16px 20px; margin: 24px 0; border-radius: 4px;">
+    <p style="margin: 0 0 8px;"><strong>Donor:</strong> ${donation.donor.firstName} ${donation.donor.lastName}</p>
+    <p style="margin: 0 0 8px;"><strong>Amount:</strong> $${dollars}${isMonthly ? " / month (recurring)" : ""}</p>
+    <p style="margin: 0 0 8px;"><strong>Date:</strong> ${dateStr}</p>
+    <p style="margin: 0 0 8px;"><strong>Designation:</strong> ${donation.purpose ?? "General Fund"}</p>
+    ${honorLine}
+    <p style="margin: 0;"><strong>Donation ID:</strong> ${donation.id}</p>
+  </div>
+
+  <p style="background: #fef7f7; border: 1px solid #f0d4d6; padding: 12px 16px; border-radius: 4px; font-size: 13px;">
+    <strong>For tax purposes:</strong> No goods or services were provided in exchange for this contribution. Your donation is tax-deductible to the fullest extent allowed by law.
+  </p>
+
+  <p style="margin-top: 24px; color: #555; font-size: 13px;">
+    ${settings?.schoolLegalName ?? "JETS Synagogue"}<br />
+    EIN: ${settings?.schoolEin ?? "68-0500418"}<br />
+    ${settings?.schoolAddress ?? "Granada Hills, Los Angeles, CA"}<br />
+    ${settings?.schoolPhone ?? "(818) 831-3000"} · ${settings?.schoolEmail ?? "info@jetsschool.org"}
+  </p>
+
+  <p style="margin-top: 16px; font-size: 11px; color: #888; text-align: center;">
+    This receipt is your official record of your donation. Please save it for your tax records.
+  </p>
+</div>
+    `,
+  });
+
+  await db.donation.update({
+    where: { id: donation.id },
+    data: { receiptSent: true },
+  });
+
+  await db.donorReceipt.create({
+    data: {
+      donorId: donation.donor.id,
+      type: "donation",
+      year: new Date().getFullYear(),
+      amount: donation.amount,
+      emailSent: true,
+      sentAt: new Date(),
+    },
+  });
 }

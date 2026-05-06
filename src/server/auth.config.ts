@@ -33,6 +33,7 @@ export const authConfig: NextAuthConfig = {
         "/inquire",
         "/privacy",
         "/terms",
+        "/donate",
         "/reapply",
         "/login",
         "/register",
